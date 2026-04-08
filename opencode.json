@@ -1,0 +1,115 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "share": "disabled",
+  "provider": {
+    "azure": {
+      "npm": "@ai-sdk/azure",
+      "name": "Azure OpenAI (SSI)",
+      "options": {
+        // Let the adapter build: https://<resource>.openai.azure.com/openai/v1/
+        "resourceName": "brent-schneeman-8052-resource"
+        // If you ever need a preview: "apiVersion": "2025-04-01-preview"
+      },
+      "models": {
+        // Keys here must match your Azure DEPLOYMENT NAMES exactly
+        "gpt-5.3-codex": {
+          "name": "GPT‑5.3 Codex (Azure)"
+        },
+        "gpt-5.1-codex": {
+          "name": "GPT‑5.1 Codex (Azure)"
+        },
+        "gpt-5.2-codex": {
+          "name": "GPT‑5.2 Codex (Azure)"
+        }
+      }
+    }
+  },
+  "permission": {
+    "edit": "allow",
+    "bash": {
+      "*": "allow",
+      "git push": "ask",
+      "git push --force": "deny",
+      "git reset --hard": "deny",
+      "git clean -fd": "deny",
+      "rm -rf *": "deny",
+      "terraform *": "deny"
+    },
+    "webfetch": "deny"
+  },
+  "model": "azure/gpt-5.3-codex",
+  "small_model": "ollama/mistral-nemo:latest",
+  "agent": {
+    "build": {
+      "enabled": "false"
+    },
+    "plan": {
+      "enabled": "false"
+    },
+    "tworavens-build": {
+      "description": "Primary build agent (supports Qwen and GPT-5.1)",
+      "default_model": "azure/gpt-5.3-codex",
+      "models": [
+        "azure/gpt-5.3-codex",
+        "azure/gpt-5.2-codex",
+        "azure/gpt-5.1-codex",
+      ],
+      "permission": {
+        "edit": "allow",
+        "bash": {
+          "*": "allow",
+          "git push": "ask",
+          "terraform *": "deny"
+        },
+        "webfetch": "ask"
+      }
+    },
+    "tworavens-plan": {
+      "description": "Planning/analysis agent (Qwen or GPT-5.1)",
+      "models": [
+        "qwenlocal/qwen3-coder",
+        "azureopenai/gpt-5.1"
+      ],
+      "permission": {
+        "edit": "deny",
+        "bash": "deny",
+        "webfetch": "ask"
+      }
+    }
+  },
+  "mcp": {
+    "duckdb_local": {
+      "type": "local",
+      "enabled": true,
+      "command": [
+        "uvx",
+        "mcp-server-duckdb",
+        "--db-path",
+        "./data/trackstat.duckdb",
+        "--keep-connection"
+      ],
+      "environment": {
+        "PYTHONUNBUFFERED": "1"
+      },
+      "timeout": 8000
+    },
+    "context7": {
+      "type": "remote",
+      "url": "https://mcp.context7.com/mcp",
+      "enabled": true
+    },
+    "local-faiss-mcp": {
+      "type": "local",
+      "enabled": true,
+      "command": [
+        "uv",
+        "run",
+        "python",
+        "-m",
+        "local_faiss_mcp",
+        "--index-dir",
+        "./.vector_store"
+      ]
+    }
+  }
+}

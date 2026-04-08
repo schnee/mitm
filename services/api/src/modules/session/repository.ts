@@ -1,0 +1,302 @@
+import { randomUUID } from "node:crypto";
+import type {
+  CreateSessionResult,
+  SessionEvent,
+  JoinSessionResult,
+  ParticipantRecord,
+  SessionParticipantRole,
+  SessionRecord,
+  SessionSnapshot,
+  SessionStatus
+} from "./contracts";
+import { assertValidTransition } from "./state-machine";
+
+type JoinErrorCode = "SESSION_NOT_FOUND" | "SESSION_FULL" | "SESSION_EXPIRED";
+
+export class SessionDomainError extends Error {
+  code: JoinErrorCode;
+
+  constructor(code: JoinErrorCode, message: string) {
+    super(message);
+    this.code = code;
+  }
+}
+
+type CreateSessionParams = {
+  joinToken: string;
+  role: SessionParticipantRole;
+  now?: Date;
+  expiresAt?: Date;
+};
+
+type JoinSessionParams = {
+  joinToken: string;
+  role: SessionParticipantRole;
+  now?: Date;
+};
+
+export class SessionRepository {
+  private sessions = new Map<string, SessionRecord>();
+  private participantsBySessionId = new Map<string, ParticipantRecord[]>();
+  private sessionIdByToken = new Map<string, string>();
+  private eventsBySessionId = new Map<string, SessionEvent[]>();
+
+  createSession(params: CreateSessionParams): CreateSessionResult {
+    const now = params.now ?? new Date();
+    const expiresAt = params.expiresAt ?? new Date(now.getTime() + 2 * 60 * 60 * 1000);
+    const sessionId = randomUUID();
+    const participantId = randomUUID();
+
+    const session: SessionRecord = {
+      sessionId,
+      joinToken: params.joinToken,
+      status: "created",
+      createdAt: now.toISOString(),
+      updatedAt: now.toISOString(),
+      expiresAt: expiresAt.toISOString()
+    };
+
+    const hostParticipant: ParticipantRecord = {
+      participantId,
+      sessionId,
+      role: params.role,
+      joinedAt: now.toISOString(),
+      accountId: null
+    };
+
+    this.sessions.set(sessionId, session);
+    this.sessionIdByToken.set(params.joinToken, sessionId);
+    this.participantsBySessionId.set(sessionId, [hostParticipant]);
+    this.eventsBySessionId.set(sessionId, [
+      {
+        eventType: "session_updated",
+        sessionId,
+        updatedAt: now.toISOString(),
+        diff: { status: "created" }
+      }
+    ]);
+
+    return {
+      sessionId,
+      joinToken: params.joinToken,
+      participantId
+    };
+  }
+
+  joinSession(params: JoinSessionParams): JoinSessionResult {
+    const now = params.now ?? new Date();
+    const sessionId = this.sessionIdByToken.get(params.joinToken);
+
+    if (!sessionId) {
+      throw new SessionDomainError("SESSION_NOT_FOUND", "No session found for token");
+    }
+
+    const session = this.sessions.get(sessionId);
+    if (!session) {
+      throw new SessionDomainError("SESSION_NOT_FOUND", "No session found for token");
+    }
+
+    if (new Date(session.expiresAt).getTime() <= now.getTime()) {
+      session.status = "expired";
+      session.updatedAt = now.toISOString();
+      this.sessions.set(sessionId, session);
+      throw new SessionDomainError("SESSION_EXPIRED", "Session expired");
+    }
+
+    const participants = this.participantsBySessionId.get(sessionId) ?? [];
+    if (participants.length >= 2) {
+      throw new SessionDomainError("SESSION_FULL", "Session already has two participants");
+    }
+
+    const participantId = randomUUID();
+    const invitee: ParticipantRecord = {
+      participantId,
+      sessionId,
+      role: params.role,
+      joinedAt: now.toISOString(),
+      accountId: null
+    };
+
+    participants.push(invitee);
+    this.participantsBySessionId.set(sessionId, participants);
+    this.updateSessionStatus(sessionId, "joined", now);
+    this.pushEvent({
+      eventType: "participant_joined",
+      sessionId,
+      updatedAt: now.toISOString(),
+      participantId,
+      participantRole: params.role,
+      diff: { participantCount: participants.length }
+    });
+
+    return {
+      sessionId,
+      participantId
+    };
+  }
+
+  getSessionById(sessionId: string): SessionRecord | undefined {
+    return this.sessions.get(sessionId);
+  }
+
+  getSessionByToken(joinToken: string): SessionRecord | undefined {
+    const sessionId = this.sessionIdByToken.get(joinToken);
+    if (!sessionId) {
+      return undefined;
+    }
+    return this.getSessionById(sessionId);
+  }
+
+  getParticipants(sessionId: string): ParticipantRecord[] {
+    return this.participantsBySessionId.get(sessionId) ?? [];
+  }
+
+  getParticipant(sessionId: string, participantId: string): ParticipantRecord | undefined {
+    return this.getParticipants(sessionId).find((item) => item.participantId === participantId);
+  }
+
+  updateSessionStatus(sessionId: string, nextStatus: SessionStatus, now: Date = new Date()): SessionRecord {
+    const session = this.sessions.get(sessionId);
+    if (!session) {
+      throw new SessionDomainError("SESSION_NOT_FOUND", "No session found for id");
+    }
+
+    assertValidTransition(session.status, nextStatus);
+    session.status = nextStatus;
+    session.updatedAt = now.toISOString();
+    this.sessions.set(sessionId, session);
+    this.pushEvent({
+      eventType: "session_updated",
+      sessionId,
+      updatedAt: now.toISOString(),
+      diff: { status: nextStatus }
+    });
+    return session;
+  }
+
+  upsertParticipantLocationDraft(params: {
+    sessionId: string;
+    participantId: string;
+    mode: "geolocation" | "manual";
+    lat: number;
+    lng: number;
+    addressLabel: string;
+    updatedAt?: Date;
+    expireAt?: Date;
+  }): ParticipantRecord {
+    const participant = this.getParticipant(params.sessionId, params.participantId);
+    if (!participant) {
+      throw new SessionDomainError("SESSION_NOT_FOUND", "Participant not found in session");
+    }
+
+    const updatedAt = (params.updatedAt ?? new Date()).toISOString();
+    participant.locationMode = params.mode;
+    participant.lat = params.lat;
+    participant.lng = params.lng;
+    participant.addressLabel = params.addressLabel;
+    participant.locationDraftUpdatedAt = updatedAt;
+    participant.locationExpireAt = (params.expireAt ?? new Date(Date.now() + 24 * 60 * 60 * 1000)).toISOString();
+
+    this.pushEvent({
+      eventType: "session_updated",
+      sessionId: params.sessionId,
+      updatedAt,
+      participantId: participant.participantId,
+      participantRole: participant.role,
+      diff: { locationDraftUpdatedAt: updatedAt }
+    });
+
+    return participant;
+  }
+
+  confirmParticipantLocation(params: {
+    sessionId: string;
+    participantId: string;
+    now?: Date;
+  }): ParticipantRecord {
+    const participant = this.getParticipant(params.sessionId, params.participantId);
+    if (!participant) {
+      throw new SessionDomainError("SESSION_NOT_FOUND", "Participant not found in session");
+    }
+
+    if (!participant.locationDraftUpdatedAt) {
+      throw new SessionDomainError("SESSION_NOT_FOUND", "Location draft is required before confirm");
+    }
+
+    const timestamp = (params.now ?? new Date()).toISOString();
+    participant.locationConfirmedAt = timestamp;
+    this.pushEvent({
+      eventType: "participant_location_confirmed",
+      sessionId: params.sessionId,
+      updatedAt: timestamp,
+      participantId: participant.participantId,
+      participantRole: participant.role,
+      diff: { locationConfirmedAt: timestamp }
+    });
+
+    if (this.areBothLocationsConfirmed(params.sessionId)) {
+      const session = this.getSessionById(params.sessionId);
+      if (session && session.status === "joined") {
+        this.updateSessionStatus(params.sessionId, "locating", new Date(timestamp));
+      }
+    }
+
+    return participant;
+  }
+
+  areBothLocationsConfirmed(sessionId: string): boolean {
+    const participants = this.getParticipants(sessionId);
+    return participants.length === 2 && participants.every((item) => Boolean(item.locationConfirmedAt));
+  }
+
+  getSessionSnapshot(sessionId: string): SessionSnapshot | undefined {
+    const session = this.getSessionById(sessionId);
+    if (!session) {
+      return undefined;
+    }
+    const participants = this.getParticipants(sessionId)
+      .slice()
+      .sort((a, b) => a.role.localeCompare(b.role))
+      .map((item) => ({
+        participantId: item.participantId,
+        role: item.role,
+        joinedAt: item.joinedAt,
+        locationConfirmedAt: item.locationConfirmedAt ?? null
+      }));
+    return {
+      sessionId,
+      status: session.status,
+      updatedAt: session.updatedAt,
+      participants,
+      inputsReady: this.areBothLocationsConfirmed(sessionId)
+    };
+  }
+
+  listSessionEvents(sessionId: string, since?: string): SessionEvent[] {
+    const events = this.eventsBySessionId.get(sessionId) ?? [];
+    if (!since) {
+      return events.slice();
+    }
+    return events.filter((item) => item.updatedAt > since);
+  }
+
+  private pushEvent(event: SessionEvent): void {
+    const events = this.eventsBySessionId.get(event.sessionId) ?? [];
+    events.push(event);
+    this.eventsBySessionId.set(event.sessionId, events);
+  }
+
+  seedSession(overrides: Partial<SessionRecord> & Pick<SessionRecord, "sessionId" | "joinToken">): void {
+    const now = new Date().toISOString();
+    this.sessions.set(overrides.sessionId, {
+      sessionId: overrides.sessionId,
+      joinToken: overrides.joinToken,
+      status: (overrides.status as SessionStatus | undefined) ?? "created",
+      createdAt: overrides.createdAt ?? now,
+      updatedAt: overrides.updatedAt ?? now,
+      expiresAt: overrides.expiresAt ?? new Date(Date.now() + 30_000).toISOString()
+    });
+    this.sessionIdByToken.set(overrides.joinToken, overrides.sessionId);
+    this.eventsBySessionId.set(overrides.sessionId, []);
+  }
+}

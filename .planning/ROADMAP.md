@@ -10,7 +10,7 @@ This roadmap delivers the MVP in dependency order: establish two-person session 
 - Integer phases (1, 2, 3): Planned milestone work
 - Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
-- [ ] **Phase 1: Discovery & Session/Input Backbone** - Lock critical product/data decisions while delivering resilient two-person create/join and consented location capture.
+- [x] **Phase 1: Discovery & Session/Input Backbone** - Lock critical product/data decisions while delivering resilient two-person create/join and consented location capture.
 - [ ] **Phase 2: Fair Ranking & Recommendation Core** - Generate and rank venue candidates by travel-time fairness and preference relevance.
 - [ ] **Phase 3: Shared Shortlist & Confirmation** - Turn ranked options into one mutually confirmed destination.
 - [ ] **Phase 4: Launch Readiness & Stabilization** - Validate cross-browser funnel reliability and instrument decision funnel analytics.
@@ -34,10 +34,13 @@ Rationale: this order follows hard product dependencies and minimizes rework; ea
 - Mobile-first screen order for two-person synchronized input and shortlist actions.
 
 ### Data
+- Session-first ephemeral schema with server-created session record on User 1 start.
 - Precise location retention TTL and deletion policy for session data.
 - Event schema for funnel metrics (`session_start`, `inputs_set`, `results_returned`, `decision_confirmed`).
 
 ### Technical
+- Deployment targets are fixed: Cloudflare for frontend and Google Cloud for backend.
+- Backend baseline is fixed: Cloud Run API + Firestore with TTL + Secret Manager + Cloud Logging.
 - Primary places/routing provider selection and adapter contract.
 - Server-authoritative session state transitions and idempotent confirmation strategy.
 
@@ -55,10 +58,11 @@ Rationale: this order follows hard product dependencies and minimizes rework; ea
 
 ## First 2 Weeks Execution Plan
 
-1. Finalize provider choice, location retention TTL, and event schema contracts.
-2. Deliver create/join session flow with synchronized state and no-account invitee path.
-3. Ship consented location capture with geolocation + manual fallback and confirmation step.
-4. Stand up ranking adapter skeleton and seed scoring harness for fairness calibration.
+1. Define and implement session schema for server-created sessions on User 1 start (`sessions`, `participants`, lifecycle timestamps/status).
+2. Configure and verify TTL policy for session-scoped precise location auto-expiry.
+3. Establish deployment foundations: Cloudflare frontend project and Google Cloud backend baseline (Cloud Run + Firestore + Secret Manager + Logging).
+4. Deliver create/join session flow with synchronized state and no-account invitee path.
+5. Implement and validate create/join lifecycle transitions before ranking integration.
 
 ## Phase Details
 
@@ -68,8 +72,9 @@ Rationale: this order follows hard product dependencies and minimizes rework; ea
 **Requirements**: SESS-01, SESS-02, SESS-03, LOCT-01, LOCT-02, LOCT-03
 **Objective**: Remove startup friction and input failure risk so downstream ranking has trustworthy participant data.
 **Core Deliverables**:
-- Two-person session creation with shareable link and invitee join.
-- Synchronized shared session state for both participants.
+- Server-created session at User 1 start with shareable link and invitee join.
+- Synchronized shared session state for both participants using server-authoritative lifecycle transitions.
+- Ephemeral session persistence with TTL auto-expiry for precise location fields.
 - Location capture with permission flow, manual fallback, and explicit confirmation.
 **Success Metrics**:
 - **Leading**: Session join completion rate from shared link.
@@ -78,6 +83,7 @@ Rationale: this order follows hard product dependencies and minimizes rework; ea
 **Major Risks**:
 - Geolocation denial/timeout causes abandonment.
 - Session state desync creates trust failure.
+- Cross-provider deployment setup drift (env vars/secrets/networking) slows early integration.
 **Assumptions**:
 - Invitees accept no-account join for MVP.
 - Manual address entry can recover most geolocation failures.
@@ -89,7 +95,11 @@ Rationale: this order follows hard product dependencies and minimizes rework; ea
   2. Invitee can join from link without account creation and both participants see the same live session state.
   3. Each participant can provide location via geolocation or typed address and proceed without dead ends.
   4. Each participant explicitly confirms the location used for later ranking.
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [x] 01-01-PLAN.md — Define session schema and implement server-created create/join contracts with no-account invitee flow.
+- [x] 01-02-PLAN.md — Implement canonical lifecycle transitions and synchronized state for both participants.
+- [x] 01-03-PLAN.md — Add TTL expiry policy for precise location plus fallback capture and explicit confirmation gate.
 **UI hint**: yes
 
 ### Phase 2: Fair Ranking & Recommendation Core
@@ -183,7 +193,7 @@ Rationale: this order follows hard product dependencies and minimizes rework; ea
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Discovery & Session/Input Backbone | 0/TBD | Not started | - |
+| 1. Discovery & Session/Input Backbone | 3/3 | Complete | 01-01, 01-02, 01-03 |
 | 2. Fair Ranking & Recommendation Core | 0/TBD | Not started | - |
 | 3. Shared Shortlist & Confirmation | 0/TBD | Not started | - |
 | 4. Launch Readiness & Stabilization | 0/TBD | Not started | - |

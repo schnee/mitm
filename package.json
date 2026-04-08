@@ -1,0 +1,25 @@
+{
+  "name": "meet-me-in-the-middle",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev:api": "tsx services/api/src/dev-server.ts",
+    "dev:web": "next dev -p 3000",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.52.0",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "@types/node": "^24.5.2",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.2",
+    "vitest": "^2.1.1"
+  },
+  "dependencies": {
+    "next": "^16.2.2",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "zod": "^3.23.8"
+  }
+}
