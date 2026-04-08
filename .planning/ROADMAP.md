@@ -129,7 +129,11 @@ Plans:
   2. Participants can select preference tags and see ranked results change accordingly.
   3. System returns ranked candidate venues between both participants using configured provider data.
   4. Each ranked result displays ETA per participant, venue category, and open status when available.
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 02-01-PLAN.md — Define and validate willingness split + preference tag input contracts and persistence API.
+- [ ] 02-02-PLAN.md — Implement provider-backed candidate retrieval and fairness+preference ranking endpoint.
+- [ ] 02-03-PLAN.md — Wire ranking input/result UX with ETA/category/open-status metadata rendering.
 **UI hint**: yes
 
 ### Phase 3: Shared Shortlist & Confirmation
