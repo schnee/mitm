@@ -21,15 +21,15 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Travel Fairness and Preferences
 
-- [ ] **FAIR-01**: Each participant can set willingness-to-travel split using predefined options (50/50, 60/40, 70/30).
-- [ ] **PREF-01**: Participants can select high-level preference tags (for example coffee, cocktails, vintage shops).
-- [ ] **PREF-02**: Preference tags influence ranking order of candidate venues.
+- [x] **FAIR-01**: Each participant can set willingness-to-travel split using predefined options (50/50, 60/40, 70/30).
+- [x] **PREF-01**: Participants can select high-level preference tags (for example coffee, cocktails, vintage shops).
+- [x] **PREF-02**: Preference tags influence ranking order of candidate venues.
 
 ### Venue Retrieval and Ranking
 
-- [ ] **RANK-01**: System retrieves candidate venues between both participants using one configured places provider.
-- [ ] **RANK-02**: System ranks candidates using travel-time fairness and preference relevance.
-- [ ] **RANK-03**: Each result shows key decision metadata: ETA per participant, venue category, and open status when available.
+- [x] **RANK-01**: System retrieves candidate venues between both participants using one configured places provider.
+- [x] **RANK-02**: System ranks candidates using travel-time fairness and preference relevance.
+- [x] **RANK-03**: Each result shows key decision metadata: ETA per participant, venue category, and open status when available.
 
 ### Decision Flow
 
@@ -85,12 +85,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | LOCT-01 | Phase 1 | Complete |
 | LOCT-02 | Phase 1 | Complete |
 | LOCT-03 | Phase 1 | Complete |
-| FAIR-01 | Phase 2 | Pending |
-| PREF-01 | Phase 2 | Pending |
-| PREF-02 | Phase 2 | Pending |
-| RANK-01 | Phase 2 | Pending |
-| RANK-02 | Phase 2 | Pending |
-| RANK-03 | Phase 2 | Pending |
+| FAIR-01 | Phase 2 | Complete |
+| PREF-01 | Phase 2 | Complete |
+| PREF-02 | Phase 2 | Complete |
+| RANK-01 | Phase 2 | Complete |
+| RANK-02 | Phase 2 | Complete |
+| RANK-03 | Phase 2 | Complete |
 | DECS-01 | Phase 3 | Pending |
 | DECS-02 | Phase 3 | Pending |
 | DECS-03 | Phase 3 | Pending |

@@ -2,11 +2,13 @@
 
 import { use, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { joinSessionByToken } from "../../../lib/api/session-client";
+import { getRankedResults, joinSessionByToken, type RankedVenue } from "../../../lib/api/session-client";
 import { useSessionSync } from "../../../hooks/useSessionSync";
 import { ParticipantStatus } from "../../../components/session/ParticipantStatus";
 import { LocationCaptureForm } from "../../../components/location/LocationCaptureForm";
 import { LocationConfirmCard } from "../../../components/location/LocationConfirmCard";
+import { RankingInputsForm } from "../../../components/ranking/RankingInputsForm";
+import { RankedResultsList } from "../../../components/ranking/RankedResultsList";
 
 type JoinState = "joining" | "joined" | "join_error";
 
@@ -27,6 +29,9 @@ export default function JoinPage({ params }: JoinPageProps) {
   const [participantId, setParticipantId] = useState<string | null>(null);
   const [draftSaved, setDraftSaved] = useState(false);
   const [confirmedAt, setConfirmedAt] = useState<string | null>(null);
+  const [rankingInputsSaved, setRankingInputsSaved] = useState(false);
+  const [rankingStatus, setRankingStatus] = useState("Waiting for ranking input.");
+  const [rankedResults, setRankedResults] = useState<RankedVenue[]>([]);
   const { token } = use(params);
   const searchParams = useSearchParams();
   const sync = useSessionSync(sessionId);
@@ -103,6 +108,20 @@ export default function JoinPage({ params }: JoinPageProps) {
     };
   }, [searchParams, token]);
 
+  const runRanking = async () => {
+    if (!sessionId) {
+      return;
+    }
+
+    try {
+      const response = await getRankedResults(sessionId);
+      setRankedResults(response.results);
+      setRankingStatus(`Ranking generated at ${response.generatedAt}`);
+    } catch {
+      setRankingStatus("Unable to run ranking. Ensure both participants saved ranking inputs.");
+    }
+  };
+
   return (
     <main>
       {state === "joining" && <p>Joining session...</p>}
@@ -128,6 +147,27 @@ export default function JoinPage({ params }: JoinPageProps) {
           )}
           {confirmedAt && <p>Location confirmed at {confirmedAt}</p>}
           {sync.snapshot?.inputsReady && <p>Inputs ready for ranking.</p>}
+          {sync.snapshot?.inputsReady && sessionId && participantId && (
+            <>
+              <RankingInputsForm
+                sessionId={sessionId}
+                participantId={participantId}
+                onSaved={() => setRankingInputsSaved(true)}
+              />
+              <button
+                type="button"
+                disabled={!rankingInputsSaved}
+                onClick={() => {
+                  void runRanking();
+                }}
+              >
+                Run ranking
+              </button>
+              {!rankingInputsSaved && <p>Save ranking inputs before running ranking.</p>}
+              <p>{rankingStatus}</p>
+              <RankedResultsList results={rankedResults} />
+            </>
+          )}
         </>
       )}
       {state === "join_error" && <p>Unable to join this session. Please request a new link.</p>}

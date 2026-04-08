@@ -11,7 +11,7 @@ This roadmap delivers the MVP in dependency order: establish two-person session 
 - Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
 - [x] **Phase 1: Discovery & Session/Input Backbone** - Lock critical product/data decisions while delivering resilient two-person create/join and consented location capture.
-- [ ] **Phase 2: Fair Ranking & Recommendation Core** - Generate and rank venue candidates by travel-time fairness and preference relevance.
+- [x] **Phase 2: Fair Ranking & Recommendation Core** - Generate and rank venue candidates by travel-time fairness and preference relevance.
 - [ ] **Phase 3: Shared Shortlist & Confirmation** - Turn ranked options into one mutually confirmed destination.
 - [ ] **Phase 4: Launch Readiness & Stabilization** - Validate cross-browser funnel reliability and instrument decision funnel analytics.
 
@@ -131,9 +131,9 @@ Plans:
   4. Each ranked result displays ETA per participant, venue category, and open status when available.
 **Plans**: 3 plans
 Plans:
-- [ ] 02-01-PLAN.md — Define and validate willingness split + preference tag input contracts and persistence API.
-- [ ] 02-02-PLAN.md — Implement provider-backed candidate retrieval and fairness+preference ranking endpoint.
-- [ ] 02-03-PLAN.md — Wire ranking input/result UX with ETA/category/open-status metadata rendering.
+- [x] 02-01-PLAN.md — Define and validate willingness split + preference tag input contracts and persistence API.
+- [x] 02-02-PLAN.md — Implement provider-backed candidate retrieval and fairness+preference ranking endpoint.
+- [x] 02-03-PLAN.md — Wire ranking input/result UX with ETA/category/open-status metadata rendering.
 **UI hint**: yes
 
 ### Phase 3: Shared Shortlist & Confirmation
@@ -198,6 +198,6 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Discovery & Session/Input Backbone | 3/3 | Complete | 01-01, 01-02, 01-03 |
-| 2. Fair Ranking & Recommendation Core | 0/TBD | Not started | - |
+| 2. Fair Ranking & Recommendation Core | 3/3 | Complete | 02-01, 02-02, 02-03 |
 | 3. Shared Shortlist & Confirmation | 0/TBD | Not started | - |
 | 4. Launch Readiness & Stabilization | 0/TBD | Not started | - |

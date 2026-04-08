@@ -5,21 +5,21 @@
 See: .planning/PROJECT.md (updated 2026-04-08)
 
 **Core value:** Turn a slow, awkward "where should we meet?" negotiation into a fast and fair decision both people accept.
-**Current focus:** Phase 2 - Fair Ranking & Recommendation Core (ready)
+**Current focus:** Phase 3 - Shared Shortlist & Confirmation (ready)
 
 ## Current Position
 
-Phase: 1 of 4 (Discovery & Session/Input Backbone)
+Phase: 2 of 4 (Fair Ranking & Recommendation Core)
 Plan: 3 of 3 complete
 Status: Complete (ready to transition)
-Last activity: 2026-04-08 — Human checkpoint approved; Plan 01-03 sign-off completed and Phase 1 execution gates closed.
+Last activity: 2026-04-08 — Phase 2 plans 02-01, 02-02, and 02-03 executed with backend ranking APIs, scoring, and UI integration.
 
-Progress: [██████████] 100%
+Progress: [█████░░░░░] 50%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 3
+- Total plans completed: 6
 - Average duration: TBD
 - Total execution time: TBD
 
@@ -28,10 +28,11 @@ Progress: [██████████] 100%
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 1. Discovery & Session/Input Backbone | 3 | TBD | TBD |
+| 2. Fair Ranking & Recommendation Core | 3 | TBD | TBD |
 
 **Recent Trend:**
-- Last 5 plans: 01-01, 01-02, 01-03
-- Trend: Accelerating
+- Last 5 plans: 01-02, 01-03, 02-01, 02-02, 02-03
+- Trend: Steady
 
 *Updated after each plan completion*
 
@@ -52,9 +53,9 @@ Recent decisions affecting current work:
 
 ### Pending Todos
 
-- Define and test Firestore TTL policy for precise location/session expiry.
-- Add Cloudflare frontend project baseline and environment wiring.
-- Add Google Cloud backend project/service baseline and secret wiring.
+- Start Phase 3 planning and define shortlist persistence/events schema.
+- Add shared shortlist route contracts and conflict-safe confirmation flow.
+- Add navigation handoff payload fields for confirmed destination.
 
 ### Blockers/Concerns
 
@@ -63,6 +64,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-04-08 00:00
-Stopped at: Phase 1 research refreshed and aligned to current architecture decisions; ready for plan execution.
+Last session: 2026-04-08 12:45
+Stopped at: Phase 2 execution complete; ranking inputs/results are available in API and session UI.
 Resume file: None

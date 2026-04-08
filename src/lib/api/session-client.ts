@@ -35,6 +35,18 @@ export interface SessionEventResponse {
   diff?: Record<string, unknown>;
 }
 
+export type WillingnessSplit = "50_50" | "60_40" | "70_30";
+export type PreferenceTag = "coffee" | "cocktails" | "vintage_shops" | "dessert" | "quiet";
+
+export interface RankedVenue {
+  venueId: string;
+  name: string;
+  etaParticipantA: number;
+  etaParticipantB: number;
+  category: string;
+  openNow: boolean | null;
+}
+
 export async function createSession(): Promise<CreateSessionResponse> {
   const response = await fetch(`${API_BASE_URL}/v1/sessions`, {
     method: "POST",
@@ -113,4 +125,41 @@ export async function confirmLocation(input: {
     throw new Error(`confirmLocation failed: ${response.status}`);
   }
   return (await response.json()) as { confirmedAt: string; inputsReady: boolean };
+}
+
+export async function upsertRankingInputs(input: {
+  sessionId: string;
+  participantId: string;
+  split: WillingnessSplit;
+  tags: PreferenceTag[];
+}): Promise<{ split: WillingnessSplit; tags: PreferenceTag[]; updatedAt: string }> {
+  const response = await fetch(`${API_BASE_URL}/v1/ranking/inputs`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input)
+  });
+  if (!response.ok) {
+    throw new Error(`upsertRankingInputs failed: ${response.status}`);
+  }
+  return (await response.json()) as { split: WillingnessSplit; tags: PreferenceTag[]; updatedAt: string };
+}
+
+export async function getRankedResults(sessionId: string): Promise<{
+  sessionId: string;
+  generatedAt: string;
+  results: RankedVenue[];
+}> {
+  const response = await fetch(`${API_BASE_URL}/v1/ranking/results`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ sessionId })
+  });
+  if (!response.ok) {
+    throw new Error(`getRankedResults failed: ${response.status}`);
+  }
+  return (await response.json()) as {
+    sessionId: string;
+    generatedAt: string;
+    results: RankedVenue[];
+  };
 }

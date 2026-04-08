@@ -24,6 +24,9 @@ export interface ParticipantRecord {
   locationDraftUpdatedAt?: string;
   locationConfirmedAt?: string;
   locationExpireAt?: string;
+  willingnessSplit?: "50_50" | "60_40" | "70_30";
+  preferenceTags?: Array<"coffee" | "cocktails" | "vintage_shops" | "dessert" | "quiet">;
+  rankingInputsUpdatedAt?: string;
 }
 
 export interface CreateSessionInput {

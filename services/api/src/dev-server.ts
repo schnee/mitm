@@ -1,9 +1,14 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { URL } from "node:url";
 import { LocationRepository } from "./modules/location/repository";
+import { GoogleMapsAdapter } from "./modules/ranking/provider/googleMapsAdapter";
+import { RankingRepository } from "./modules/ranking/repository";
+import { RankingService } from "./modules/ranking/service";
 import { SessionRepository } from "./modules/session/repository";
 import { confirmLocationHandler } from "./routes/location/confirmLocation";
 import { upsertLocationDraftHandler } from "./routes/location/upsertLocationDraft";
+import { getRankedResultsHandler } from "./routes/ranking/getRankedResults";
+import { upsertRankingInputsHandler } from "./routes/ranking/upsertRankingInputs";
 import { createSessionHandler } from "./routes/sessions/createSession";
 import { getSessionSnapshotHandler } from "./routes/sessions/getSessionSnapshot";
 import { joinSessionHandler } from "./routes/sessions/joinSession";
@@ -11,6 +16,8 @@ import { sessionEventsHandler } from "./routes/sessions/sessionEvents";
 
 const repository = new SessionRepository();
 const locationRepository = new LocationRepository(repository);
+const rankingRepository = new RankingRepository(repository);
+const rankingService = new RankingService(repository, rankingRepository, new GoogleMapsAdapter());
 
 const apiPort = Number(process.env.API_PORT ?? 8080);
 const appUrl = process.env.APP_URL ?? "http://localhost:3000";
@@ -148,6 +155,20 @@ const server = createServer(async (request, response) => {
   if (method === "POST" && url.pathname === "/v1/location/confirm") {
     const payload = await readJsonBody(request);
     const result = await confirmLocationHandler(payload, { repository: locationRepository });
+    sendJson(response, result.status, result.body);
+    return;
+  }
+
+  if (method === "POST" && url.pathname === "/v1/ranking/inputs") {
+    const payload = await readJsonBody(request);
+    const result = await upsertRankingInputsHandler(payload, { repository: rankingRepository });
+    sendJson(response, result.status, result.body);
+    return;
+  }
+
+  if (method === "POST" && url.pathname === "/v1/ranking/results") {
+    const payload = await readJsonBody(request);
+    const result = await getRankedResultsHandler(payload, { service: rankingService });
     sendJson(response, result.status, result.body);
     return;
   }
