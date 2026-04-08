@@ -20,11 +20,11 @@
 └───────────────┬────────────────────────────────────────────────────────────┘
                 │ HTTPS (REST/Server Actions) + WebSocket (presence/updates)
 ┌───────────────▼────────────────────────────────────────────────────────────┐
-│                           Application Layer (BFF)                           │
+│                    Application Layer (GCP API Boundary)                     │
 ├────────────────────────────────────────────────────────────────────────────┤
-│ Next.js App Router                                                          │
-│  - Route Handlers: session API, ranking API, confirm API                   │
-│  - Server Actions: simple form mutations                                   │
+│ Cloud Run API (Node.js/TypeScript)                                          │
+│  - REST endpoints: session API, ranking API, confirm API                   │
+│  - Session lifecycle/state machine enforcement                             │
 │  - Auth/session middleware                                                  │
 │  - Recommendation service (fairness scoring)                                │
 │  - Integration adapters (Places + Routing matrix)                           │
@@ -33,10 +33,10 @@
 ┌───────────────▼────────────────────────────────────────────────────────────┐
 │                               Data Layer                                    │
 ├────────────────────────────────────────────────────────────────────────────┤
-│ PostgreSQL (transactional data)                                            │
-│  - users, sessions, participants, preferences, candidates, shortlist, final │
-│  - ephemeral_location_shares (TTL cleanup)                                  │
-│ Realtime channel state (presence + lightweight event stream)                │
+│ Firestore (ephemeral session documents)                                     │
+│  - sessions, participants, preferences, candidates, shortlist, final         │
+│  - precise location fields with TTL auto-expiry policy                       │
+│ Cloud Logging (request/session lifecycle telemetry)                          │
 └───────────────┬────────────────────────────────────────────────────────────┘
                 │
 ┌───────────────▼────────────────────────────────────────────────────────────┐
@@ -51,13 +51,13 @@
 
 | Component | Responsibility | Talks To |
 |-----------|----------------|----------|
-| **Web Client (Next.js UI)** | Collect inputs, show ranked candidates, shortlist, confirmation | BFF APIs + Realtime channel |
-| **Session Service** | Create/join 2-person session; enforce session state machine | Postgres, Realtime |
-| **Location Consent + Capture Service** | Capture explicit consent and coarse/fine location payload | Postgres (ephemeral table), Realtime |
-| **Recommendation Engine** | Build candidate set, call matrix API, compute fairness + preference score | Places adapter, Routing adapter, Postgres |
-| **Shortlist/Decision Service** | Persist votes/shortlist and finalize one location | Postgres, Realtime |
-| **Policy/Access Layer** | Enforce per-session authorization and data isolation | Postgres RLS / auth context |
-| **Cleanup Worker (cron/job)** | Delete expired precise locations and stale sessions | Postgres |
+| **Web Client (Next.js UI on Cloudflare)** | Collect inputs, show ranked candidates, shortlist, confirmation | Cloud Run API |
+| **Session Service** | Create/join 2-person session; create canonical server session immediately on User 1 start; enforce session state machine | Firestore |
+| **Location Consent + Capture Service** | Capture explicit consent and coarse/fine location payload | Firestore (TTL-managed location fields) |
+| **Recommendation Engine** | Build candidate set, call matrix API, compute fairness + preference score | Places adapter, Routing adapter, Firestore |
+| **Shortlist/Decision Service** | Persist votes/shortlist and finalize one location | Firestore |
+| **Policy/Access Layer** | Enforce per-session authorization and data isolation | API auth context + Firestore rules/guards |
+| **TTL/Expiry Policy** | Auto-expire precise location/session documents after retention window | Firestore TTL |
 
 ## Recommended Project Structure
 
@@ -66,10 +66,7 @@ src/
 ├── app/                       # Next.js App Router pages + route handlers
 │   ├── (marketing)/
 │   ├── s/[sessionCode]/       # Session UX (join, negotiate, shortlist, confirm)
-│   └── api/
-│       ├── sessions/          # create/join/endpoints
-│       ├── recommendations/   # ranking endpoint
-│       └── decisions/         # shortlist + confirm endpoint
+│   └── api-client/            # typed client for Cloud Run API
 ├── modules/                   # Business domains (clean boundaries)
 │   ├── session/
 │   ├── participant/
@@ -80,9 +77,9 @@ src/
 │   ├── places/
 │   └── routing/
 ├── data/
-│   ├── db/                    # schema + queries + repository layer
-│   └── realtime/              # channel utilities + event contracts
-├── jobs/                      # TTL cleanup and maintenance jobs
+│   └── firestore/             # repositories, converters, lifecycle persistence
+├── services/
+│   └── api/                   # Cloud Run API service (session/ranking/decision)
 └── lib/                       # shared utilities (validation, logging, config)
 ```
 
@@ -90,8 +87,8 @@ src/
 
 - **`modules/` as primary boundary**: keeps business rules independent of framework and external APIs.
 - **`integrations/` as anti-corruption layer**: isolates provider-specific request/response quirks.
-- **`app/api/` as thin orchestration**: request parsing/auth in handlers, domain logic in modules.
-- **`jobs/` separate from request path**: retention and cleanup must not depend on user traffic.
+- **Cloud Run API as thin orchestration**: request parsing/auth in handlers, domain logic in modules.
+- **TTL policy, not app cron, for location retention**: expiry should not depend on user traffic.
 
 ## Architectural Patterns
 
@@ -172,16 +169,16 @@ Both UIs remain in sync without polling-heavy loops
 
 1. **Client never calls Places/Matrix APIs directly** (API keys and scoring logic stay server-side).
 2. **Modules call integrations via interfaces only** (no direct SDK calls in UI/routes).
-3. **Realtime carries coordination events, not full source of truth** (truth remains in Postgres).
+3. **Client sync signals are advisory, not full source of truth** (truth remains in Firestore session documents).
 
 ## Suggested Build Order (Roadmap Dependency Backbone)
 
 1. **Foundation: Session + Auth + Basic Data Model**
-   - Build: user/session/participant tables, create/join flow, route handler skeleton.
+   - Build: session/participant collections, create/join flow, Cloud Run API skeleton.
    - Why first: all later flows depend on identity + shared session context.
 
 2. **Location Consent + Ephemeral Storage**
-   - Build: consent UI, location capture endpoint, TTL fields + cleanup job.
+   - Build: consent UI, location capture endpoint, TTL fields + expiry policy.
    - Why second: recommendation and fairness are impossible without trusted input.
 
 3. **Provider Adapters (Places + Matrix) in Isolation**
@@ -204,14 +201,14 @@ Both UIs remain in sync without polling-heavy loops
 
 | Scale | Architecture Adjustments |
 |-------|--------------------------|
-| 0–1k users | Single app + single Postgres instance; aggressive caching not required |
-| 1k–100k users | Add read replicas, queue recommendation jobs, cache venue candidates by area/tags |
+| 0–1k users | Single Cloud Run service + Firestore; aggressive caching not required |
+| 1k–100k users | Tune Firestore indexes, queue recommendation jobs, cache venue candidates by area/tags |
 | 100k+ users | Split recommendation compute into separate worker service; shard hot session traffic |
 
 ### First Bottlenecks
 
 1. **External API latency/cost** (places + matrix calls) → mitigate with bounded candidate pool + caching.
-2. **Realtime fan-out in busy geographies** → partition channels by session and tighten payload size.
+2. **Hot document contention in busy sessions** → keep writes granular and avoid unnecessary global counters.
 
 ## Anti-Patterns
 
@@ -235,21 +232,22 @@ Both UIs remain in sync without polling-heavy loops
 |---------|---------------------|-------|
 | Places API | Server-side adapter with normalized `PlaceCandidate` DTO | Keep provider response out of domain layer |
 | Routing Matrix API | Server-side adapter returning normalized duration matrix | Matrix values are directional/asymmetric; score accordingly |
-| Realtime backend | Authorized per-session channels | Events for sync; DB remains source of truth |
+| Firestore | Session-scoped document model with TTL policies | Primary source of truth for create/join lifecycle |
 
 ### Internal Boundaries
 
 | Boundary | Communication | Notes |
 |----------|---------------|-------|
-| `app/api` ↔ `modules/*` | Function calls via typed service interfaces | Keep handlers thin |
+| `services/api` ↔ `modules/*` | Function calls via typed service interfaces | Keep handlers thin |
 | `modules/recommendation` ↔ `integrations/*` | Port/adapter interface | Enables provider swap |
-| `modules/*` ↔ `data/db` | Repository methods | Centralizes persistence policy and transactions |
+| `modules/*` ↔ `data/firestore` | Repository methods | Centralizes persistence policy and lifecycle transitions |
 
 ## Sources
 
 - Next.js App Router Route Handlers and Server Actions docs (official): https://nextjs.org/docs/app/getting-started/route-handlers, https://nextjs.org/docs/app/guides/forms *(HIGH)*
-- Supabase Realtime authorization + RLS examples (official): https://supabase.com/docs/guides/realtime/authorization *(HIGH)*
-- Mapbox Matrix API + Geocoding API docs (official): https://docs.mapbox.com/api/navigation/matrix/, https://docs.mapbox.com/api/search/geocoding/ *(HIGH)*
+- Cloud Run service architecture docs (official): https://cloud.google.com/run/docs/architecture *(HIGH)*
+- Firestore TTL policies docs (official): https://cloud.google.com/firestore/docs/ttl *(HIGH)*
+- Google Maps Places + Routes API docs (official): https://developers.google.com/maps/documentation/places/web-service, https://developers.google.com/maps/documentation/routes *(HIGH)*
 - Project constraints/context: `/Users/Brent.Schneeman/projects/tworavens/mitm/.planning/PROJECT.md` *(HIGH)*
 
 ---

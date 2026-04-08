@@ -16,8 +16,8 @@ Turn a slow, awkward "where should we meet?" negotiation into a fast and fair de
 
 ### Active
 
-- [ ] Two-person session flow where one person creates and the other joins
-- [ ] Location capture for both participants with clear consent
+- [x] Two-person session flow where one person creates and the other joins
+- [x] Location capture for both participants with clear consent
 - [ ] Travel willingness input with asymmetric split options (50/50, 60/40, 70/30)
 - [ ] Preference tag selection (for example coffee, cocktails, vintage shops)
 - [ ] Ranked venue recommendations based on fairness, travel burden, and preferences
@@ -41,8 +41,9 @@ Turn a slow, awkward "where should we meet?" negotiation into a fast and fair de
 
 - **Platform**: Web-first responsive experience for mobile and desktop — optimize build speed and shared code.
 - **Scope**: Two participants only for v1 — keep fairness model and UI simple.
-- **Privacy**: Minimize precise location retention — reduce trust and compliance risk early.
+- **Privacy**: Minimize precise location retention with session TTL auto-expiry — reduce trust and compliance risk early.
 - **Integration**: One places provider and one routing provider initially — contain cost and reliability variance.
+- **Deployment**: Frontend deploys to Cloudflare and backend deploys to Google Cloud — keep edge delivery and backend service concerns clearly separated.
 - **Execution**: High-leverage MVP before expansion — prioritize proof of core value over breadth.
 
 ## Key Decisions
@@ -53,6 +54,9 @@ Turn a slow, awkward "where should we meet?" negotiation into a fast and fair de
 | Use percentage-based willingness split (for example 70/30) | Mirrors real negotiation language and user intent | - Pending |
 | Launch with tag-based preferences before deeper personalization | Fast to implement while still improving recommendation quality | - Pending |
 | Build mobile web first, then evaluate native apps | Enables faster validation and lower initial complexity | - Pending |
+| Deploy frontend on Cloudflare | Fast global edge delivery aligns with web-first MVP and mobile responsiveness goals | Decided 2026-04-08 |
+| Deploy backend on Google Cloud | Supports managed backend services and future scaling flexibility for session/realtime/ranking workloads | Decided 2026-04-08 |
+| Use session-first ephemeral persistence (Alternative 3) | Creating a server session at User 1 start reduces flow fragility while TTL limits sensitive retention | Decided 2026-04-08 |
 
 ## Evolution
 
@@ -72,4 +76,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-08 after initialization*
+*Last updated: 2026-04-08 after Phase 1 execution completion and human checkpoint approval*

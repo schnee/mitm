@@ -79,12 +79,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SESS-01 | Phase 1 | Pending |
-| SESS-02 | Phase 1 | Pending |
-| SESS-03 | Phase 1 | Pending |
-| LOCT-01 | Phase 1 | Pending |
-| LOCT-02 | Phase 1 | Pending |
-| LOCT-03 | Phase 1 | Pending |
+| SESS-01 | Phase 1 | Complete |
+| SESS-02 | Phase 1 | Complete |
+| SESS-03 | Phase 1 | Complete |
+| LOCT-01 | Phase 1 | Complete |
+| LOCT-02 | Phase 1 | Complete |
+| LOCT-03 | Phase 1 | Complete |
 | FAIR-01 | Phase 2 | Pending |
 | PREF-01 | Phase 2 | Pending |
 | PREF-02 | Phase 2 | Pending |
