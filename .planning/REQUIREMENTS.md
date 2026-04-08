@@ -79,28 +79,28 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SESS-01 | TBD | Pending |
-| SESS-02 | TBD | Pending |
-| SESS-03 | TBD | Pending |
-| LOCT-01 | TBD | Pending |
-| LOCT-02 | TBD | Pending |
-| LOCT-03 | TBD | Pending |
-| FAIR-01 | TBD | Pending |
-| PREF-01 | TBD | Pending |
-| PREF-02 | TBD | Pending |
-| RANK-01 | TBD | Pending |
-| RANK-02 | TBD | Pending |
-| RANK-03 | TBD | Pending |
-| DECS-01 | TBD | Pending |
-| DECS-02 | TBD | Pending |
-| DECS-03 | TBD | Pending |
-| PLAT-01 | TBD | Pending |
-| PLAT-02 | TBD | Pending |
+| SESS-01 | Phase 1 | Pending |
+| SESS-02 | Phase 1 | Pending |
+| SESS-03 | Phase 1 | Pending |
+| LOCT-01 | Phase 1 | Pending |
+| LOCT-02 | Phase 1 | Pending |
+| LOCT-03 | Phase 1 | Pending |
+| FAIR-01 | Phase 2 | Pending |
+| PREF-01 | Phase 2 | Pending |
+| PREF-02 | Phase 2 | Pending |
+| RANK-01 | Phase 2 | Pending |
+| RANK-02 | Phase 2 | Pending |
+| RANK-03 | Phase 2 | Pending |
+| DECS-01 | Phase 3 | Pending |
+| DECS-02 | Phase 3 | Pending |
+| DECS-03 | Phase 3 | Pending |
+| PLAT-01 | Phase 4 | Pending |
+| PLAT-02 | Phase 4 | Pending |
 
 **Coverage:**
 - v1 requirements: 17 total
-- Mapped to phases: 0
-- Unmapped: 17 ⚠
+- Mapped to phases: 17
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-04-08*
