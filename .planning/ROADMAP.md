@@ -89,7 +89,11 @@ Rationale: this order follows hard product dependencies and minimizes rework; ea
   2. Invitee can join from link without account creation and both participants see the same live session state.
   3. Each participant can provide location via geolocation or typed address and proceed without dead ends.
   4. Each participant explicitly confirms the location used for later ranking.
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 01-01-PLAN.md — Build session create/join contracts, persistence, and no-account join flow.
+- [ ] 01-02-PLAN.md — Add canonical + realtime synchronized session state for both participants.
+- [ ] 01-03-PLAN.md — Implement location capture fallback and explicit confirmation gate.
 **UI hint**: yes
 
 ### Phase 2: Fair Ranking & Recommendation Core
