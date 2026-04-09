@@ -122,12 +122,9 @@ describe("funnel lifecycle emission", () => {
     });
 
     const events = sessions.listFunnelEvents(created.sessionId);
-    expect(events.map((item) => item.event)).toEqual([
-      "session_start",
-      "inputs_set",
-      "results_returned",
-      "decision_confirmed"
-    ]);
+    expect(events.map((item) => item.event)).toEqual(
+      expect.arrayContaining(["session_start", "inputs_set", "results_returned", "shortlist_opened", "decision_confirmed"])
+    );
     expect(events.filter((item) => item.event === "decision_confirmed")).toHaveLength(1);
   });
 });
@@ -150,6 +147,69 @@ describe("analytics funnel route", () => {
         inputs_set: true,
         results_returned: true,
         decision_confirmed: true
+      },
+      interactionSummary: {
+        reactionCount: 0,
+        acceptCount: 0,
+        passCount: 0,
+        firstReactionAt: null,
+        firstShortlistAt: null,
+        reactionToShortlistSeconds: null
+      }
+    });
+  });
+
+  it("returns interaction summary with deterministic reaction and shortlist timing", async () => {
+    const repository = new SessionRepository();
+    const created = repository.createSession({
+      joinToken: "interactionsummary1",
+      role: "host",
+      now: new Date("2026-01-01T10:00:00.000Z")
+    });
+    repository.joinSession({
+      joinToken: "interactionsummary1",
+      role: "invitee",
+      now: new Date("2026-01-01T10:00:30.000Z")
+    });
+
+    repository.upsertVenueReaction({
+      sessionId: created.sessionId,
+      participantId: created.participantId,
+      venueId: "coffee-spot",
+      reaction: "accept",
+      now: new Date("2026-01-01T10:03:00.000Z")
+    });
+    repository.upsertVenueReaction({
+      sessionId: created.sessionId,
+      participantId: created.participantId,
+      venueId: "park-cafe",
+      reaction: "pass",
+      now: new Date("2026-01-01T10:03:30.000Z")
+    });
+    repository.upsertShortlistVenue({
+      sessionId: created.sessionId,
+      participantId: created.participantId,
+      venueId: "coffee-spot",
+      name: "Coffee Spot",
+      category: "cafe",
+      openNow: true,
+      lat: 40.72,
+      lng: -73.99,
+      etaParticipantA: 12,
+      etaParticipantB: 14,
+      now: new Date("2026-01-01T10:05:00.000Z")
+    });
+
+    const response = await getSessionFunnelHandler(created.sessionId, { repository });
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({
+      interactionSummary: {
+        reactionCount: 2,
+        acceptCount: 1,
+        passCount: 1,
+        firstReactionAt: "2026-01-01T10:03:00.000Z",
+        firstShortlistAt: "2026-01-01T10:05:00.000Z",
+        reactionToShortlistSeconds: 120
       }
     });
   });

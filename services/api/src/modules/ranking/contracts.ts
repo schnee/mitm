@@ -35,4 +35,8 @@ export interface RankedVenue {
   openNow: boolean | null;
   etaParticipantA: number;
   etaParticipantB: number;
+  fairnessScore: number;
+  preferenceScore: number;
+  totalScore: number;
+  fairnessDeltaMinutes: number;
 }

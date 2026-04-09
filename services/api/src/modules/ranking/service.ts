@@ -76,7 +76,11 @@ export class RankingService {
       category: candidate.category,
       openNow: candidate.openNow,
       etaParticipantA: candidate.etaParticipantA,
-      etaParticipantB: candidate.etaParticipantB
+      etaParticipantB: candidate.etaParticipantB,
+      fairnessScore: candidate.fairnessScore,
+      preferenceScore: candidate.preferenceScore,
+      totalScore: candidate.totalScore,
+      fairnessDeltaMinutes: Math.abs(candidate.etaParticipantA - candidate.etaParticipantB)
     }));
 
     const session = this.sessionRepository.getSessionById(sessionId);

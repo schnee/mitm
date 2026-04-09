@@ -14,7 +14,7 @@ This roadmap delivers the MVP in dependency order: establish two-person session 
 - [x] **Phase 2: Fair Ranking & Recommendation Core** - Generate and rank venue candidates by travel-time fairness and preference relevance.
 - [x] **Phase 3: Shared Shortlist & Confirmation** - Turn ranked options into one mutually confirmed destination.
 - [x] **Phase 4: Launch Readiness & Stabilization** - Validate cross-browser funnel reliability and instrument decision funnel analytics.
-- [ ] **Phase 5: UX Refresh & Decision Confidence** - Improve clarity, trust, and speed of choice through a focused post-launch UX refresh.
+- [x] **Phase 5: UX Refresh & Decision Confidence** - Improve clarity, trust, and speed of choice through a focused post-launch UX refresh.
 
 ## Dependency Map and Sequencing Rationale
 
@@ -231,9 +231,9 @@ Plans:
 - Introducing native mobile app experiences or account-based personalization.
 **Plans**: 3 plans
 Plans:
-- [ ] 05-01-PLAN.md — Redesign ranking list and venue details with explainability-first information hierarchy.
-- [ ] 05-02-PLAN.md — Add accept/pass reaction interactions with conflict-safe shared-state updates.
-- [ ] 05-03-PLAN.md — Run UX validation pass and instrument new interaction telemetry for optimization loops.
+- [x] 05-01-PLAN.md — Redesign ranking list and venue details with explainability-first information hierarchy.
+- [x] 05-02-PLAN.md — Add accept/pass reaction interactions with conflict-safe shared-state updates.
+- [x] 05-03-PLAN.md — Run UX validation pass and instrument new interaction telemetry for optimization loops.
 **UI hint**: yes
 
 ## Progress
@@ -244,4 +244,4 @@ Plans:
 | 2. Fair Ranking & Recommendation Core | 3/3 | Complete | 02-01, 02-02, 02-03 |
 | 3. Shared Shortlist & Confirmation | 3/3 | Complete | 03-01, 03-02, 03-03 |
 | 4. Launch Readiness & Stabilization | 3/3 | Complete | 04-01, 04-02, 04-03 |
-| 5. UX Refresh & Decision Confidence | 0/3 | Planned | - |
+| 5. UX Refresh & Decision Confidence | 3/3 | Complete | 05-01, 05-02, 05-03 |

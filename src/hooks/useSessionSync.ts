@@ -17,6 +17,9 @@ function mergeEvent(snapshot: SessionSnapshotResponse, event: SessionEventRespon
     const nextShortlist = Array.isArray(event.diff?.shortlist)
       ? (event.diff.shortlist as SessionSnapshotResponse["shortlist"])
       : snapshot.shortlist;
+    const nextReactions = Array.isArray(event.diff?.reactions)
+      ? (event.diff.reactions as SessionSnapshotResponse["reactions"])
+      : snapshot.reactions;
     const hasConfirmedPlace = Object.prototype.hasOwnProperty.call(event.diff ?? {}, "confirmedPlace");
     const nextConfirmedPlace = hasConfirmedPlace
       ? (event.diff?.confirmedPlace as SessionSnapshotResponse["confirmedPlace"])
@@ -30,6 +33,7 @@ function mergeEvent(snapshot: SessionSnapshotResponse, event: SessionEventRespon
       ...snapshot,
       status: nextStatus,
       shortlist: nextShortlist,
+      reactions: nextReactions,
       confirmedPlace: nextConfirmedPlace,
       inputsReady: nextInputsReady,
       updatedAt: event.updatedAt

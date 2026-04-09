@@ -8,6 +8,9 @@ import type {
   JoinSessionResult,
   ParticipantRecord,
   ShortlistVenue,
+  VenueReaction,
+  VenueReactionSummary,
+  VenueReactionType,
   SessionParticipantRole,
   SessionRecord,
   SessionSnapshot,
@@ -51,6 +54,7 @@ export class SessionRepository {
   private eventsBySessionId = new Map<string, SessionEvent[]>();
   private funnelEventsBySessionId = new Map<string, FunnelEventRecord[]>();
   private shortlistBySessionId = new Map<string, ShortlistVenue[]>();
+  private reactionsBySessionId = new Map<string, VenueReaction[]>();
   private confirmedPlaceBySessionId = new Map<string, ConfirmedPlace | null>();
 
   createSession(params: CreateSessionParams): CreateSessionResult {
@@ -80,6 +84,7 @@ export class SessionRepository {
     this.sessionIdByToken.set(params.joinToken, sessionId);
     this.participantsBySessionId.set(sessionId, [hostParticipant]);
     this.shortlistBySessionId.set(sessionId, []);
+    this.reactionsBySessionId.set(sessionId, []);
     this.confirmedPlaceBySessionId.set(sessionId, null);
     this.eventsBySessionId.set(sessionId, [
       {
@@ -90,7 +95,7 @@ export class SessionRepository {
       }
     ]);
     this.funnelEventsBySessionId.set(sessionId, []);
-    this.recordFunnelEvent(sessionId, "session_start", { role: params.role });
+    this.recordFunnelEvent(sessionId, "session_start", { role: params.role }, now);
 
     return {
       sessionId,
@@ -285,6 +290,7 @@ export class SessionRepository {
 
     const addedAt = (params.now ?? new Date()).toISOString();
     const shortlist = this.shortlistBySessionId.get(params.sessionId) ?? [];
+    const wasEmpty = shortlist.length === 0;
     const nextEntry: ShortlistVenue = {
       venueId: params.venueId,
       name: params.name,
@@ -306,6 +312,25 @@ export class SessionRepository {
     }
 
     this.shortlistBySessionId.set(params.sessionId, shortlist);
+
+    if (wasEmpty) {
+      this.recordFunnelEvent(params.sessionId, "shortlist_opened", { venueId: params.venueId }, new Date(addedAt));
+    }
+
+    const firstReaction = this.getFirstReactionForVenue(params.sessionId, params.venueId);
+    if (firstReaction && !this.hasReactionToShortlistEventForVenue(params.sessionId, params.venueId)) {
+      const reactionToShortlistSeconds = Math.max(
+        0,
+        Math.round((new Date(addedAt).getTime() - new Date(firstReaction.reactedAt).getTime()) / 1000)
+      );
+      this.recordFunnelEvent(
+        params.sessionId,
+        "reaction_to_shortlist",
+        { venueId: params.venueId, reactionToShortlistSeconds },
+        new Date(addedAt)
+      );
+    }
+
     this.pushEvent({
       eventType: "session_updated",
       sessionId: params.sessionId,
@@ -316,6 +341,76 @@ export class SessionRepository {
     });
 
     return shortlist;
+  }
+
+  upsertVenueReaction(params: {
+    sessionId: string;
+    venueId: string;
+    participantId: string;
+    reaction: VenueReactionType;
+    now?: Date;
+  }): VenueReactionSummary {
+    const participant = this.getParticipant(params.sessionId, params.participantId);
+    if (!participant) {
+      throw new SessionDomainError("SESSION_NOT_FOUND", "Participant not found in session");
+    }
+
+    const reactedAt = (params.now ?? new Date()).toISOString();
+    const reactions = this.reactionsBySessionId.get(params.sessionId) ?? [];
+    const existingIndex = reactions.findIndex(
+      (item) => item.venueId === params.venueId && item.participantId === params.participantId
+    );
+
+    const nextReaction: VenueReaction = {
+      sessionId: params.sessionId,
+      venueId: params.venueId,
+      participantId: params.participantId,
+      reaction: params.reaction,
+      reactedAt
+    };
+
+    if (existingIndex >= 0) {
+      reactions[existingIndex] = nextReaction;
+    } else {
+      reactions.push(nextReaction);
+    }
+
+    this.reactionsBySessionId.set(params.sessionId, reactions);
+    this.recordFunnelEvent(
+      params.sessionId,
+      "result_reacted",
+      { venueId: params.venueId, reaction: params.reaction },
+      new Date(reactedAt)
+    );
+
+    const isShortlisted = (this.shortlistBySessionId.get(params.sessionId) ?? []).some(
+      (item) => item.venueId === params.venueId
+    );
+    const firstReaction = this.getFirstReactionForVenue(params.sessionId, params.venueId);
+    if (isShortlisted && firstReaction && !this.hasReactionToShortlistEventForVenue(params.sessionId, params.venueId)) {
+      const reactionToShortlistSeconds = Math.max(
+        0,
+        Math.round((new Date(reactedAt).getTime() - new Date(firstReaction.reactedAt).getTime()) / 1000)
+      );
+      this.recordFunnelEvent(
+        params.sessionId,
+        "reaction_to_shortlist",
+        { venueId: params.venueId, reactionToShortlistSeconds },
+        new Date(reactedAt)
+      );
+    }
+
+    const aggregate = this.getVenueReactionSummary(params.sessionId, params.venueId);
+    this.pushEvent({
+      eventType: "session_updated",
+      sessionId: params.sessionId,
+      updatedAt: reactedAt,
+      participantId: participant.participantId,
+      participantRole: participant.role,
+      diff: { reactions: this.getReactionSummaries(params.sessionId) }
+    });
+
+    return aggregate;
   }
 
   confirmVenue(params: {
@@ -374,7 +469,8 @@ export class SessionRepository {
   recordFunnelEvent(
     sessionId: string,
     event: FunnelEventName,
-    metadata?: Record<string, string | number | boolean | null>
+    metadata?: Record<string, string | number | boolean | null>,
+    occurredAt?: Date
   ): void {
     const session = this.getSessionById(sessionId);
     if (!session) {
@@ -389,7 +485,7 @@ export class SessionRepository {
     events.push({
       sessionId,
       event,
-      occurredAt: new Date().toISOString(),
+      occurredAt: (occurredAt ?? new Date()).toISOString(),
       ...(metadata ? { metadata } : {})
     });
     this.funnelEventsBySessionId.set(sessionId, events);
@@ -424,6 +520,7 @@ export class SessionRepository {
       participants,
       inputsReady: this.areBothLocationsConfirmed(sessionId),
       shortlist: (this.shortlistBySessionId.get(sessionId) ?? []).slice(),
+      reactions: this.getReactionSummaries(sessionId),
       confirmedPlace: this.confirmedPlaceBySessionId.get(sessionId) ?? null
     };
   }
@@ -456,6 +553,54 @@ export class SessionRepository {
     this.eventsBySessionId.set(overrides.sessionId, []);
     this.funnelEventsBySessionId.set(overrides.sessionId, []);
     this.shortlistBySessionId.set(overrides.sessionId, []);
+    this.reactionsBySessionId.set(overrides.sessionId, []);
     this.confirmedPlaceBySessionId.set(overrides.sessionId, null);
+  }
+
+  private getReactionSummaries(sessionId: string): VenueReactionSummary[] {
+    const reactions = this.reactionsBySessionId.get(sessionId) ?? [];
+    const byVenueId = new Map<string, VenueReactionSummary>();
+
+    for (const reaction of reactions) {
+      const current = byVenueId.get(reaction.venueId) ?? {
+        venueId: reaction.venueId,
+        acceptCount: 0,
+        passCount: 0,
+        reactionsByParticipant: {}
+      };
+      current.reactionsByParticipant[reaction.participantId] = reaction.reaction;
+      byVenueId.set(reaction.venueId, current);
+    }
+
+    for (const summary of byVenueId.values()) {
+      const values = Object.values(summary.reactionsByParticipant);
+      summary.acceptCount = values.filter((value) => value === "accept").length;
+      summary.passCount = values.filter((value) => value === "pass").length;
+    }
+
+    return Array.from(byVenueId.values()).sort((a, b) => a.venueId.localeCompare(b.venueId));
+  }
+
+  private getVenueReactionSummary(sessionId: string, venueId: string): VenueReactionSummary {
+    return (
+      this.getReactionSummaries(sessionId).find((item) => item.venueId === venueId) ?? {
+        venueId,
+        acceptCount: 0,
+        passCount: 0,
+        reactionsByParticipant: {}
+      }
+    );
+  }
+
+  private getFirstReactionForVenue(sessionId: string, venueId: string): VenueReaction | undefined {
+    return (this.reactionsBySessionId.get(sessionId) ?? [])
+      .filter((item) => item.venueId === venueId)
+      .sort((a, b) => a.reactedAt.localeCompare(b.reactedAt))[0];
+  }
+
+  private hasReactionToShortlistEventForVenue(sessionId: string, venueId: string): boolean {
+    return (this.funnelEventsBySessionId.get(sessionId) ?? []).some(
+      (item) => item.event === "reaction_to_shortlist" && item.metadata?.venueId === venueId
+    );
   }
 }

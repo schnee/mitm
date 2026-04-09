@@ -8,6 +8,7 @@ import { SessionRepository } from "./modules/session/repository";
 import { getSessionFunnelHandler } from "./routes/analytics/getSessionFunnel";
 import { confirmVenueHandler } from "./routes/decision/confirmVenue";
 import { upsertShortlistVenueHandler } from "./routes/decision/upsertShortlistVenue";
+import { upsertVenueReactionHandler } from "./routes/decision/upsertVenueReaction";
 import { confirmLocationHandler } from "./routes/location/confirmLocation";
 import { upsertLocationDraftHandler } from "./routes/location/upsertLocationDraft";
 import { getRankedResultsHandler } from "./routes/ranking/getRankedResults";
@@ -187,6 +188,13 @@ const server = createServer(async (request, response) => {
   if (method === "POST" && url.pathname === "/v1/decision/shortlist") {
     const payload = await readJsonBody(request);
     const result = await upsertShortlistVenueHandler(payload, { repository });
+    sendJson(response, result.status, result.body);
+    return;
+  }
+
+  if (method === "POST" && url.pathname === "/v1/decision/reaction") {
+    const payload = await readJsonBody(request);
+    const result = await upsertVenueReactionHandler(payload, { repository });
     sendJson(response, result.status, result.body);
     return;
   }

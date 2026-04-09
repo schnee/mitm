@@ -13,6 +13,7 @@ test("shows ETA, category, and open status", async ({ page }) => {
         updatedAt: new Date().toISOString(),
         inputsReady: true,
         shortlist: [],
+        reactions: [],
         confirmedPlace: null,
         participants: [
           {
@@ -68,7 +69,11 @@ test("shows ETA, category, and open status", async ({ page }) => {
             category: "cafe",
             openNow: true,
             etaParticipantA: 12,
-            etaParticipantB: 14
+            etaParticipantB: 14,
+            fairnessScore: 0.93,
+            preferenceScore: 0.9,
+            totalScore: 0.92,
+            fairnessDeltaMinutes: 2
           }
         ]
       })

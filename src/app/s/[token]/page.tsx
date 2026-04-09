@@ -9,6 +9,9 @@ import {
   type ConfirmedPlace,
   type RankedVenue,
   type ShortlistVenue,
+  type VenueReactionSummary,
+  type VenueReactionType,
+  upsertVenueReaction,
   upsertShortlistVenue
 } from "../../../lib/api/session-client";
 import { useSessionSync } from "../../../hooks/useSessionSync";
@@ -33,6 +36,64 @@ interface HostSessionContext {
   participantId: string;
 }
 
+function applyOptimisticReaction(
+  reactions: VenueReactionSummary[],
+  input: { venueId: string; participantId: string; reaction: VenueReactionType }
+): VenueReactionSummary[] {
+  const next = reactions.map((item) => ({ ...item, reactionsByParticipant: { ...item.reactionsByParticipant } }));
+  const existing = next.find((item) => item.venueId === input.venueId);
+  const target =
+    existing ??
+    (() => {
+      const created: VenueReactionSummary = {
+        venueId: input.venueId,
+        acceptCount: 0,
+        passCount: 0,
+        reactionsByParticipant: {}
+      };
+      next.push(created);
+      return created;
+    })();
+
+  target.reactionsByParticipant[input.participantId] = input.reaction;
+  const values = Object.values(target.reactionsByParticipant);
+  target.acceptCount = values.filter((value) => value === "accept").length;
+  target.passCount = values.filter((value) => value === "pass").length;
+
+  return next;
+}
+
+function buildReactionStatusByVenueId(
+  reactions: VenueReactionSummary[],
+  participantId: string | null,
+  partnerParticipantId: string | null
+): Record<string, string> {
+  if (!participantId) {
+    return {};
+  }
+
+  return reactions.reduce<Record<string, string>>((acc, item) => {
+    const myReaction = item.reactionsByParticipant[participantId];
+    const partnerReaction = partnerParticipantId ? item.reactionsByParticipant[partnerParticipantId] : undefined;
+
+    if (myReaction && partnerReaction) {
+      acc[item.venueId] = `You ${myReaction}ed. Partner ${partnerReaction}ed.`;
+      return acc;
+    }
+
+    if (myReaction) {
+      acc[item.venueId] = `You ${myReaction}ed.`;
+      return acc;
+    }
+
+    if (partnerReaction) {
+      acc[item.venueId] = `Partner ${partnerReaction}ed.`;
+    }
+
+    return acc;
+  }, {});
+}
+
 export default function JoinPage({ params }: JoinPageProps) {
   const [state, setState] = useState<JoinState>("joining");
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -43,6 +104,8 @@ export default function JoinPage({ params }: JoinPageProps) {
   const [rankingStatus, setRankingStatus] = useState("Waiting for ranking input.");
   const [rankedResults, setRankedResults] = useState<RankedVenue[]>([]);
   const [localShortlist, setLocalShortlist] = useState<ShortlistVenue[]>([]);
+  const [localReactions, setLocalReactions] = useState<VenueReactionSummary[]>([]);
+  const [reactionPendingVenueIds, setReactionPendingVenueIds] = useState<string[]>([]);
   const [localConfirmedPlace, setLocalConfirmedPlace] = useState<ConfirmedPlace | null>(null);
   const [decisionStatus, setDecisionStatus] = useState("Add a result to shortlist to begin deciding.");
   const { token } = use(params);
@@ -140,6 +203,10 @@ export default function JoinPage({ params }: JoinPageProps) {
       ? (sync.snapshot?.shortlist ?? localShortlist)
       : localShortlist;
   const confirmedPlace = sync.snapshot?.confirmedPlace ?? localConfirmedPlace;
+  const reactions = sync.snapshot?.reactions ?? localReactions;
+  const partnerParticipantId =
+    sync.snapshot?.participants.find((item) => item.participantId !== participantId)?.participantId ?? null;
+  const reactionStatusByVenueId = buildReactionStatusByVenueId(reactions, participantId, partnerParticipantId);
 
   const addToShortlist = async (venue: RankedVenue) => {
     if (!sessionId || !participantId) {
@@ -177,6 +244,39 @@ export default function JoinPage({ params }: JoinPageProps) {
       setDecisionStatus("Place confirmed.");
     } catch {
       setDecisionStatus("This session already has a different confirmed place.");
+    }
+  };
+
+  const reactToVenue = async (venue: RankedVenue, reaction: VenueReactionType) => {
+    if (!sessionId || !participantId) {
+      return;
+    }
+
+    setReactionPendingVenueIds((current) => Array.from(new Set([...current, venue.venueId])));
+    setLocalReactions((current) =>
+      applyOptimisticReaction(current.length > 0 ? current : reactions, {
+        venueId: venue.venueId,
+        participantId,
+        reaction
+      })
+    );
+
+    try {
+      const response = await upsertVenueReaction({
+        sessionId,
+        venueId: venue.venueId,
+        participantId,
+        reaction
+      });
+      setLocalReactions((current) => {
+        const remaining = current.filter((item) => item.venueId !== response.reaction.venueId);
+        return [...remaining, response.reaction];
+      });
+      setDecisionStatus(`You ${reaction}ed ${venue.name}.`);
+    } catch {
+      setDecisionStatus("Unable to save your reaction right now.");
+    } finally {
+      setReactionPendingVenueIds((current) => current.filter((item) => item !== venue.venueId));
     }
   };
 
@@ -230,6 +330,13 @@ export default function JoinPage({ params }: JoinPageProps) {
                   void addToShortlist(venue);
                 }}
                 shortlistVenueIds={shortlist.map((item) => item.venueId)}
+                reactions={reactions}
+                participantId={participantId ?? undefined}
+                onReact={(venue, reaction) => {
+                  void reactToVenue(venue, reaction);
+                }}
+                reactionPendingVenueIds={reactionPendingVenueIds}
+                reactionStatusByVenueId={reactionStatusByVenueId}
               />
               <p>{decisionStatus}</p>
               <ShortlistPanel

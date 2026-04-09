@@ -18,3 +18,10 @@ export const confirmVenueSchema = z.object({
   participantId: z.string().min(1),
   venueId: z.string().min(1)
 });
+
+export const venueReactionSchema = z.object({
+  sessionId: z.string().min(1),
+  venueId: z.string().min(1),
+  participantId: z.string().min(1),
+  reaction: z.enum(["accept", "pass"])
+});

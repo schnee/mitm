@@ -2,6 +2,12 @@ import { expect, test } from "@playwright/test";
 
 test("completes full funnel and validates telemetry completeness", async ({ page }) => {
   const appUrl = process.env.E2E_APP_URL ?? "http://localhost:3000";
+  let reactionState = {
+    venueId: "coffee-spot",
+    acceptCount: 0,
+    passCount: 0,
+    reactionsByParticipant: {} as Record<string, "accept" | "pass">
+  };
 
   await page.route("**/v1/sessions/demo-session", async (route) => {
     await route.fulfill({
@@ -13,6 +19,7 @@ test("completes full funnel and validates telemetry completeness", async ({ page
         updatedAt: new Date().toISOString(),
         inputsReady: true,
         shortlist: [],
+        reactions: [],
         confirmedPlace: null,
         participants: [
           {
@@ -68,9 +75,36 @@ test("completes full funnel and validates telemetry completeness", async ({ page
             lat: 40.72,
             lng: -73.99,
             etaParticipantA: 12,
-            etaParticipantB: 14
+            etaParticipantB: 14,
+            fairnessScore: 0.93,
+            preferenceScore: 0.9,
+            totalScore: 0.92,
+            fairnessDeltaMinutes: 2
           }
         ]
+      })
+    });
+  });
+
+  await page.route("**/v1/decision/reaction", async (route) => {
+    const requestBody = route.request().postDataJSON() as {
+      participantId: string;
+      reaction: "accept" | "pass";
+      venueId: string;
+    };
+    reactionState = {
+      venueId: requestBody.venueId,
+      acceptCount: requestBody.reaction === "accept" ? 1 : 0,
+      passCount: requestBody.reaction === "pass" ? 1 : 0,
+      reactionsByParticipant: {
+        [requestBody.participantId]: requestBody.reaction
+      }
+    };
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        reaction: reactionState
       })
     });
   });
@@ -134,6 +168,14 @@ test("completes full funnel and validates telemetry completeness", async ({ page
           inputs_set: true,
           results_returned: true,
           decision_confirmed: true
+        },
+        interactionSummary: {
+          reactionCount: 2,
+          acceptCount: 1,
+          passCount: 1,
+          firstReactionAt: "2026-01-01T10:09:30.000Z",
+          firstShortlistAt: "2026-01-01T10:10:00.000Z",
+          reactionToShortlistSeconds: 30
         }
       })
     });
@@ -143,6 +185,11 @@ test("completes full funnel and validates telemetry completeness", async ({ page
 
   await page.getByRole("button", { name: "Save ranking inputs" }).click();
   await page.getByRole("button", { name: "Run ranking" }).click();
+  await expect(page.getByText("Fairness delta: 2 min")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Accept" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Pass" })).toBeVisible();
+  await page.getByRole("button", { name: "Accept" }).click();
+  await page.getByRole("button", { name: "Pass" }).click();
   await page.getByRole("button", { name: "Add to shortlist" }).click();
   await page.getByRole("button", { name: "Confirm this place" }).click();
 
@@ -157,6 +204,14 @@ test("completes full funnel and validates telemetry completeness", async ({ page
         results_returned: boolean;
         decision_confirmed: boolean;
       };
+      interactionSummary: {
+        reactionCount: number;
+        acceptCount: number;
+        passCount: number;
+        firstReactionAt: string | null;
+        firstShortlistAt: string | null;
+        reactionToShortlistSeconds: number | null;
+      };
     };
   });
 
@@ -165,5 +220,10 @@ test("completes full funnel and validates telemetry completeness", async ({ page
     inputs_set: true,
     results_returned: true,
     decision_confirmed: true
+  });
+  expect(funnelPayload.interactionSummary).toMatchObject({
+    reactionCount: 2,
+    acceptCount: 1,
+    passCount: 1
   });
 });
