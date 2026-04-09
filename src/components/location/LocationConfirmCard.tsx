@@ -1,20 +1,28 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { confirmLocation } from "../../lib/api/session-client";
 
 export function LocationConfirmCard({
   sessionId,
   participantId,
   draftSaved,
+  inputsReady,
   onConfirmed
 }: {
   sessionId: string;
   participantId: string;
   draftSaved: boolean;
+  inputsReady: boolean;
   onConfirmed: (confirmedAt: string) => void;
 }) {
   const [status, setStatus] = useState("Awaiting confirmation");
+
+  useEffect(() => {
+    if (inputsReady) {
+      setStatus("Confirmed. Inputs ready for ranking.");
+    }
+  }, [inputsReady]);
 
   const runConfirm = async () => {
     const result = await confirmLocation({ sessionId, participantId });

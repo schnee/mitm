@@ -199,6 +199,7 @@ export default function JoinPage({ params }: JoinPageProps) {
                 sessionId={sessionId}
                 participantId={participantId}
                 draftSaved={draftSaved}
+                inputsReady={Boolean(sync.snapshot?.inputsReady)}
                 onConfirmed={(nextConfirmedAt) => setConfirmedAt(nextConfirmedAt)}
               />
             </>

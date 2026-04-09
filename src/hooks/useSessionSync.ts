@@ -14,36 +14,46 @@ function mergeEvent(snapshot: SessionSnapshotResponse, event: SessionEventRespon
   if (event.eventType === "session_updated") {
     const nextStatus =
       typeof event.diff?.status === "string" ? (event.diff.status as SessionSnapshotResponse["status"]) : snapshot.status;
-    const nextShortlist = Array.isArray(event.diff?.shortlist) ? (event.diff.shortlist as SessionSnapshotResponse["shortlist"]) : snapshot.shortlist;
+    const nextShortlist = Array.isArray(event.diff?.shortlist)
+      ? (event.diff.shortlist as SessionSnapshotResponse["shortlist"])
+      : snapshot.shortlist;
     const hasConfirmedPlace = Object.prototype.hasOwnProperty.call(event.diff ?? {}, "confirmedPlace");
     const nextConfirmedPlace = hasConfirmedPlace
       ? (event.diff?.confirmedPlace as SessionSnapshotResponse["confirmedPlace"])
       : snapshot.confirmedPlace;
+    const nextInputsReady =
+      typeof event.diff?.inputsReady === "boolean"
+        ? (event.diff.inputsReady as boolean)
+        : snapshot.inputsReady;
 
     return {
       ...snapshot,
       status: nextStatus,
       shortlist: nextShortlist,
       confirmedPlace: nextConfirmedPlace,
+      inputsReady: nextInputsReady,
       updatedAt: event.updatedAt
     };
   }
 
   if (event.eventType === "participant_location_confirmed" && event.participantId) {
+    const nextParticipants = snapshot.participants.map((item) =>
+      item.participantId === event.participantId
+        ? {
+            ...item,
+            locationConfirmedAt:
+              typeof event.diff?.locationConfirmedAt === "string"
+                ? (event.diff.locationConfirmedAt as string)
+                : event.updatedAt
+          }
+        : item
+    );
+
     return {
       ...snapshot,
       updatedAt: event.updatedAt,
-      participants: snapshot.participants.map((item) =>
-        item.participantId === event.participantId
-          ? {
-              ...item,
-              locationConfirmedAt:
-                typeof event.diff?.locationConfirmedAt === "string"
-                  ? (event.diff.locationConfirmedAt as string)
-                  : event.updatedAt
-            }
-          : item
-      )
+      participants: nextParticipants,
+      inputsReady: nextParticipants.length === 2 && nextParticipants.every((item) => Boolean(item.locationConfirmedAt))
     };
   }
 

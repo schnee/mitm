@@ -185,7 +185,7 @@ export class SessionRepository {
       eventType: "session_updated",
       sessionId,
       updatedAt: now.toISOString(),
-      diff: { status: nextStatus }
+      diff: { status: nextStatus, inputsReady: this.areBothLocationsConfirmed(sessionId) }
     });
     return session;
   }
