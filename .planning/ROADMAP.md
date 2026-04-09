@@ -195,7 +195,11 @@ Plans:
   1. Users can complete the end-to-end flow on modern mobile and desktop browsers without platform-specific blockers.
   2. Required funnel events are captured for each session lifecycle (`session_start`, `inputs_set`, `results_returned`, `decision_confirmed`).
   3. Top launch-blocking reliability issues are fixed and verified in staged runs before broad rollout.
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 04-01-PLAN.md — Add server-authoritative funnel telemetry capture for required lifecycle events.
+- [ ] 04-02-PLAN.md — Harden session sync with SSE fallback to prevent browser-specific flow blockers.
+- [ ] 04-03-PLAN.md — Add cross-browser launch verification suite and telemetry completeness endpoint.
 
 ## Progress
 

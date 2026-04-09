@@ -5,6 +5,7 @@ import { GoogleMapsAdapter } from "./modules/ranking/provider/googleMapsAdapter"
 import { RankingRepository } from "./modules/ranking/repository";
 import { RankingService } from "./modules/ranking/service";
 import { SessionRepository } from "./modules/session/repository";
+import { getSessionFunnelHandler } from "./routes/analytics/getSessionFunnel";
 import { confirmVenueHandler } from "./routes/decision/confirmVenue";
 import { upsertShortlistVenueHandler } from "./routes/decision/upsertShortlistVenue";
 import { confirmLocationHandler } from "./routes/location/confirmLocation";
@@ -143,6 +144,14 @@ const server = createServer(async (request, response) => {
     }
 
     const result = await sessionEventsHandler(sessionId, { repository }, { since });
+    sendJson(response, result.status, result.body);
+    return;
+  }
+
+  const funnelMatch = url.pathname.match(/^\/v1\/analytics\/funnel\/([^/]+)$/);
+  if (method === "GET" && funnelMatch) {
+    const sessionId = decodeURIComponent(funnelMatch[1]);
+    const result = await getSessionFunnelHandler(sessionId, { repository });
     sendJson(response, result.status, result.body);
     return;
   }

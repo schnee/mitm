@@ -68,21 +68,88 @@ export function useSessionSync(sessionId: string | null) {
 
     let cancelled = false;
     let eventSource: EventSource | null = null;
+    let pollIntervalId: number | null = null;
+    let reconnectTimeoutId: number | null = null;
+    let fallbackEstablished = false;
+    let consecutivePollErrors = 0;
+    let latestUpdatedAt: string | undefined;
 
     const hydrate = async () => {
       const next = await getSessionSnapshot(stableSessionId);
       if (!cancelled) {
         setSnapshot(next);
       }
+      latestUpdatedAt = next.updatedAt;
       return next;
     };
 
-    const subscribe = async (latestUpdatedAt?: string) => {
+    const applyEvents = (events: SessionEventResponse[]) => {
+      if (events.length === 0) {
+        return;
+      }
+      latestUpdatedAt = events[events.length - 1]?.updatedAt;
+      setSnapshot((current) => {
+        if (!current) {
+          return current;
+        }
+        return events.reduce(mergeEvent, current);
+      });
+    };
+
+    const startFallbackPolling = () => {
+      if (cancelled || pollIntervalId !== null) {
+        return;
+      }
+
+      setSyncState("reconnecting");
+
+      const pollOnce = async () => {
+        if (cancelled) {
+          return;
+        }
+
+        try {
+          const events = await getSessionEvents(stableSessionId, latestUpdatedAt);
+          applyEvents(events);
+          consecutivePollErrors = 0;
+          if (!fallbackEstablished) {
+            fallbackEstablished = true;
+            setSyncState("live");
+          }
+        } catch {
+          consecutivePollErrors += 1;
+          setSyncState("reconnecting");
+
+          if (consecutivePollErrors >= 3) {
+            try {
+              await hydrate();
+              consecutivePollErrors = 0;
+              fallbackEstablished = true;
+              setSyncState("live");
+            } catch {
+              setError("Fallback sync failed");
+            }
+          }
+        }
+      };
+
+      void pollOnce();
+      pollIntervalId = window.setInterval(() => {
+        void pollOnce();
+      }, 1000);
+    };
+
+    const subscribe = async (cursor?: string) => {
       if (cancelled) {
         return;
       }
 
-      const sinceQuery = latestUpdatedAt ? `?since=${encodeURIComponent(latestUpdatedAt)}` : "";
+      if (typeof window.EventSource !== "function") {
+        startFallbackPolling();
+        return;
+      }
+
+      const sinceQuery = cursor ? `?since=${encodeURIComponent(cursor)}` : "";
       eventSource = new EventSource(
         `${process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080"}/v1/sessions/${stableSessionId}/events${sinceQuery}`
       );
@@ -95,6 +162,7 @@ export function useSessionSync(sessionId: string | null) {
       eventSource.onmessage = (message) => {
         try {
           const event = JSON.parse(message.data) as SessionEventResponse;
+          latestUpdatedAt = event.updatedAt;
           setSnapshot((current) => (current ? mergeEvent(current, event) : current));
         } catch {
           setError("Invalid event payload");
@@ -109,9 +177,15 @@ export function useSessionSync(sessionId: string | null) {
         setSyncState("reconnecting");
         eventSource?.close();
         reconnectAttemptsRef.current += 1;
+
+        if (reconnectAttemptsRef.current >= 3) {
+          startFallbackPolling();
+          return;
+        }
+
         const delay = Math.min(1000 * 2 ** reconnectAttemptsRef.current, 10_000);
 
-        window.setTimeout(async () => {
+        reconnectTimeoutId = window.setTimeout(async () => {
           if (cancelled) {
             return;
           }
@@ -120,20 +194,16 @@ export function useSessionSync(sessionId: string | null) {
             await subscribe(refreshed.updatedAt);
           } catch {
             setError("Reconnect failed");
+            startFallbackPolling();
           }
         }, delay);
       };
 
       try {
-        const backlogEvents = await getSessionEvents(stableSessionId, latestUpdatedAt);
-        setSnapshot((current) => {
-          if (!current) {
-            return current;
-          }
-          return backlogEvents.reduce(mergeEvent, current);
-        });
+        const backlogEvents = await getSessionEvents(stableSessionId, cursor);
+        applyEvents(backlogEvents);
       } catch {
-        setError("Unable to fetch session events");
+        startFallbackPolling();
       }
     };
 
@@ -150,6 +220,12 @@ export function useSessionSync(sessionId: string | null) {
     return () => {
       cancelled = true;
       eventSource?.close();
+      if (pollIntervalId !== null) {
+        window.clearInterval(pollIntervalId);
+      }
+      if (reconnectTimeoutId !== null) {
+        window.clearTimeout(reconnectTimeoutId);
+      }
     };
   }, [stableSessionId]);
 

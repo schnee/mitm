@@ -2,6 +2,8 @@ import { randomUUID } from "node:crypto";
 import type {
   ConfirmedPlace,
   CreateSessionResult,
+  FunnelEventName,
+  FunnelEventRecord,
   SessionEvent,
   JoinSessionResult,
   ParticipantRecord,
@@ -47,6 +49,7 @@ export class SessionRepository {
   private participantsBySessionId = new Map<string, ParticipantRecord[]>();
   private sessionIdByToken = new Map<string, string>();
   private eventsBySessionId = new Map<string, SessionEvent[]>();
+  private funnelEventsBySessionId = new Map<string, FunnelEventRecord[]>();
   private shortlistBySessionId = new Map<string, ShortlistVenue[]>();
   private confirmedPlaceBySessionId = new Map<string, ConfirmedPlace | null>();
 
@@ -86,6 +89,8 @@ export class SessionRepository {
         diff: { status: "created" }
       }
     ]);
+    this.funnelEventsBySessionId.set(sessionId, []);
+    this.recordFunnelEvent(sessionId, "session_start", { role: params.role });
 
     return {
       sessionId,
@@ -361,8 +366,41 @@ export class SessionRepository {
       participantRole: participant.role,
       diff: { confirmedPlace }
     });
+    this.recordFunnelEvent(params.sessionId, "decision_confirmed", { venueId: params.venueId });
 
     return confirmedPlace;
+  }
+
+  recordFunnelEvent(
+    sessionId: string,
+    event: FunnelEventName,
+    metadata?: Record<string, string | number | boolean | null>
+  ): void {
+    const session = this.getSessionById(sessionId);
+    if (!session) {
+      throw new SessionDomainError("SESSION_NOT_FOUND", "No session found for id");
+    }
+
+    const events = this.funnelEventsBySessionId.get(sessionId) ?? [];
+    if ((event === "inputs_set" || event === "decision_confirmed") && events.some((item) => item.event === event)) {
+      return;
+    }
+
+    events.push({
+      sessionId,
+      event,
+      occurredAt: new Date().toISOString(),
+      ...(metadata ? { metadata } : {})
+    });
+    this.funnelEventsBySessionId.set(sessionId, events);
+  }
+
+  listFunnelEvents(sessionId: string): FunnelEventRecord[] {
+    const session = this.getSessionById(sessionId);
+    if (!session) {
+      throw new SessionDomainError("SESSION_NOT_FOUND", "No session found for id");
+    }
+    return (this.funnelEventsBySessionId.get(sessionId) ?? []).slice();
   }
 
   getSessionSnapshot(sessionId: string): SessionSnapshot | undefined {
@@ -416,6 +454,7 @@ export class SessionRepository {
     });
     this.sessionIdByToken.set(overrides.joinToken, overrides.sessionId);
     this.eventsBySessionId.set(overrides.sessionId, []);
+    this.funnelEventsBySessionId.set(overrides.sessionId, []);
     this.shortlistBySessionId.set(overrides.sessionId, []);
     this.confirmedPlaceBySessionId.set(overrides.sessionId, null);
   }
