@@ -2,13 +2,23 @@
 
 import { use, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { getRankedResults, joinSessionByToken, type RankedVenue } from "../../../lib/api/session-client";
+import {
+  confirmVenue,
+  getRankedResults,
+  joinSessionByToken,
+  type ConfirmedPlace,
+  type RankedVenue,
+  type ShortlistVenue,
+  upsertShortlistVenue
+} from "../../../lib/api/session-client";
 import { useSessionSync } from "../../../hooks/useSessionSync";
 import { ParticipantStatus } from "../../../components/session/ParticipantStatus";
 import { LocationCaptureForm } from "../../../components/location/LocationCaptureForm";
 import { LocationConfirmCard } from "../../../components/location/LocationConfirmCard";
 import { RankingInputsForm } from "../../../components/ranking/RankingInputsForm";
 import { RankedResultsList } from "../../../components/ranking/RankedResultsList";
+import { ShortlistPanel } from "../../../components/decision/ShortlistPanel";
+import { ConfirmedPlaceCard } from "../../../components/decision/ConfirmedPlaceCard";
 
 type JoinState = "joining" | "joined" | "join_error";
 
@@ -32,6 +42,9 @@ export default function JoinPage({ params }: JoinPageProps) {
   const [rankingInputsSaved, setRankingInputsSaved] = useState(false);
   const [rankingStatus, setRankingStatus] = useState("Waiting for ranking input.");
   const [rankedResults, setRankedResults] = useState<RankedVenue[]>([]);
+  const [localShortlist, setLocalShortlist] = useState<ShortlistVenue[]>([]);
+  const [localConfirmedPlace, setLocalConfirmedPlace] = useState<ConfirmedPlace | null>(null);
+  const [decisionStatus, setDecisionStatus] = useState("Add a result to shortlist to begin deciding.");
   const { token } = use(params);
   const searchParams = useSearchParams();
   const sync = useSessionSync(sessionId);
@@ -122,6 +135,51 @@ export default function JoinPage({ params }: JoinPageProps) {
     }
   };
 
+  const shortlist =
+    (sync.snapshot?.shortlist.length ?? 0) >= localShortlist.length
+      ? (sync.snapshot?.shortlist ?? localShortlist)
+      : localShortlist;
+  const confirmedPlace = sync.snapshot?.confirmedPlace ?? localConfirmedPlace;
+
+  const addToShortlist = async (venue: RankedVenue) => {
+    if (!sessionId || !participantId) {
+      return;
+    }
+
+    try {
+      const response = await upsertShortlistVenue({
+        sessionId,
+        participantId,
+        venueId: venue.venueId,
+        name: venue.name,
+        category: venue.category,
+        openNow: venue.openNow,
+        lat: venue.lat,
+        lng: venue.lng,
+        etaParticipantA: venue.etaParticipantA,
+        etaParticipantB: venue.etaParticipantB
+      });
+      setLocalShortlist(response.shortlist);
+      setDecisionStatus("Shortlist updated.");
+    } catch {
+      setDecisionStatus("Unable to update shortlist right now.");
+    }
+  };
+
+  const confirmShortlistedVenue = async (venueId: string) => {
+    if (!sessionId || !participantId) {
+      return;
+    }
+
+    try {
+      const response = await confirmVenue({ sessionId, participantId, venueId });
+      setLocalConfirmedPlace(response.confirmedPlace);
+      setDecisionStatus("Place confirmed.");
+    } catch {
+      setDecisionStatus("This session already has a different confirmed place.");
+    }
+  };
+
   return (
     <main>
       {state === "joining" && <p>Joining session...</p>}
@@ -165,7 +223,22 @@ export default function JoinPage({ params }: JoinPageProps) {
               </button>
               {!rankingInputsSaved && <p>Save ranking inputs before running ranking.</p>}
               <p>{rankingStatus}</p>
-              <RankedResultsList results={rankedResults} />
+              <RankedResultsList
+                results={rankedResults}
+                onAddToShortlist={(venue) => {
+                  void addToShortlist(venue);
+                }}
+                shortlistVenueIds={shortlist.map((item) => item.venueId)}
+              />
+              <p>{decisionStatus}</p>
+              <ShortlistPanel
+                shortlist={shortlist}
+                confirmedPlace={confirmedPlace}
+                onConfirm={(venueId) => {
+                  void confirmShortlistedVenue(venueId);
+                }}
+              />
+              {confirmedPlace && <ConfirmedPlaceCard confirmedPlace={confirmedPlace} />}
             </>
           )}
         </>

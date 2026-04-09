@@ -11,10 +11,20 @@ import {
 export type SyncState = "syncing" | "live" | "reconnecting";
 
 function mergeEvent(snapshot: SessionSnapshotResponse, event: SessionEventResponse): SessionSnapshotResponse {
-  if (event.eventType === "session_updated" && typeof event.diff?.status === "string") {
+  if (event.eventType === "session_updated") {
+    const nextStatus =
+      typeof event.diff?.status === "string" ? (event.diff.status as SessionSnapshotResponse["status"]) : snapshot.status;
+    const nextShortlist = Array.isArray(event.diff?.shortlist) ? (event.diff.shortlist as SessionSnapshotResponse["shortlist"]) : snapshot.shortlist;
+    const hasConfirmedPlace = Object.prototype.hasOwnProperty.call(event.diff ?? {}, "confirmedPlace");
+    const nextConfirmedPlace = hasConfirmedPlace
+      ? (event.diff?.confirmedPlace as SessionSnapshotResponse["confirmedPlace"])
+      : snapshot.confirmedPlace;
+
     return {
       ...snapshot,
-      status: event.diff.status as SessionSnapshotResponse["status"],
+      status: nextStatus,
+      shortlist: nextShortlist,
+      confirmedPlace: nextConfirmedPlace,
       updatedAt: event.updatedAt
     };
   }

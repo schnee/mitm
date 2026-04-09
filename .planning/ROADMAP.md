@@ -12,7 +12,7 @@ This roadmap delivers the MVP in dependency order: establish two-person session 
 
 - [x] **Phase 1: Discovery & Session/Input Backbone** - Lock critical product/data decisions while delivering resilient two-person create/join and consented location capture.
 - [x] **Phase 2: Fair Ranking & Recommendation Core** - Generate and rank venue candidates by travel-time fairness and preference relevance.
-- [ ] **Phase 3: Shared Shortlist & Confirmation** - Turn ranked options into one mutually confirmed destination.
+- [x] **Phase 3: Shared Shortlist & Confirmation** - Turn ranked options into one mutually confirmed destination.
 - [ ] **Phase 4: Launch Readiness & Stabilization** - Validate cross-browser funnel reliability and instrument decision funnel analytics.
 
 ## Dependency Map and Sequencing Rationale
@@ -162,7 +162,11 @@ Plans:
   1. Both participants can add venues to a single shared shortlist and see updates in near real time.
   2. Session can end with one confirmed place that is clearly visible as final for both participants.
   3. Confirmed place provides a working external map/deep link for navigation handoff.
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [x] 03-01-PLAN.md — Define shared shortlist decision-state contracts and repository behavior.
+- [x] 03-02-PLAN.md — Implement shortlist/confirmation API routes with conflict-safe finalization.
+- [x] 03-03-PLAN.md — Wire shortlist, final confirmation, and navigation handoff into session UI.
 **UI hint**: yes
 
 ### Phase 4: Launch Readiness & Stabilization
@@ -199,5 +203,5 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. Discovery & Session/Input Backbone | 3/3 | Complete | 01-01, 01-02, 01-03 |
 | 2. Fair Ranking & Recommendation Core | 3/3 | Complete | 02-01, 02-02, 02-03 |
-| 3. Shared Shortlist & Confirmation | 0/TBD | Not started | - |
+| 3. Shared Shortlist & Confirmation | 3/3 | Complete | 03-01, 03-02, 03-03 |
 | 4. Launch Readiness & Stabilization | 0/TBD | Not started | - |

@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("shows ETA, category, and open status", async ({ page }) => {
+test("shows shared shortlist and confirmed map handoff", async ({ page }) => {
   const appUrl = process.env.E2E_APP_URL ?? "http://localhost:3000";
 
   await page.route("**/v1/sessions/demo-session", async (route) => {
@@ -61,12 +61,12 @@ test("shows ETA, category, and open status", async ({ page }) => {
         generatedAt: new Date().toISOString(),
         results: [
           {
-            venueId: "venue-1",
+            venueId: "coffee-spot",
             name: "Coffee Spot",
-            lat: 40.72,
-            lng: -73.99,
             category: "cafe",
             openNow: true,
+            lat: 40.72,
+            lng: -73.99,
             etaParticipantA: 12,
             etaParticipantB: 14
           }
@@ -75,13 +75,55 @@ test("shows ETA, category, and open status", async ({ page }) => {
     });
   });
 
+  await page.route("**/v1/decision/shortlist", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        shortlist: [
+          {
+            venueId: "coffee-spot",
+            name: "Coffee Spot",
+            category: "cafe",
+            openNow: true,
+            lat: 40.72,
+            lng: -73.99,
+            etaParticipantA: 12,
+            etaParticipantB: 14,
+            addedByParticipantId: "demo-host",
+            addedAt: "2026-01-01T10:10:00.000Z"
+          }
+        ]
+      })
+    });
+  });
+
+  await page.route("**/v1/decision/confirm", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        confirmedPlace: {
+          venueId: "coffee-spot",
+          name: "Coffee Spot",
+          category: "cafe",
+          lat: 40.72,
+          lng: -73.99,
+          navigationUrl: "https://www.google.com/maps/search/?api=1&query=40.72,-73.99",
+          confirmedByParticipantId: "demo-host",
+          confirmedAt: "2026-01-01T10:12:00.000Z"
+        }
+      })
+    });
+  });
+
   await page.goto(`${appUrl}/s/demo-token?asHost=1&sessionId=demo-session&participantId=demo-host`);
 
   await page.getByRole("button", { name: "Save ranking inputs" }).click();
   await page.getByRole("button", { name: "Run ranking" }).click();
+  await page.getByRole("button", { name: "Add to shortlist" }).click();
+  await expect(page.getByRole("button", { name: "Confirm this place" })).toBeVisible();
 
-  await expect(page.getByText("ETA (You):", { exact: false })).toBeVisible();
-  await expect(page.getByText("ETA (Partner):", { exact: false })).toBeVisible();
-  await expect(page.getByText("Category:", { exact: false })).toBeVisible();
-  await expect(page.getByText("Open now", { exact: false })).toBeVisible();
+  await page.getByRole("button", { name: "Confirm this place" }).click();
+  await expect(page.getByRole("link", { name: "Open in Maps" })).toBeVisible();
 });

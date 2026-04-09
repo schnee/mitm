@@ -12,7 +12,17 @@ function renderOpenStatus(openNow: boolean | null): string {
   return "Open status unavailable";
 }
 
-export function RankedResultsList({ results }: { results: RankedVenue[] }) {
+export function RankedResultsList({
+  results,
+  onAddToShortlist,
+  shortlistVenueIds
+}: {
+  results: RankedVenue[];
+  onAddToShortlist?: (venue: RankedVenue) => void;
+  shortlistVenueIds?: string[];
+}) {
+  const shortlistedSet = new Set(shortlistVenueIds ?? []);
+
   return (
     <section>
       <h2>Ranked results</h2>
@@ -25,6 +35,11 @@ export function RankedResultsList({ results }: { results: RankedVenue[] }) {
             <p>{renderOpenStatus(result.openNow)}</p>
             <p>ETA (You): {result.etaParticipantA} min</p>
             <p>ETA (Partner): {result.etaParticipantB} min</p>
+            {onAddToShortlist && (
+              <button type="button" onClick={() => onAddToShortlist(result)} disabled={shortlistedSet.has(result.venueId)}>
+                Add to shortlist
+              </button>
+            )}
           </li>
         ))}
       </ol>

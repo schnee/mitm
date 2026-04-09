@@ -29,6 +29,8 @@ export interface ScoredCandidate extends RankingCandidate {
 export interface RankedVenue {
   venueId: string;
   name: string;
+  lat: number;
+  lng: number;
   category: string;
   openNow: boolean | null;
   etaParticipantA: number;

@@ -5,6 +5,8 @@ import { GoogleMapsAdapter } from "./modules/ranking/provider/googleMapsAdapter"
 import { RankingRepository } from "./modules/ranking/repository";
 import { RankingService } from "./modules/ranking/service";
 import { SessionRepository } from "./modules/session/repository";
+import { confirmVenueHandler } from "./routes/decision/confirmVenue";
+import { upsertShortlistVenueHandler } from "./routes/decision/upsertShortlistVenue";
 import { confirmLocationHandler } from "./routes/location/confirmLocation";
 import { upsertLocationDraftHandler } from "./routes/location/upsertLocationDraft";
 import { getRankedResultsHandler } from "./routes/ranking/getRankedResults";
@@ -169,6 +171,20 @@ const server = createServer(async (request, response) => {
   if (method === "POST" && url.pathname === "/v1/ranking/results") {
     const payload = await readJsonBody(request);
     const result = await getRankedResultsHandler(payload, { service: rankingService });
+    sendJson(response, result.status, result.body);
+    return;
+  }
+
+  if (method === "POST" && url.pathname === "/v1/decision/shortlist") {
+    const payload = await readJsonBody(request);
+    const result = await upsertShortlistVenueHandler(payload, { repository });
+    sendJson(response, result.status, result.body);
+    return;
+  }
+
+  if (method === "POST" && url.pathname === "/v1/decision/confirm") {
+    const payload = await readJsonBody(request);
+    const result = await confirmVenueHandler(payload, { repository });
     sendJson(response, result.status, result.body);
     return;
   }

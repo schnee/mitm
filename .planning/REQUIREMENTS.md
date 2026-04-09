@@ -33,9 +33,9 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Decision Flow
 
-- [ ] **DECS-01**: Both participants can add candidates to a shared shortlist.
-- [ ] **DECS-02**: Session can end with one confirmed place visible to both participants.
-- [ ] **DECS-03**: Confirmed place provides external map/deep link for navigation handoff.
+- [x] **DECS-01**: Both participants can add candidates to a shared shortlist.
+- [x] **DECS-02**: Session can end with one confirmed place visible to both participants.
+- [x] **DECS-03**: Confirmed place provides external map/deep link for navigation handoff.
 
 ### Web and Reliability
 
@@ -91,9 +91,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | RANK-01 | Phase 2 | Complete |
 | RANK-02 | Phase 2 | Complete |
 | RANK-03 | Phase 2 | Complete |
-| DECS-01 | Phase 3 | Pending |
-| DECS-02 | Phase 3 | Pending |
-| DECS-03 | Phase 3 | Pending |
+| DECS-01 | Phase 3 | Complete |
+| DECS-02 | Phase 3 | Complete |
+| DECS-03 | Phase 3 | Complete |
 | PLAT-01 | Phase 4 | Pending |
 | PLAT-02 | Phase 4 | Pending |
 

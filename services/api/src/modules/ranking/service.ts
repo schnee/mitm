@@ -71,6 +71,8 @@ export class RankingService {
     const results: RankedVenue[] = scored.slice(0, 10).map((candidate) => ({
       venueId: candidate.venueId,
       name: candidate.name,
+      lat: candidate.lat,
+      lng: candidate.lng,
       category: candidate.category,
       openNow: candidate.openNow,
       etaParticipantA: candidate.etaParticipantA,

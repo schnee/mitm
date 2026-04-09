@@ -1,9 +1,11 @@
 import { randomUUID } from "node:crypto";
 import type {
+  ConfirmedPlace,
   CreateSessionResult,
   SessionEvent,
   JoinSessionResult,
   ParticipantRecord,
+  ShortlistVenue,
   SessionParticipantRole,
   SessionRecord,
   SessionSnapshot,
@@ -11,12 +13,17 @@ import type {
 } from "./contracts";
 import { assertValidTransition } from "./state-machine";
 
-type JoinErrorCode = "SESSION_NOT_FOUND" | "SESSION_FULL" | "SESSION_EXPIRED";
+type SessionErrorCode =
+  | "SESSION_NOT_FOUND"
+  | "SESSION_FULL"
+  | "SESSION_EXPIRED"
+  | "PLACE_ALREADY_CONFIRMED"
+  | "VENUE_NOT_SHORTLISTED";
 
 export class SessionDomainError extends Error {
-  code: JoinErrorCode;
+  code: SessionErrorCode;
 
-  constructor(code: JoinErrorCode, message: string) {
+  constructor(code: SessionErrorCode, message: string) {
     super(message);
     this.code = code;
   }
@@ -40,6 +47,8 @@ export class SessionRepository {
   private participantsBySessionId = new Map<string, ParticipantRecord[]>();
   private sessionIdByToken = new Map<string, string>();
   private eventsBySessionId = new Map<string, SessionEvent[]>();
+  private shortlistBySessionId = new Map<string, ShortlistVenue[]>();
+  private confirmedPlaceBySessionId = new Map<string, ConfirmedPlace | null>();
 
   createSession(params: CreateSessionParams): CreateSessionResult {
     const now = params.now ?? new Date();
@@ -67,6 +76,8 @@ export class SessionRepository {
     this.sessions.set(sessionId, session);
     this.sessionIdByToken.set(params.joinToken, sessionId);
     this.participantsBySessionId.set(sessionId, [hostParticipant]);
+    this.shortlistBySessionId.set(sessionId, []);
+    this.confirmedPlaceBySessionId.set(sessionId, null);
     this.eventsBySessionId.set(sessionId, [
       {
         eventType: "session_updated",
@@ -249,6 +260,111 @@ export class SessionRepository {
     return participants.length === 2 && participants.every((item) => Boolean(item.locationConfirmedAt));
   }
 
+  upsertShortlistVenue(params: {
+    sessionId: string;
+    participantId: string;
+    venueId: string;
+    name: string;
+    category: string;
+    openNow: boolean | null;
+    lat: number;
+    lng: number;
+    etaParticipantA: number;
+    etaParticipantB: number;
+    now?: Date;
+  }): ShortlistVenue[] {
+    const participant = this.getParticipant(params.sessionId, params.participantId);
+    if (!participant) {
+      throw new SessionDomainError("SESSION_NOT_FOUND", "Participant not found in session");
+    }
+
+    const addedAt = (params.now ?? new Date()).toISOString();
+    const shortlist = this.shortlistBySessionId.get(params.sessionId) ?? [];
+    const nextEntry: ShortlistVenue = {
+      venueId: params.venueId,
+      name: params.name,
+      category: params.category,
+      openNow: params.openNow,
+      lat: params.lat,
+      lng: params.lng,
+      etaParticipantA: params.etaParticipantA,
+      etaParticipantB: params.etaParticipantB,
+      addedByParticipantId: participant.participantId,
+      addedAt
+    };
+
+    const existingIndex = shortlist.findIndex((item) => item.venueId === params.venueId);
+    if (existingIndex >= 0) {
+      shortlist[existingIndex] = nextEntry;
+    } else {
+      shortlist.push(nextEntry);
+    }
+
+    this.shortlistBySessionId.set(params.sessionId, shortlist);
+    this.pushEvent({
+      eventType: "session_updated",
+      sessionId: params.sessionId,
+      updatedAt: addedAt,
+      participantId: participant.participantId,
+      participantRole: participant.role,
+      diff: { shortlist }
+    });
+
+    return shortlist;
+  }
+
+  confirmVenue(params: {
+    sessionId: string;
+    participantId: string;
+    venueId: string;
+    now?: Date;
+  }): ConfirmedPlace {
+    const participant = this.getParticipant(params.sessionId, params.participantId);
+    if (!participant) {
+      throw new SessionDomainError("SESSION_NOT_FOUND", "Participant not found in session");
+    }
+
+    const shortlisted = (this.shortlistBySessionId.get(params.sessionId) ?? []).find(
+      (item) => item.venueId === params.venueId
+    );
+    if (!shortlisted) {
+      throw new SessionDomainError("VENUE_NOT_SHORTLISTED", "Venue must be shortlisted before confirmation");
+    }
+
+    const existingConfirmedPlace = this.confirmedPlaceBySessionId.get(params.sessionId) ?? null;
+    if (existingConfirmedPlace) {
+      if (existingConfirmedPlace.venueId === params.venueId) {
+        return existingConfirmedPlace;
+      }
+      throw new SessionDomainError("PLACE_ALREADY_CONFIRMED", "A different place is already confirmed");
+    }
+
+    const confirmedAt = (params.now ?? new Date()).toISOString();
+    const confirmedPlace: ConfirmedPlace = {
+      venueId: shortlisted.venueId,
+      name: shortlisted.name,
+      category: shortlisted.category,
+      lat: shortlisted.lat,
+      lng: shortlisted.lng,
+      navigationUrl: `https://www.google.com/maps/search/?api=1&query=${shortlisted.lat},${shortlisted.lng}`,
+      confirmedByParticipantId: participant.participantId,
+      confirmedAt
+    };
+
+    this.confirmedPlaceBySessionId.set(params.sessionId, confirmedPlace);
+    this.updateSessionStatus(params.sessionId, "confirmed", new Date(confirmedAt));
+    this.pushEvent({
+      eventType: "session_updated",
+      sessionId: params.sessionId,
+      updatedAt: confirmedAt,
+      participantId: participant.participantId,
+      participantRole: participant.role,
+      diff: { confirmedPlace }
+    });
+
+    return confirmedPlace;
+  }
+
   getSessionSnapshot(sessionId: string): SessionSnapshot | undefined {
     const session = this.getSessionById(sessionId);
     if (!session) {
@@ -268,7 +384,9 @@ export class SessionRepository {
       status: session.status,
       updatedAt: session.updatedAt,
       participants,
-      inputsReady: this.areBothLocationsConfirmed(sessionId)
+      inputsReady: this.areBothLocationsConfirmed(sessionId),
+      shortlist: (this.shortlistBySessionId.get(sessionId) ?? []).slice(),
+      confirmedPlace: this.confirmedPlaceBySessionId.get(sessionId) ?? null
     };
   }
 
@@ -298,5 +416,7 @@ export class SessionRepository {
     });
     this.sessionIdByToken.set(overrides.joinToken, overrides.sessionId);
     this.eventsBySessionId.set(overrides.sessionId, []);
+    this.shortlistBySessionId.set(overrides.sessionId, []);
+    this.confirmedPlaceBySessionId.set(overrides.sessionId, null);
   }
 }

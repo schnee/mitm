@@ -57,12 +57,38 @@ export interface SessionSnapshotParticipant {
   locationConfirmedAt: string | null;
 }
 
+export interface ShortlistVenue {
+  venueId: string;
+  name: string;
+  category: string;
+  openNow: boolean | null;
+  lat: number;
+  lng: number;
+  etaParticipantA: number;
+  etaParticipantB: number;
+  addedByParticipantId: string;
+  addedAt: string;
+}
+
+export interface ConfirmedPlace {
+  venueId: string;
+  name: string;
+  category: string;
+  lat: number;
+  lng: number;
+  navigationUrl: string;
+  confirmedByParticipantId: string;
+  confirmedAt: string;
+}
+
 export interface SessionSnapshot {
   sessionId: string;
   status: SessionStatus;
   updatedAt: string;
   participants: SessionSnapshotParticipant[];
   inputsReady: boolean;
+  shortlist: ShortlistVenue[];
+  confirmedPlace: ConfirmedPlace | null;
 }
 
 export type SessionEventType =

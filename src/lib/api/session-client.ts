@@ -18,12 +18,38 @@ export interface SessionSnapshotParticipant {
   locationConfirmedAt: string | null;
 }
 
+export interface ShortlistVenue {
+  venueId: string;
+  name: string;
+  category: string;
+  openNow: boolean | null;
+  lat: number;
+  lng: number;
+  etaParticipantA: number;
+  etaParticipantB: number;
+  addedByParticipantId: string;
+  addedAt: string;
+}
+
+export interface ConfirmedPlace {
+  venueId: string;
+  name: string;
+  category: string;
+  lat: number;
+  lng: number;
+  navigationUrl: string;
+  confirmedByParticipantId: string;
+  confirmedAt: string;
+}
+
 export interface SessionSnapshotResponse {
   sessionId: string;
   status: "created" | "joined" | "locating" | "ranked" | "confirmed" | "expired";
   updatedAt: string;
   participants: SessionSnapshotParticipant[];
   inputsReady: boolean;
+  shortlist: ShortlistVenue[];
+  confirmedPlace: ConfirmedPlace | null;
 }
 
 export interface SessionEventResponse {
@@ -41,10 +67,51 @@ export type PreferenceTag = "coffee" | "cocktails" | "vintage_shops" | "dessert"
 export interface RankedVenue {
   venueId: string;
   name: string;
+  lat: number;
+  lng: number;
   etaParticipantA: number;
   etaParticipantB: number;
   category: string;
   openNow: boolean | null;
+}
+
+export async function upsertShortlistVenue(input: {
+  sessionId: string;
+  participantId: string;
+  venueId: string;
+  name: string;
+  category: string;
+  openNow: boolean | null;
+  lat: number;
+  lng: number;
+  etaParticipantA: number;
+  etaParticipantB: number;
+}): Promise<{ shortlist: ShortlistVenue[] }> {
+  const response = await fetch(`${API_BASE_URL}/v1/decision/shortlist`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input)
+  });
+  if (!response.ok) {
+    throw new Error(`upsertShortlistVenue failed: ${response.status}`);
+  }
+  return (await response.json()) as { shortlist: ShortlistVenue[] };
+}
+
+export async function confirmVenue(input: {
+  sessionId: string;
+  participantId: string;
+  venueId: string;
+}): Promise<{ confirmedPlace: ConfirmedPlace }> {
+  const response = await fetch(`${API_BASE_URL}/v1/decision/confirm`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input)
+  });
+  if (!response.ok) {
+    throw new Error(`confirmVenue failed: ${response.status}`);
+  }
+  return (await response.json()) as { confirmedPlace: ConfirmedPlace };
 }
 
 export async function createSession(): Promise<CreateSessionResponse> {
