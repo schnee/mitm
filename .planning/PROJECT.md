@@ -22,11 +22,11 @@ Turn a slow, awkward "where should we meet?" negotiation into a fast and fair de
 
 ### Active
 
-- [ ] Phase 7 orchestration: auto-transition from ranking-input save to waiting/generating states without manual ranking trigger (UX-11)
-- [ ] Phase 7 orchestration: generate one canonical session-level ranked list from both participants' saved ranking inputs (UX-12, UX-13)
-- [ ] Phase 7 orchestration: make `Refresh ranking` optional secondary action while removing required `Run ranking` in main flow (UX-14)
-- [ ] Phase 7 orchestration: provide actionable ranking-failure retry states that preserve location/ranking progress (UX-15)
-- [ ] Phase 7 orchestration: ensure idempotent concurrent-save handling, lifecycle telemetry, and responsive shared-results consistency (UX-16, UX-17, UX-18)
+- [x] Phase 7 orchestration: auto-transition from ranking-input save to waiting/generating states without manual ranking trigger (UX-11)
+- [x] Phase 7 orchestration: generate one canonical session-level ranked list from both participants' saved ranking inputs (UX-12, UX-13)
+- [x] Phase 7 orchestration: make `Refresh ranking` optional secondary action while removing required `Run ranking` in main flow (UX-14)
+- [x] Phase 7 orchestration: provide actionable ranking-failure retry states that preserve location/ranking progress (UX-15)
+- [x] Phase 7 orchestration: ensure idempotent concurrent-save handling, lifecycle telemetry, and responsive shared-results consistency (UX-16, UX-17, UX-18)
 
 ### Out of Scope
 
@@ -84,4 +84,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-09 after Phase 7 shared auto-ranking orchestration planning transition*
+*Last updated: 2026-04-09 after Phase 7 shared auto-ranking orchestration execution completion*

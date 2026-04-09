@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import {
+  type RankingLifecycleResponse,
   type PreferenceTag,
   type WillingnessSplit,
   upsertRankingInputs
@@ -22,7 +23,7 @@ export function RankingInputsForm({
 }: {
   sessionId: string;
   participantId: string;
-  onSaved: () => void;
+  onSaved: (result: { rankingInputsReady: boolean; rankingLifecycle: RankingLifecycleResponse }) => void;
 }) {
   const [split, setSplit] = useState<WillingnessSplit>("50_50");
   const [tags, setTags] = useState<PreferenceTag[]>(["coffee"]);
@@ -39,10 +40,14 @@ export function RankingInputsForm({
     try {
       setStatusType("loading");
       setStatus("Loading: saving ranking inputs.");
-      await upsertRankingInputs({ sessionId, participantId, split, tags });
+      const result = await upsertRankingInputs({ sessionId, participantId, split, tags });
       setStatusType("success");
-      setStatus("Success: ranking inputs saved.");
-      onSaved();
+      setStatus(
+        result.rankingLifecycle.state === "waiting"
+          ? "Success: ranking inputs saved. Waiting for your partner to finish."
+          : "Success: ranking inputs saved. Generating shared suggestions."
+      );
+      onSaved({ rankingInputsReady: result.rankingInputsReady, rankingLifecycle: result.rankingLifecycle });
     } catch {
       setStatusType("error");
       setStatus("Error: unable to save ranking inputs. Check your selection and retry.");
@@ -55,7 +60,7 @@ export function RankingInputsForm({
     <section className="panel stage" aria-labelledby="ranking-inputs-title">
       <header className="section-header">
         <h2 id="ranking-inputs-title">Ranking inputs</h2>
-        <p>Set your travel willingness and preference tags before running ranking.</p>
+        <p>Set your travel willingness and preference tags to start shared ranking.</p>
       </header>
 
       <fieldset className="panel input-stack">

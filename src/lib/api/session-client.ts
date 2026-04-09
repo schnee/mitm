@@ -57,9 +57,35 @@ export interface SessionSnapshotResponse {
   updatedAt: string;
   participants: SessionSnapshotParticipant[];
   inputsReady: boolean;
+  rankingInputsReady: boolean;
+  rankingLifecycle: RankingLifecycleResponse;
+  rankedResults: RankedVenue[];
   shortlist: ShortlistVenue[];
   reactions: VenueReactionSummary[];
   confirmedPlace: ConfirmedPlace | null;
+}
+
+export type RankingLifecycleState = "waiting" | "generating" | "ready" | "failed";
+
+export interface RankingLifecycleResponse {
+  state: RankingLifecycleState;
+  generatedAt?: string;
+  lastErrorCode?: string | null;
+  generationRequestId?: string | null;
+}
+
+export interface SessionEventDiffResponse {
+  status?: SessionSnapshotResponse["status"];
+  inputsReady?: boolean;
+  participantCount?: number;
+  locationDraftUpdatedAt?: string;
+  locationConfirmedAt?: string;
+  shortlist?: ShortlistVenue[];
+  reactions?: VenueReactionSummary[];
+  confirmedPlace?: ConfirmedPlace | null;
+  rankingInputsReady?: boolean;
+  rankingLifecycle?: RankingLifecycleResponse;
+  rankedResults?: RankedVenue[];
 }
 
 export interface SessionEventResponse {
@@ -68,7 +94,7 @@ export interface SessionEventResponse {
   updatedAt: string;
   participantId?: string;
   participantRole?: "host" | "invitee";
-  diff?: Record<string, unknown>;
+  diff?: SessionEventDiffResponse;
 }
 
 export type WillingnessSplit = "50_50" | "60_40" | "70_30";
@@ -230,7 +256,14 @@ export async function upsertRankingInputs(input: {
   participantId: string;
   split: WillingnessSplit;
   tags: PreferenceTag[];
-}): Promise<{ split: WillingnessSplit; tags: PreferenceTag[]; updatedAt: string }> {
+}): Promise<{
+  split: WillingnessSplit;
+  tags: PreferenceTag[];
+  updatedAt: string;
+  rankingInputsReady: boolean;
+  rankingLifecycle: RankingLifecycleResponse;
+  autoGenerationError?: string;
+}> {
   const response = await fetch(`${API_BASE_URL}/v1/ranking/inputs`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -239,13 +272,21 @@ export async function upsertRankingInputs(input: {
   if (!response.ok) {
     throw new Error(`upsertRankingInputs failed: ${response.status}`);
   }
-  return (await response.json()) as { split: WillingnessSplit; tags: PreferenceTag[]; updatedAt: string };
+  return (await response.json()) as {
+    split: WillingnessSplit;
+    tags: PreferenceTag[];
+    updatedAt: string;
+    rankingInputsReady: boolean;
+    rankingLifecycle: RankingLifecycleResponse;
+    autoGenerationError?: string;
+  };
 }
 
 export async function getRankedResults(sessionId: string): Promise<{
   sessionId: string;
   generatedAt: string;
   results: RankedVenue[];
+  mode: "auto" | "refresh";
 }> {
   const response = await fetch(`${API_BASE_URL}/v1/ranking/results`, {
     method: "POST",
@@ -259,5 +300,6 @@ export async function getRankedResults(sessionId: string): Promise<{
     sessionId: string;
     generatedAt: string;
     results: RankedVenue[];
+    mode: "auto" | "refresh";
   };
 }
