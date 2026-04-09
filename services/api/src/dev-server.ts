@@ -173,7 +173,7 @@ const server = createServer(async (request, response) => {
 
   if (method === "POST" && url.pathname === "/v1/ranking/inputs") {
     const payload = await readJsonBody(request);
-    const result = await upsertRankingInputsHandler(payload, { repository: rankingRepository });
+    const result = await upsertRankingInputsHandler(payload, { repository: rankingRepository, service: rankingService });
     sendJson(response, result.status, result.body);
     return;
   }

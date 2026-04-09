@@ -4,11 +4,21 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   getSessionEvents,
   getSessionSnapshot,
+  type RankingLifecycleResponse,
   type SessionEventResponse,
   type SessionSnapshotResponse
 } from "../lib/api/session-client";
 
 export type SyncState = "syncing" | "live" | "reconnecting";
+
+function isRankingLifecycle(value: unknown): value is RankingLifecycleResponse {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "state" in value &&
+    typeof (value as { state?: unknown }).state === "string"
+  );
+}
 
 function mergeEvent(snapshot: SessionSnapshotResponse, event: SessionEventResponse): SessionSnapshotResponse {
   if (event.eventType === "session_updated") {
@@ -28,6 +38,12 @@ function mergeEvent(snapshot: SessionSnapshotResponse, event: SessionEventRespon
       typeof event.diff?.inputsReady === "boolean"
         ? (event.diff.inputsReady as boolean)
         : snapshot.inputsReady;
+    const nextRankingInputsReady =
+      typeof event.diff?.rankingInputsReady === "boolean" ? event.diff.rankingInputsReady : snapshot.rankingInputsReady;
+    const nextRankingLifecycle = isRankingLifecycle(event.diff?.rankingLifecycle)
+      ? event.diff.rankingLifecycle
+      : snapshot.rankingLifecycle;
+    const nextRankedResults = Array.isArray(event.diff?.rankedResults) ? event.diff.rankedResults : snapshot.rankedResults;
 
     return {
       ...snapshot,
@@ -36,6 +52,9 @@ function mergeEvent(snapshot: SessionSnapshotResponse, event: SessionEventRespon
       reactions: nextReactions,
       confirmedPlace: nextConfirmedPlace,
       inputsReady: nextInputsReady,
+      rankingInputsReady: nextRankingInputsReady,
+      rankingLifecycle: nextRankingLifecycle,
+      rankedResults: nextRankedResults,
       updatedAt: event.updatedAt
     };
   }

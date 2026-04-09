@@ -2,7 +2,7 @@
 
 ## Overview
 
-This roadmap delivers the MVP in dependency order: establish two-person session and consented input reliability first, prove fair ranking quality second, close decisions collaboratively third, then launch with cross-device reliability and instrumentation so stabilization is data-driven, followed by a final UX polish pass for production-grade feel.
+This roadmap delivers the MVP in dependency order: establish two-person session and consented input reliability first, prove fair ranking quality second, close decisions collaboratively third, then launch with cross-device reliability and instrumentation so stabilization is data-driven, followed by UX-focused phases that polish the interface and synchronize ranking generation into one shared session-level outcome.
 
 ## Phases
 
@@ -16,6 +16,7 @@ This roadmap delivers the MVP in dependency order: establish two-person session 
 - [x] **Phase 4: Launch Readiness & Stabilization** - Validate cross-browser funnel reliability and instrument decision funnel analytics.
 - [x] **Phase 5: UX Refresh & Decision Confidence** - Improve clarity, trust, and speed of choice through a focused post-launch UX refresh.
 - [x] **Phase 6: UX Polish & Professional Experience** - Polish startup, negotiation/ranking, and shared decision flows to feel production-grade across devices.
+- [x] **Phase 7: Shared Auto-Ranking & Synced Results** - Replace manual per-user ranking trigger with one canonical session-level ranked list that appears automatically for both participants after inputs are saved. (completed 2026-04-09)
 
 ## Dependency Map and Sequencing Rationale
 
@@ -24,6 +25,7 @@ This roadmap delivers the MVP in dependency order: establish two-person session 
 - **Phase 3 → Phase 4**: Launch reliability and instrumentation require full end-to-end flow.
 - **Phase 4 → Phase 5**: UX optimization should be informed by real funnel telemetry and stabilized cross-browser behavior.
 - **Phase 5 → Phase 6**: Professional-grade polish should build on validated UX patterns and telemetry from the refresh cycle.
+- **Phase 6 → Phase 7**: Shared auto-ranking orchestration depends on polished state messaging and responsive UI behavior from prior UX phases.
 
 Rationale: this order follows hard product dependencies and minimizes rework; each phase ends with a user-verifiable capability.
 
@@ -272,6 +274,47 @@ Plans:
 - [x] 06-03-PLAN.md — Standardize cross-flow states, responsive behavior, and accessibility baseline validation.
 **UI hint**: yes
 
+### Phase 7: Shared Auto-Ranking & Synced Results
+**Goal**: Replace manual ranking runs with one merged, session-level ranked list that auto-generates and synchronizes for both participants after ranking inputs are saved.
+**Depends on**: Phase 6
+**Requirements**: UX-11, UX-12, UX-13, UX-14, UX-15, UX-16, UX-17, UX-18
+**Objective**: Improve collaborative flow speed and trust by making ranking generation automatic, shared, retryable, and conflict-safe without changing fairness/provider fundamentals.
+**Core Deliverables**:
+- Save-ranking transition states: waiting-for-partner when one user is ready, generating-suggestions when both are ready.
+- Canonical session-scoped ranked list generation using both participants' saved ranking inputs with current split handling and preference merge behavior.
+- Session-level ranked-result persistence and synchronization so both users see the same ordered list without manual rerun.
+- Main-flow CTA shift from required `Run ranking` to optional secondary `Refresh ranking` retry/recompute action.
+- Actionable error messaging with retry path that preserves previously entered location and ranking inputs.
+- Idempotent, conflict-safe generation path for near-simultaneous participant saves plus telemetry for save/wait/generate/render/failure lifecycle events.
+- Cross-breakpoint rendering consistency for shared ranked list while preserving explainability and reaction affordances from Phases 5/6.
+**Success Metrics**:
+- **Leading**: Percentage of sessions that transition from second ranking-input save to shared ranked-list render within sync SLA.
+- **Leading**: Rate of successful automatic shared-list generation without manual refresh.
+- **Lagging**: Reduction in drop-off between ranking-input save and first ranked-list interaction.
+**Major Risks**:
+- Concurrent saves may create duplicate generation jobs or conflicting persisted list state if idempotency controls are incomplete.
+- Provider/transient failures may degrade trust if error states are not explicit and recoverable.
+- Auto-transition orchestration may regress established explainability/reaction UX if state contracts are inconsistent.
+**Assumptions**:
+- Current fairness algorithm and provider integrations remain stable and should be reused as-is.
+- Two-participant session scope remains fixed for this phase.
+- Existing split and preference merge behavior is correct and should be preserved.
+**Non-Goals**:
+- Changes to fairness algorithm fundamentals or weighting model.
+- Changes to places/routing providers or provider adapter contracts.
+- Expansion beyond two-user sessions.
+**Success Criteria** (what must be TRUE):
+  1. When only one participant has saved ranking inputs, both users who open the session see a clear waiting state with no required manual ranking trigger.
+  2. When both participants have saved ranking inputs, both users automatically see the same ranked list (same items, same order) within sync SLA.
+  3. Optional `Refresh ranking` recomputes session-level results and both users converge to the same updated order.
+  4. Ranking generation failures preserve prior location/ranking inputs, show actionable retry messaging, and allow retry without re-entry.
+**Plans**: 3 plans
+Plans:
+- [x] 07-01-PLAN.md — Implement ranking-input save state orchestration and automatic waiting/generating transitions.
+- [x] 07-02-PLAN.md — Add idempotent session-level shared ranking generation/persistence with conflict-safe sync and refresh path.
+- [x] 07-03-PLAN.md — Polish responsive shared-results rendering and telemetry coverage for save→wait→generate→render/failure lifecycle.
+**UI hint**: yes
+
 ## Progress
 
 | Phase | Plans Complete | Status | Completed |
@@ -282,3 +325,4 @@ Plans:
 | 4. Launch Readiness & Stabilization | 3/3 | Complete | 04-01, 04-02, 04-03 |
 | 5. UX Refresh & Decision Confidence | 3/3 | Complete | 05-01, 05-02, 05-03 |
 | 6. UX Polish & Professional Experience | 3/3 | Complete | 06-01, 06-02, 06-03 |
+| 7. Shared Auto-Ranking & Synced Results | 3/3 | Complete   | 2026-04-09 |

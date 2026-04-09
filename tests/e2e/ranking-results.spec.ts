@@ -1,7 +1,25 @@
 import { expect, test } from "@playwright/test";
 
-test("shows polished ranking readability and actions", async ({ page }) => {
+test("auto-ranking lifecycle renders shared results and retry messaging", async ({ page }) => {
   const appUrl = process.env.E2E_APP_URL ?? "http://localhost:3000";
+  const now = new Date().toISOString();
+
+  const sharedResults = [
+    {
+      venueId: "venue-1",
+      name: "Coffee Spot",
+      lat: 40.72,
+      lng: -73.99,
+      category: "cafe",
+      openNow: true,
+      etaParticipantA: 12,
+      etaParticipantB: 14,
+      fairnessScore: 0.93,
+      preferenceScore: 0.9,
+      totalScore: 0.92,
+      fairnessDeltaMinutes: 2
+    }
+  ];
 
   await page.route("**/v1/sessions/demo-session", async (route) => {
     await route.fulfill({
@@ -10,8 +28,15 @@ test("shows polished ranking readability and actions", async ({ page }) => {
       body: JSON.stringify({
         sessionId: "demo-session",
         status: "joined",
-        updatedAt: new Date().toISOString(),
+        updatedAt: now,
         inputsReady: true,
+        rankingInputsReady: true,
+        rankingLifecycle: {
+          state: "waiting",
+          lastErrorCode: null,
+          generationRequestId: null
+        },
+        rankedResults: [],
         shortlist: [],
         reactions: [],
         confirmedPlace: null,
@@ -37,7 +62,38 @@ test("shows polished ranking readability and actions", async ({ page }) => {
     await route.fulfill({
       status: 200,
       contentType: "application/json",
-      body: JSON.stringify({ events: [] })
+      body: JSON.stringify({
+        events: [
+          {
+            eventType: "session_updated",
+            sessionId: "demo-session",
+            updatedAt: "2026-01-01T10:06:00.000Z",
+            diff: {
+              rankingInputsReady: true,
+              rankingLifecycle: {
+                state: "generating",
+                lastErrorCode: null,
+                generationRequestId: "req-1"
+              }
+            }
+          },
+          {
+            eventType: "session_updated",
+            sessionId: "demo-session",
+            updatedAt: "2026-01-01T10:07:00.000Z",
+            diff: {
+              rankingInputsReady: true,
+              rankingLifecycle: {
+                state: "ready",
+                generatedAt: "2026-01-01T10:07:00.000Z",
+                lastErrorCode: null,
+                generationRequestId: "req-1"
+              },
+              rankedResults: sharedResults
+            }
+          }
+        ]
+      })
     });
   });
 
@@ -48,34 +104,41 @@ test("shows polished ranking readability and actions", async ({ page }) => {
       body: JSON.stringify({
         split: "50_50",
         tags: ["coffee"],
-        updatedAt: new Date().toISOString()
+        updatedAt: now,
+        rankingInputsReady: true,
+        rankingLifecycle: {
+          state: "generating",
+          lastErrorCode: null,
+          generationRequestId: "req-1"
+        }
       })
     });
   });
 
+  let refreshAttempts = 0;
   await page.route("**/v1/ranking/results", async (route) => {
+    refreshAttempts += 1;
+    if (refreshAttempts === 1) {
+      await route.fulfill({
+        status: 503,
+        contentType: "application/json",
+        body: JSON.stringify({
+          error: "RANKING_GENERATION_FAILED",
+          retryable: true,
+          message: "Saved locations and meet-up preferences are preserved. Retry with Refresh suggestions."
+        })
+      });
+      return;
+    }
+
     await route.fulfill({
       status: 200,
       contentType: "application/json",
       body: JSON.stringify({
         sessionId: "demo-session",
-        generatedAt: new Date().toISOString(),
-        results: [
-          {
-            venueId: "venue-1",
-            name: "Coffee Spot",
-            lat: 40.72,
-            lng: -73.99,
-            category: "cafe",
-            openNow: true,
-            etaParticipantA: 12,
-            etaParticipantB: 14,
-            fairnessScore: 0.93,
-            preferenceScore: 0.9,
-            totalScore: 0.92,
-            fairnessDeltaMinutes: 2
-          }
-        ]
+        generatedAt: "2026-01-01T10:08:00.000Z",
+        results: sharedResults,
+        mode: "refresh"
       })
     });
   });
@@ -128,13 +191,21 @@ test("shows polished ranking readability and actions", async ({ page }) => {
 
   await page.goto(`${appUrl}/s/demo-token?asHost=1&sessionId=demo-session&participantId=demo-host`);
 
-  await page.getByRole("button", { name: "Save ranking inputs" }).click();
-  await page.getByRole("button", { name: "Run ranking" }).click();
+  await expect(page.getByRole("button", { name: "Run ranking" })).toHaveCount(0);
+  await expect(page.getByText("shared suggestions are ready", { exact: false })).toBeVisible();
+
+  await page.getByRole("button", { name: "Save meet-up preferences" }).click();
+  await expect(page.getByText("shared suggestions are ready", { exact: false })).toBeVisible();
 
   await expect(page.getByText("Fairness delta:", { exact: false })).toBeVisible();
   await expect(page.getByRole("button", { name: "Accept" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Pass" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Add to shortlist" })).toBeVisible();
+
+  await page.getByRole("button", { name: "Refresh suggestions" }).click();
+  await expect(page.getByText("Saved locations and meet-up preferences are still preserved", { exact: false })).toBeVisible();
+  await page.getByRole("button", { name: "Refresh suggestions" }).click();
+  await expect(page.getByText("shared suggestions refreshed", { exact: false })).toBeVisible();
 
   await page.getByRole("button", { name: "Accept" }).click();
   await page.getByRole("button", { name: "Add to shortlist" }).click();

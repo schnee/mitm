@@ -16,6 +16,14 @@ test("keeps session flow synced when EventSource is unavailable", async ({ page 
         status: "joined",
         updatedAt: "2026-01-01T10:00:00.000Z",
         inputsReady: true,
+        rankingInputsReady: true,
+        rankingLifecycle: {
+          state: "ready",
+          generatedAt: "2026-01-01T10:00:00.000Z",
+          generationRequestId: "req-sync-fallback",
+          lastErrorCode: null
+        },
+        rankedResults: [],
         shortlist: [],
         reactions: [],
         confirmedPlace: null,
@@ -76,8 +84,8 @@ test("keeps session flow synced when EventSource is unavailable", async ({ page 
 
   await page.goto(`${appUrl}/s/demo-token?asHost=1&sessionId=demo-session&participantId=demo-host`);
 
-  await expect(page.getByRole("heading", { name: "Run ranking" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Run ranking" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Shared preferences status" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Refresh suggestions" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Shared shortlist" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Confirm this place" })).toBeVisible();
 });

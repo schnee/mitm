@@ -22,11 +22,11 @@ Turn a slow, awkward "where should we meet?" negotiation into a fast and fair de
 
 ### Active
 
-- [ ] Phase 6 UX polish: redesign create-session startup screen for hierarchy, confidence copy, and clear primary CTA (UX-06)
-- [ ] Phase 6 UX polish: redesign negotiation/ranking screen for readability, explainability clarity, and faster decision actions (UX-07)
-- [ ] Phase 6 UX polish: standardize loading/empty/error/success states across startup, ranking, shortlist, and confirmation (UX-08)
-- [ ] Phase 6 UX polish: responsive behavior refinement for mobile and desktop breakpoints across end-to-end flow (UX-09)
-- [ ] Phase 6 UX polish: accessibility baseline upgrades for focus visibility, labels, contrast, and keyboard operability (UX-10)
+- [x] Phase 7 orchestration: auto-transition from ranking-input save to waiting/generating states without manual ranking trigger (UX-11)
+- [x] Phase 7 orchestration: generate one canonical session-level ranked list from both participants' saved ranking inputs (UX-12, UX-13)
+- [x] Phase 7 orchestration: make `Refresh ranking` optional secondary action while removing required `Run ranking` in main flow (UX-14)
+- [x] Phase 7 orchestration: provide actionable ranking-failure retry states that preserve location/ranking progress (UX-15)
+- [x] Phase 7 orchestration: ensure idempotent concurrent-save handling, lifecycle telemetry, and responsive shared-results consistency (UX-16, UX-17, UX-18)
 
 ### Out of Scope
 
@@ -41,6 +41,7 @@ Turn a slow, awkward "where should we meet?" negotiation into a fast and fair de
 - User trust depends on perceived fairness and low setup friction.
 - For MVP, single-region rollout and limited provider integrations reduce operational risk.
 - Success depends on converting intent into confirmed meeting places quickly.
+- Ranking orchestration now prioritizes one shared, auto-generated list so both participants converge without manual reruns.
 
 ## Constraints
 
@@ -60,6 +61,7 @@ Turn a slow, awkward "where should we meet?" negotiation into a fast and fair de
 | Launch with tag-based preferences before deeper personalization | Fast to implement while still improving recommendation quality | - Pending |
 | Build mobile web first, then evaluate native apps | Enables faster validation and lower initial complexity | - Pending |
 | Keep Phase 6 scoped to UX polish only | Maintains execution focus and avoids re-opening validated ranking/provider decisions | Decided 2026-04-09 |
+| Keep Phase 7 scoped to shared ranking flow orchestration only | Improves coordination speed/trust while preserving validated fairness algorithm and provider integrations | Decided 2026-04-09 |
 | Deploy frontend on Cloudflare | Fast global edge delivery aligns with web-first MVP and mobile responsiveness goals | Decided 2026-04-08 |
 | Deploy backend on Google Cloud | Supports managed backend services and future scaling flexibility for session/realtime/ranking workloads | Decided 2026-04-08 |
 | Use session-first ephemeral persistence (Alternative 3) | Creating a server session at User 1 start reduces flow fragility while TTL limits sensitive retention | Decided 2026-04-08 |
@@ -82,4 +84,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-09 after Phase 6 UX polish planning transition*
+*Last updated: 2026-04-09 after Phase 7 shared auto-ranking orchestration execution completion*

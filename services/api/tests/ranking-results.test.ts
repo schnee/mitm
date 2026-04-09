@@ -269,4 +269,204 @@ describe("ranking results", () => {
       fairnessDeltaMinutes: expect.any(Number)
     });
   });
+
+  it("persists canonical ranked results and keeps snapshot in sync across refresh", async () => {
+    const sessions = new SessionRepository();
+    const ranking = new RankingRepository(sessions);
+    const created = sessions.createSession({ joinToken: "persistedrank12345", role: "host" });
+    const joined = sessions.joinSession({ joinToken: "persistedrank12345", role: "invitee" });
+
+    sessions.upsertParticipantLocationDraft({
+      sessionId: created.sessionId,
+      participantId: created.participantId,
+      mode: "manual",
+      lat: 40.71,
+      lng: -74.0,
+      addressLabel: "Host"
+    });
+    sessions.confirmParticipantLocation({ sessionId: created.sessionId, participantId: created.participantId });
+    sessions.upsertParticipantLocationDraft({
+      sessionId: created.sessionId,
+      participantId: joined.participantId,
+      mode: "manual",
+      lat: 40.74,
+      lng: -73.98,
+      addressLabel: "Invitee"
+    });
+    sessions.confirmParticipantLocation({ sessionId: created.sessionId, participantId: joined.participantId });
+
+    ranking.upsertRankingInputs({
+      sessionId: created.sessionId,
+      participantId: created.participantId,
+      split: "50_50",
+      tags: ["coffee"]
+    });
+    ranking.upsertRankingInputs({
+      sessionId: created.sessionId,
+      participantId: joined.participantId,
+      split: "50_50",
+      tags: ["coffee"]
+    });
+
+    let candidateVersion = 1;
+    const service = new RankingService(sessions, ranking, {
+      searchCandidates: async () =>
+        candidateVersion === 1
+          ? [
+              {
+                venueId: "coffee-spot",
+                name: "Coffee Spot",
+                lat: 40.72,
+                lng: -73.99,
+                category: "cafe",
+                openNow: true,
+                tags: ["coffee"]
+              },
+              {
+                venueId: "cocktail-room",
+                name: "Cocktail Room",
+                lat: 40.73,
+                lng: -73.97,
+                category: "bar",
+                openNow: true,
+                tags: ["cocktails"]
+              }
+            ]
+          : [
+              {
+                venueId: "cocktail-room",
+                name: "Cocktail Room",
+                lat: 40.73,
+                lng: -73.97,
+                category: "bar",
+                openNow: true,
+                tags: ["cocktails"]
+              },
+              {
+                venueId: "coffee-spot",
+                name: "Coffee Spot",
+                lat: 40.72,
+                lng: -73.99,
+                category: "cafe",
+                openNow: true,
+                tags: ["coffee"]
+              }
+            ],
+      getTravelDurations: async () => [
+        [15, 15],
+        [15, 15]
+      ]
+    });
+
+    const first = await getRankedResultsHandler({ sessionId: created.sessionId }, { service });
+    expect(first.status).toBe(200);
+    const firstBody = first.body as { results: Array<{ venueId: string }>; mode: "refresh" };
+    expect(firstBody.mode).toBe("refresh");
+    expect(firstBody.results[0]?.venueId).toBe("coffee-spot");
+
+    const firstSnapshot = sessions.getSessionSnapshot(created.sessionId);
+    expect(firstSnapshot?.rankingLifecycle).toMatchObject({ state: "ready" });
+    expect(firstSnapshot?.rankedResults.map((item) => item.venueId)).toEqual(firstBody.results.map((item) => item.venueId));
+
+    candidateVersion = 2;
+    ranking.upsertRankingInputs({
+      sessionId: created.sessionId,
+      participantId: created.participantId,
+      split: "50_50",
+      tags: ["cocktails"]
+    });
+    ranking.upsertRankingInputs({
+      sessionId: created.sessionId,
+      participantId: joined.participantId,
+      split: "50_50",
+      tags: ["cocktails"]
+    });
+
+    const second = await getRankedResultsHandler({ sessionId: created.sessionId }, { service });
+    expect(second.status).toBe(200);
+    const secondBody = second.body as { results: Array<{ venueId: string }> };
+    expect(secondBody.results[0]?.venueId).toBe("cocktail-room");
+
+    const secondSnapshot = sessions.getSessionSnapshot(created.sessionId);
+    expect(secondSnapshot?.rankedResults.map((item) => item.venueId)).toEqual(secondBody.results.map((item) => item.venueId));
+  });
+
+  it("sets failed lifecycle while preserving saved location and ranking inputs", async () => {
+    const sessions = new SessionRepository();
+    const ranking = new RankingRepository(sessions);
+    const created = sessions.createSession({ joinToken: "rankfail123456789", role: "host" });
+    const joined = sessions.joinSession({ joinToken: "rankfail123456789", role: "invitee" });
+
+    sessions.upsertParticipantLocationDraft({
+      sessionId: created.sessionId,
+      participantId: created.participantId,
+      mode: "manual",
+      lat: 40.71,
+      lng: -74.0,
+      addressLabel: "Host"
+    });
+    sessions.confirmParticipantLocation({ sessionId: created.sessionId, participantId: created.participantId });
+    sessions.upsertParticipantLocationDraft({
+      sessionId: created.sessionId,
+      participantId: joined.participantId,
+      mode: "manual",
+      lat: 40.74,
+      lng: -73.98,
+      addressLabel: "Invitee"
+    });
+    sessions.confirmParticipantLocation({ sessionId: created.sessionId, participantId: joined.participantId });
+
+    ranking.upsertRankingInputs({
+      sessionId: created.sessionId,
+      participantId: created.participantId,
+      split: "70_30",
+      tags: ["coffee"]
+    });
+    ranking.upsertRankingInputs({
+      sessionId: created.sessionId,
+      participantId: joined.participantId,
+      split: "70_30",
+      tags: ["quiet"]
+    });
+
+    let shouldFail = true;
+    const service = new RankingService(sessions, ranking, {
+      searchCandidates: async () => {
+        if (shouldFail) {
+          throw new Error("provider down");
+        }
+        return [
+          {
+            venueId: "recovery-cafe",
+            name: "Recovery Cafe",
+            lat: 40.72,
+            lng: -73.99,
+            category: "cafe",
+            openNow: true,
+            tags: ["coffee"]
+          }
+        ];
+      },
+      getTravelDurations: async () => [[12], [14]]
+    });
+
+    const failed = await getRankedResultsHandler({ sessionId: created.sessionId }, { service });
+    expect(failed.status).toBe(503);
+    expect(failed.body).toMatchObject({
+      error: "RANKING_GENERATION_FAILED",
+      retryable: true
+    });
+
+    const failedSnapshot = sessions.getSessionSnapshot(created.sessionId);
+    expect(failedSnapshot?.rankingLifecycle).toMatchObject({ state: "failed", lastErrorCode: "GENERATION_FAILED" });
+    expect(sessions.getParticipant(created.sessionId, created.participantId)?.rankingInputsUpdatedAt).toBeTruthy();
+    expect(sessions.getParticipant(created.sessionId, joined.participantId)?.rankingInputsUpdatedAt).toBeTruthy();
+
+    shouldFail = false;
+    const retried = await getRankedResultsHandler({ sessionId: created.sessionId }, { service });
+    expect(retried.status).toBe(200);
+    const retriedSnapshot = sessions.getSessionSnapshot(created.sessionId);
+    expect(retriedSnapshot?.rankingLifecycle).toMatchObject({ state: "ready", lastErrorCode: null });
+    expect(retriedSnapshot?.rankedResults).toHaveLength(1);
+  });
 });

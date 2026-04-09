@@ -1,3 +1,5 @@
+import type { RankedVenue } from "../ranking/contracts";
+
 export type SessionStatus = "created" | "joined" | "locating" | "ranked" | "confirmed" | "expired";
 
 export type SessionParticipantRole = "host" | "invitee";
@@ -104,9 +106,21 @@ export interface SessionSnapshot {
   updatedAt: string;
   participants: SessionSnapshotParticipant[];
   inputsReady: boolean;
+  rankingInputsReady: boolean;
+  rankingLifecycle: RankingLifecycle;
+  rankedResults: RankedVenue[];
   shortlist: ShortlistVenue[];
   reactions: VenueReactionSummary[];
   confirmedPlace: ConfirmedPlace | null;
+}
+
+export type RankingLifecycleState = "waiting" | "generating" | "ready" | "failed";
+
+export interface RankingLifecycle {
+  state: RankingLifecycleState;
+  generatedAt?: string;
+  lastErrorCode?: string | null;
+  generationRequestId?: string | null;
 }
 
 export type FunnelEventName =
@@ -116,7 +130,13 @@ export type FunnelEventName =
   | "decision_confirmed"
   | "result_reacted"
   | "shortlist_opened"
-  | "reaction_to_shortlist";
+  | "reaction_to_shortlist"
+  | "ranking_inputs_saved"
+  | "ranking_waiting_for_partner"
+  | "ranking_generation_started"
+  | "ranking_generation_succeeded"
+  | "ranking_generation_failed"
+  | "ranking_results_rendered";
 
 export type FunnelEventMetadataValue = string | number | boolean | null;
 
@@ -132,11 +152,25 @@ export type SessionEventType =
   | "participant_location_confirmed"
   | "session_updated";
 
+export interface SessionEventDiff {
+  status?: SessionStatus;
+  inputsReady?: boolean;
+  participantCount?: number;
+  locationDraftUpdatedAt?: string;
+  locationConfirmedAt?: string;
+  shortlist?: ShortlistVenue[];
+  reactions?: VenueReactionSummary[];
+  confirmedPlace?: ConfirmedPlace | null;
+  rankingInputsReady?: boolean;
+  rankingLifecycle?: RankingLifecycle;
+  rankedResults?: RankedVenue[];
+}
+
 export interface SessionEvent {
   eventType: SessionEventType;
   sessionId: string;
   updatedAt: string;
   participantId?: string;
   participantRole?: SessionParticipantRole;
-  diff?: Record<string, unknown>;
+  diff?: SessionEventDiff;
 }

@@ -1,5 +1,9 @@
 import { rankingResultsSchema } from "../../modules/ranking/validation";
-import { RankingPreconditionError, type RankingService } from "../../modules/ranking/service";
+import {
+  RankingGenerationError,
+  RankingPreconditionError,
+  type RankingService
+} from "../../modules/ranking/service";
 
 export async function getRankedResultsHandler(
   payload: unknown,
@@ -11,11 +15,21 @@ export async function getRankedResultsHandler(
   }
 
   try {
-    const result = await deps.service.generateRankedResults(parsed.data.sessionId);
+    const result = await deps.service.generateSessionRankedResults(parsed.data.sessionId, "refresh");
     return { status: 200, body: result };
   } catch (error) {
     if (error instanceof RankingPreconditionError && error.code === "INPUTS_NOT_READY") {
       return { status: 409, body: { error: "INPUTS_NOT_READY" } };
+    }
+    if (error instanceof RankingGenerationError) {
+      return {
+        status: 503,
+        body: {
+          error: "RANKING_GENERATION_FAILED",
+          retryable: error.retryable,
+          message: "Saved locations and meet-up preferences are preserved. Retry with Refresh suggestions."
+        }
+      };
     }
     return { status: 500, body: { error: "UNEXPECTED_ERROR" } };
   }

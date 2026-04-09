@@ -14,8 +14,10 @@ import type {
   SessionParticipantRole,
   SessionRecord,
   SessionSnapshot,
-  SessionStatus
+  SessionStatus,
+  RankingLifecycle
 } from "./contracts";
+import type { RankedVenue } from "../ranking/contracts";
 import { assertValidTransition } from "./state-machine";
 
 type SessionErrorCode =
@@ -56,6 +58,8 @@ export class SessionRepository {
   private shortlistBySessionId = new Map<string, ShortlistVenue[]>();
   private reactionsBySessionId = new Map<string, VenueReaction[]>();
   private confirmedPlaceBySessionId = new Map<string, ConfirmedPlace | null>();
+  private rankingLifecycleBySessionId = new Map<string, RankingLifecycle>();
+  private rankedResultsBySessionId = new Map<string, RankedVenue[]>();
 
   createSession(params: CreateSessionParams): CreateSessionResult {
     const now = params.now ?? new Date();
@@ -86,6 +90,8 @@ export class SessionRepository {
     this.shortlistBySessionId.set(sessionId, []);
     this.reactionsBySessionId.set(sessionId, []);
     this.confirmedPlaceBySessionId.set(sessionId, null);
+    this.rankingLifecycleBySessionId.set(sessionId, { state: "waiting", lastErrorCode: null, generationRequestId: null });
+    this.rankedResultsBySessionId.set(sessionId, []);
     this.eventsBySessionId.set(sessionId, [
       {
         eventType: "session_updated",
@@ -268,6 +274,109 @@ export class SessionRepository {
   areBothLocationsConfirmed(sessionId: string): boolean {
     const participants = this.getParticipants(sessionId);
     return participants.length === 2 && participants.every((item) => Boolean(item.locationConfirmedAt));
+  }
+
+  areBothRankingInputsSaved(sessionId: string): boolean {
+    const participants = this.getParticipants(sessionId);
+    return participants.length === 2 && participants.every((item) => Boolean(item.rankingInputsUpdatedAt));
+  }
+
+  updateRankingOrchestrationState(params: {
+    sessionId: string;
+    rankingInputsReady: boolean;
+    rankingLifecycle: RankingLifecycle;
+    now?: Date;
+  }): void {
+    this.setRankingLifecycle({
+      sessionId: params.sessionId,
+      rankingInputsReady: params.rankingInputsReady,
+      patch: params.rankingLifecycle,
+      now: params.now
+    });
+  }
+
+  setRankingLifecycle(params: {
+    sessionId: string;
+    rankingInputsReady?: boolean;
+    patch: Partial<RankingLifecycle> & Pick<RankingLifecycle, "state">;
+    now?: Date;
+  }): RankingLifecycle {
+    const session = this.getSessionById(params.sessionId);
+    if (!session) {
+      throw new SessionDomainError("SESSION_NOT_FOUND", "No session found for id");
+    }
+
+    const current = this.getRankingLifecycle(params.sessionId);
+    const updatedAt = (params.now ?? new Date()).toISOString();
+    const nextGeneratedAt = params.patch.generatedAt ?? current.generatedAt;
+    const nextLifecycle: RankingLifecycle = {
+      state: params.patch.state,
+      ...(nextGeneratedAt ? { generatedAt: nextGeneratedAt } : {}),
+      lastErrorCode: params.patch.lastErrorCode ?? null,
+      generationRequestId: params.patch.generationRequestId ?? null
+    };
+    this.rankingLifecycleBySessionId.set(params.sessionId, nextLifecycle);
+
+    this.pushEvent({
+      eventType: "session_updated",
+      sessionId: params.sessionId,
+      updatedAt,
+      diff: {
+        rankingInputsReady: params.rankingInputsReady ?? this.areBothRankingInputsSaved(params.sessionId),
+        rankingLifecycle: this.getRankingLifecycle(params.sessionId)
+      }
+    });
+
+    return this.getRankingLifecycle(params.sessionId);
+  }
+
+  upsertSessionRankedResults(params: {
+    sessionId: string;
+    results: RankedVenue[];
+    generatedAt: string;
+    rankingInputsReady?: boolean;
+    generationRequestId?: string | null;
+    now?: Date;
+  }): RankedVenue[] {
+    const session = this.getSessionById(params.sessionId);
+    if (!session) {
+      throw new SessionDomainError("SESSION_NOT_FOUND", "No session found for id");
+    }
+
+    const updatedAt = (params.now ?? new Date()).toISOString();
+    const nextResults = params.results.slice();
+    this.rankedResultsBySessionId.set(params.sessionId, nextResults);
+    this.rankingLifecycleBySessionId.set(params.sessionId, {
+      state: "ready",
+      generatedAt: params.generatedAt,
+      lastErrorCode: null,
+      generationRequestId: params.generationRequestId ?? null
+    });
+
+    this.pushEvent({
+      eventType: "session_updated",
+      sessionId: params.sessionId,
+      updatedAt,
+      diff: {
+        rankingInputsReady: params.rankingInputsReady ?? this.areBothRankingInputsSaved(params.sessionId),
+        rankingLifecycle: this.getRankingLifecycle(params.sessionId),
+        rankedResults: this.getSessionRankedResults(params.sessionId)
+      }
+    });
+
+    return this.getSessionRankedResults(params.sessionId);
+  }
+
+  getRankingLifecycle(sessionId: string): RankingLifecycle {
+    const current = this.rankingLifecycleBySessionId.get(sessionId);
+    if (current) {
+      return { ...current };
+    }
+    return { state: "waiting", lastErrorCode: null, generationRequestId: null };
+  }
+
+  getSessionRankedResults(sessionId: string): RankedVenue[] {
+    return (this.rankedResultsBySessionId.get(sessionId) ?? []).slice();
   }
 
   upsertShortlistVenue(params: {
@@ -478,7 +587,10 @@ export class SessionRepository {
     }
 
     const events = this.funnelEventsBySessionId.get(sessionId) ?? [];
-    if ((event === "inputs_set" || event === "decision_confirmed") && events.some((item) => item.event === event)) {
+    if (
+      (event === "inputs_set" || event === "decision_confirmed" || event === "ranking_results_rendered") &&
+      events.some((item) => item.event === event)
+    ) {
       return;
     }
 
@@ -519,6 +631,9 @@ export class SessionRepository {
       updatedAt: session.updatedAt,
       participants,
       inputsReady: this.areBothLocationsConfirmed(sessionId),
+      rankingInputsReady: this.areBothRankingInputsSaved(sessionId),
+      rankingLifecycle: this.getRankingLifecycle(sessionId),
+      rankedResults: this.getSessionRankedResults(sessionId),
       shortlist: (this.shortlistBySessionId.get(sessionId) ?? []).slice(),
       reactions: this.getReactionSummaries(sessionId),
       confirmedPlace: this.confirmedPlaceBySessionId.get(sessionId) ?? null
@@ -555,6 +670,12 @@ export class SessionRepository {
     this.shortlistBySessionId.set(overrides.sessionId, []);
     this.reactionsBySessionId.set(overrides.sessionId, []);
     this.confirmedPlaceBySessionId.set(overrides.sessionId, null);
+    this.rankingLifecycleBySessionId.set(overrides.sessionId, {
+      state: "waiting",
+      lastErrorCode: null,
+      generationRequestId: null
+    });
+    this.rankedResultsBySessionId.set(overrides.sessionId, []);
   }
 
   private getReactionSummaries(sessionId: string): VenueReactionSummary[] {

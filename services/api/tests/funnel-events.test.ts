@@ -4,6 +4,7 @@ import { RankingRepository } from "../src/modules/ranking/repository";
 import { RankingService } from "../src/modules/ranking/service";
 import { SessionDomainError, SessionRepository } from "../src/modules/session/repository";
 import { getSessionFunnelHandler } from "../src/routes/analytics/getSessionFunnel";
+import { getSessionSnapshotHandler } from "../src/routes/sessions/getSessionSnapshot";
 
 describe("repository funnel contracts", () => {
   it("stores session_start and returns events in chronological order", () => {
@@ -127,6 +128,85 @@ describe("funnel lifecycle emission", () => {
     );
     expect(events.filter((item) => item.event === "decision_confirmed")).toHaveLength(1);
   });
+
+  it("emits ranking save/wait/generate/succeed/fail/render lifecycle telemetry", async () => {
+    const sessions = new SessionRepository();
+    const locations = new LocationRepository(sessions);
+    const ranking = new RankingRepository(sessions);
+
+    let shouldFail = true;
+    const service = new RankingService(sessions, ranking, {
+      searchCandidates: async () => {
+        if (shouldFail) {
+          throw new Error("provider outage");
+        }
+        return [
+          {
+            venueId: "coffee-spot",
+            name: "Coffee Spot",
+            lat: 40.72,
+            lng: -73.99,
+            category: "cafe",
+            openNow: true,
+            tags: ["coffee"]
+          }
+        ];
+      },
+      getTravelDurations: async () => [[10], [12]]
+    });
+
+    const created = sessions.createSession({ joinToken: "ranktelemetry123", role: "host" });
+    const joined = sessions.joinSession({ joinToken: "ranktelemetry123", role: "invitee" });
+
+    locations.upsertLocationDraft({
+      mode: "manual",
+      sessionId: created.sessionId,
+      participantId: created.participantId,
+      lat: 40.71,
+      lng: -74.0,
+      addressLabel: "Host"
+    });
+    locations.confirmLocation({ sessionId: created.sessionId, participantId: created.participantId });
+    locations.upsertLocationDraft({
+      mode: "manual",
+      sessionId: created.sessionId,
+      participantId: joined.participantId,
+      lat: 40.74,
+      lng: -73.98,
+      addressLabel: "Invitee"
+    });
+    locations.confirmLocation({ sessionId: created.sessionId, participantId: joined.participantId });
+
+    ranking.upsertRankingInputs({
+      sessionId: created.sessionId,
+      participantId: created.participantId,
+      split: "50_50",
+      tags: ["coffee"]
+    });
+    ranking.upsertRankingInputs({
+      sessionId: created.sessionId,
+      participantId: joined.participantId,
+      split: "50_50",
+      tags: ["coffee"]
+    });
+
+    await expect(service.generateSessionRankedResults(created.sessionId, "auto")).rejects.toThrowError();
+    shouldFail = false;
+    await service.generateSessionRankedResults(created.sessionId, "refresh");
+    await getSessionSnapshotHandler(created.sessionId, { repository: sessions });
+
+    const events = sessions.listFunnelEvents(created.sessionId);
+    expect(events.map((item) => item.event)).toEqual(
+      expect.arrayContaining([
+        "ranking_inputs_saved",
+        "ranking_waiting_for_partner",
+        "ranking_generation_started",
+        "ranking_generation_failed",
+        "ranking_generation_succeeded",
+        "ranking_results_rendered"
+      ])
+    );
+  });
 });
 
 describe("analytics funnel route", () => {
@@ -155,6 +235,15 @@ describe("analytics funnel route", () => {
         firstReactionAt: null,
         firstShortlistAt: null,
         reactionToShortlistSeconds: null
+      },
+      rankingLifecycleSummary: {
+        inputsSavedCount: 0,
+        waitingForPartnerCount: 0,
+        generationStartedCount: 0,
+        generationSucceededCount: 0,
+        generationFailedCount: 0,
+        resultsRenderedCount: 0,
+        lastGenerationMode: null
       }
     });
   });

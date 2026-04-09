@@ -18,6 +18,29 @@ test("completes full funnel and validates telemetry completeness", async ({ page
         status: "joined",
         updatedAt: new Date().toISOString(),
         inputsReady: true,
+        rankingInputsReady: true,
+        rankingLifecycle: {
+          state: "ready",
+          generatedAt: "2026-01-01T10:09:00.000Z",
+          generationRequestId: "req-funnel-demo",
+          lastErrorCode: null
+        },
+        rankedResults: [
+          {
+            venueId: "coffee-spot",
+            name: "Coffee Spot",
+            category: "cafe",
+            openNow: true,
+            lat: 40.72,
+            lng: -73.99,
+            etaParticipantA: 12,
+            etaParticipantB: 14,
+            fairnessScore: 0.93,
+            preferenceScore: 0.9,
+            totalScore: 0.92,
+            fairnessDeltaMinutes: 2
+          }
+        ],
         shortlist: [],
         reactions: [],
         confirmedPlace: null,
@@ -54,7 +77,14 @@ test("completes full funnel and validates telemetry completeness", async ({ page
       body: JSON.stringify({
         split: "50_50",
         tags: ["coffee"],
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
+        rankingInputsReady: true,
+        rankingLifecycle: {
+          state: "ready",
+          generatedAt: "2026-01-01T10:09:00.000Z",
+          generationRequestId: "req-funnel-demo",
+          lastErrorCode: null
+        }
       })
     });
   });
@@ -183,13 +213,12 @@ test("completes full funnel and validates telemetry completeness", async ({ page
 
   await page.goto(`${appUrl}/s/demo-token?asHost=1&sessionId=demo-session&participantId=demo-host`);
 
-  const saveInputsButton = page.getByRole("button", { name: "Save ranking inputs" });
+  const saveInputsButton = page.getByRole("button", { name: "Save meet-up preferences" });
   await saveInputsButton.focus();
   await expect(saveInputsButton).toBeFocused();
   await page.keyboard.press("Enter");
-  await expect(page.getByText("Success: ranking inputs saved.")).toBeVisible();
+  await expect(page.getByText("Success: preferences saved.", { exact: false })).toBeVisible();
 
-  await page.getByRole("button", { name: "Run ranking" }).click();
   await expect(page.getByText("Fairness delta: 2 min")).toBeVisible();
   await expect(page.getByRole("button", { name: "Accept" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Pass" })).toBeVisible();
