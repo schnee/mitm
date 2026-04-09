@@ -84,6 +84,8 @@ export class RankingService {
       this.sessionRepository.updateSessionStatus(sessionId, "ranked");
     }
 
+    this.sessionRepository.recordFunnelEvent(sessionId, "results_returned", { resultCount: results.length });
+
     return {
       sessionId,
       generatedAt: new Date().toISOString(),

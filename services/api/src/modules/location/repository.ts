@@ -27,6 +27,7 @@ export class LocationRepository {
   }
 
   confirmLocation(input: { sessionId: string; participantId: string }): { confirmedAt: string; inputsReady: boolean } {
+    const inputsReadyBefore = this.sessionRepository.areBothLocationsConfirmed(input.sessionId);
     const participant = this.sessionRepository.confirmParticipantLocation({
       sessionId: input.sessionId,
       participantId: input.participantId
@@ -36,9 +37,14 @@ export class LocationRepository {
       throw new SessionDomainError("SESSION_NOT_FOUND", "Confirmation failed");
     }
 
+    const inputsReady = this.sessionRepository.areBothLocationsConfirmed(input.sessionId);
+    if (!inputsReadyBefore && inputsReady) {
+      this.sessionRepository.recordFunnelEvent(input.sessionId, "inputs_set");
+    }
+
     return {
       confirmedAt: participant.locationConfirmedAt,
-      inputsReady: this.sessionRepository.areBothLocationsConfirmed(input.sessionId)
+      inputsReady
     };
   }
 }

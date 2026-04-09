@@ -91,6 +91,17 @@ export interface SessionSnapshot {
   confirmedPlace: ConfirmedPlace | null;
 }
 
+export type FunnelEventName = "session_start" | "inputs_set" | "results_returned" | "decision_confirmed";
+
+export type FunnelEventMetadataValue = string | number | boolean | null;
+
+export interface FunnelEventRecord {
+  sessionId: string;
+  event: FunnelEventName;
+  occurredAt: string;
+  metadata?: Record<string, FunnelEventMetadataValue>;
+}
+
 export type SessionEventType =
   | "participant_joined"
   | "participant_location_confirmed"
