@@ -9,5 +9,11 @@ export async function getSessionSnapshotHandler(
     return { status: 404, body: { error: "SESSION_NOT_FOUND" } };
   }
 
+  if (snapshot.rankingLifecycle.state === "ready" && snapshot.rankedResults.length > 0) {
+    deps.repository.recordFunnelEvent(sessionId, "ranking_results_rendered", {
+      resultCount: snapshot.rankedResults.length
+    });
+  }
+
   return { status: 200, body: snapshot };
 }

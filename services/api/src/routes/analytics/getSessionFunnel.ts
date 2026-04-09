@@ -32,6 +32,14 @@ export async function getSessionFunnelHandler(
     );
     const reactionEvents = events.filter((item) => item.event === "result_reacted");
     const shortlistEvents = events.filter((item) => item.event === "shortlist_opened");
+    const rankingLifecycleEvents = {
+      inputsSaved: events.filter((item) => item.event === "ranking_inputs_saved"),
+      waitingForPartner: events.filter((item) => item.event === "ranking_waiting_for_partner"),
+      generationStarted: events.filter((item) => item.event === "ranking_generation_started"),
+      generationSucceeded: events.filter((item) => item.event === "ranking_generation_succeeded"),
+      generationFailed: events.filter((item) => item.event === "ranking_generation_failed"),
+      resultsRendered: events.filter((item) => item.event === "ranking_results_rendered")
+    };
     const firstReactionAt = reactionEvents[0]?.occurredAt ?? null;
     const firstShortlistAt = shortlistEvents[0]?.occurredAt ?? null;
     const firstReactionEpoch = toEpoch(firstReactionAt ?? undefined);
@@ -56,6 +64,18 @@ export async function getSessionFunnelHandler(
           firstReactionAt,
           firstShortlistAt,
           reactionToShortlistSeconds
+        },
+        rankingLifecycleSummary: {
+          inputsSavedCount: rankingLifecycleEvents.inputsSaved.length,
+          waitingForPartnerCount: rankingLifecycleEvents.waitingForPartner.length,
+          generationStartedCount: rankingLifecycleEvents.generationStarted.length,
+          generationSucceededCount: rankingLifecycleEvents.generationSucceeded.length,
+          generationFailedCount: rankingLifecycleEvents.generationFailed.length,
+          resultsRenderedCount: rankingLifecycleEvents.resultsRendered.length,
+          lastGenerationMode:
+            (rankingLifecycleEvents.generationSucceeded.at(-1)?.metadata?.mode as string | undefined) ??
+            (rankingLifecycleEvents.generationFailed.at(-1)?.metadata?.mode as string | undefined) ??
+            null
         }
       }
     };
