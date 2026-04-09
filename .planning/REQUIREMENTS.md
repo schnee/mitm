@@ -9,15 +9,15 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Sessions
 
-- [ ] **SESS-01**: User can create a two-person meetup session and receive a shareable join link.
-- [ ] **SESS-02**: Invitee can join session from link without creating an account.
-- [ ] **SESS-03**: Both participants can see synchronized session state (inputs, shortlist, confirmation status).
+- [x] **SESS-01**: User can create a two-person meetup session and receive a shareable join link.
+- [x] **SESS-02**: Invitee can join session from link without creating an account.
+- [x] **SESS-03**: Both participants can see synchronized session state (inputs, shortlist, confirmation status).
 
 ### Location and Consent
 
-- [ ] **LOCT-01**: User can provide location via current location permission or typed address.
-- [ ] **LOCT-02**: User can review and confirm the location used for ranking before results are generated.
-- [ ] **LOCT-03**: If geolocation fails or is denied, user can complete flow via manual location entry.
+- [x] **LOCT-01**: User can provide location via current location permission or typed address.
+- [x] **LOCT-02**: User can review and confirm the location used for ranking before results are generated.
+- [x] **LOCT-03**: If geolocation fails or is denied, user can complete flow via manual location entry.
 
 ### Travel Fairness and Preferences
 
@@ -39,8 +39,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Web and Reliability
 
-- [ ] **PLAT-01**: Core flow works on mobile web and desktop web from modern browsers.
-- [ ] **PLAT-02**: Core decision funnel events are captured for analytics (`session_start`, `inputs_set`, `results_returned`, `decision_confirmed`).
+- [x] **PLAT-01**: Core flow works on mobile web and desktop web from modern browsers.
+- [x] **PLAT-02**: Core decision funnel events are captured for analytics (`session_start`, `inputs_set`, `results_returned`, `decision_confirmed`).
 
 ## v2 Requirements
 
@@ -94,8 +94,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DECS-01 | Phase 3 | Complete |
 | DECS-02 | Phase 3 | Complete |
 | DECS-03 | Phase 3 | Complete |
-| PLAT-01 | Phase 4 | Pending |
-| PLAT-02 | Phase 4 | Pending |
+| PLAT-01 | Phase 4 | Complete |
+| PLAT-02 | Phase 4 | Complete |
 
 **Coverage:**
 - v1 requirements: 17 total
@@ -104,4 +104,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-04-08*
-*Last updated: 2026-04-08 after initial definition*
+*Last updated: 2026-04-09 after Phase 4 completion and launch matrix pass*

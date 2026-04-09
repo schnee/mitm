@@ -12,16 +12,17 @@ Turn a slow, awkward "where should we meet?" negotiation into a fast and fair de
 
 ### Validated
 
-(None yet — ship to validate)
+- [x] Two-person session flow where one person creates and the other joins (validated in Phase 1)
+- [x] Location capture for both participants with clear consent (validated in Phase 1)
+- [x] Travel willingness input with asymmetric split options (50/50, 60/40, 70/30) (validated in Phase 2)
+- [x] Preference tag selection (for example coffee, cocktails, vintage shops) (validated in Phase 2)
+- [x] Ranked venue recommendations based on fairness, travel burden, and preferences (validated in Phase 2)
+- [x] Shortlist and confirmation flow that ends with one selected place (validated in Phase 3)
+- [x] Cross-device launch readiness and funnel telemetry for modern web browsers (validated in Phase 4)
 
 ### Active
 
-- [x] Two-person session flow where one person creates and the other joins
-- [x] Location capture for both participants with clear consent
-- [ ] Travel willingness input with asymmetric split options (50/50, 60/40, 70/30)
-- [ ] Preference tag selection (for example coffee, cocktails, vintage shops)
-- [ ] Ranked venue recommendations based on fairness, travel burden, and preferences
-- [ ] Shortlist and confirmation flow that ends with one selected place
+- None. All v1 active requirements are now validated.
 
 ### Out of Scope
 
@@ -76,4 +77,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-08 after Phase 1 execution completion and human checkpoint approval*
+*Last updated: 2026-04-09 after Phase 4 completion and full launch matrix pass*

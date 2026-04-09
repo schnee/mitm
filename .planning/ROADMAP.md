@@ -13,7 +13,7 @@ This roadmap delivers the MVP in dependency order: establish two-person session 
 - [x] **Phase 1: Discovery & Session/Input Backbone** - Lock critical product/data decisions while delivering resilient two-person create/join and consented location capture.
 - [x] **Phase 2: Fair Ranking & Recommendation Core** - Generate and rank venue candidates by travel-time fairness and preference relevance.
 - [x] **Phase 3: Shared Shortlist & Confirmation** - Turn ranked options into one mutually confirmed destination.
-- [ ] **Phase 4: Launch Readiness & Stabilization** - Validate cross-browser funnel reliability and instrument decision funnel analytics.
+- [x] **Phase 4: Launch Readiness & Stabilization** - Validate cross-browser funnel reliability and instrument decision funnel analytics.
 
 ## Dependency Map and Sequencing Rationale
 
@@ -197,9 +197,9 @@ Plans:
   3. Top launch-blocking reliability issues are fixed and verified in staged runs before broad rollout.
 **Plans**: 3 plans
 Plans:
-- [ ] 04-01-PLAN.md — Add server-authoritative funnel telemetry capture for required lifecycle events.
-- [ ] 04-02-PLAN.md — Harden session sync with SSE fallback to prevent browser-specific flow blockers.
-- [ ] 04-03-PLAN.md — Add cross-browser launch verification suite and telemetry completeness endpoint.
+- [x] 04-01-PLAN.md — Add server-authoritative funnel telemetry capture for required lifecycle events.
+- [x] 04-02-PLAN.md — Harden session sync with SSE fallback to prevent browser-specific flow blockers.
+- [x] 04-03-PLAN.md — Add cross-browser launch verification suite and telemetry completeness endpoint.
 
 ## Progress
 
@@ -208,4 +208,4 @@ Plans:
 | 1. Discovery & Session/Input Backbone | 3/3 | Complete | 01-01, 01-02, 01-03 |
 | 2. Fair Ranking & Recommendation Core | 3/3 | Complete | 02-01, 02-02, 02-03 |
 | 3. Shared Shortlist & Confirmation | 3/3 | Complete | 03-01, 03-02, 03-03 |
-| 4. Launch Readiness & Stabilization | 0/TBD | Not started | - |
+| 4. Launch Readiness & Stabilization | 3/3 | Complete | 04-01, 04-02, 04-03 |
