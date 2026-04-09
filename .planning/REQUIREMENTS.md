@@ -55,13 +55,13 @@ Scope guardrail: UX polish only for v1.x; no fairness algorithm or provider chan
 ### v1.x Shared Auto-Ranking & Synced Results (UX/Flow Orchestration Scope)
 
 - [ ] **UX-11**: After a participant saves ranking inputs, UI transitions immediately to a clear next state: waiting for other participant if only one has saved, generating suggestions when both are ready.
-- [ ] **UX-12**: System computes one canonical ranked list per session using both participants' saved ranking inputs while preserving current split handling and preference merge behavior.
-- [ ] **UX-13**: Canonical ranked results persist at session scope and synchronize to both participants so both see the same ordered list without manual rerun.
+- [x] **UX-12**: System computes one canonical ranked list per session using both participants' saved ranking inputs while preserving current split handling and preference merge behavior.
+- [x] **UX-13**: Canonical ranked results persist at session scope and synchronize to both participants so both see the same ordered list without manual rerun.
 - [ ] **UX-14**: `Run ranking` is removed as a required primary action from the main flow; optional secondary `Refresh ranking` remains available for retry/recompute.
-- [ ] **UX-15**: If ranking generation fails (provider error, missing prerequisites, transient failure), users see actionable messaging with retry path and no loss of prior progress.
-- [ ] **UX-16**: Ranking generation is idempotent and conflict-safe under concurrent saves from both participants, preventing duplicate/conflicting list states.
-- [ ] **UX-17**: Telemetry captures flow events: `ranking_inputs_saved`, `ranking_waiting_for_partner`, `ranking_generation_started`, `ranking_generation_succeeded`, `ranking_generation_failed`, `ranking_results_rendered`.
-- [ ] **UX-18**: Shared ranked list rendering remains consistent across desktop/mobile breakpoints and preserves explainability/reaction affordances delivered in Phase 5/6.
+- [x] **UX-15**: If ranking generation fails (provider error, missing prerequisites, transient failure), users see actionable messaging with retry path and no loss of prior progress.
+- [x] **UX-16**: Ranking generation is idempotent and conflict-safe under concurrent saves from both participants, preventing duplicate/conflicting list states.
+- [x] **UX-17**: Telemetry captures flow events: `ranking_inputs_saved`, `ranking_waiting_for_partner`, `ranking_generation_started`, `ranking_generation_succeeded`, `ranking_generation_failed`, `ranking_results_rendered`.
+- [x] **UX-18**: Shared ranked list rendering remains consistent across desktop/mobile breakpoints and preserves explainability/reaction affordances delivered in Phase 5/6.
 
 Scope guardrail: keep split decision behavior conceptually unchanged; do not change fairness algorithm fundamentals or provider integrations; do not expand beyond two-user sessions.
 
@@ -124,14 +124,14 @@ Which phases cover which requirements. Updated during roadmap creation.
 | UX-08 | Phase 6 | Planned |
 | UX-09 | Phase 6 | Planned |
 | UX-10 | Phase 6 | Planned |
-| UX-11 | Phase 7 | Planned |
-| UX-12 | Phase 7 | Planned |
-| UX-13 | Phase 7 | Planned |
-| UX-14 | Phase 7 | Planned |
-| UX-15 | Phase 7 | Planned |
-| UX-16 | Phase 7 | Planned |
-| UX-17 | Phase 7 | Planned |
-| UX-18 | Phase 7 | Planned |
+| UX-11 | Phase 7 | Complete |
+| UX-12 | Phase 7 | Complete |
+| UX-13 | Phase 7 | Complete |
+| UX-14 | Phase 7 | Complete |
+| UX-15 | Phase 7 | Complete |
+| UX-16 | Phase 7 | Complete |
+| UX-17 | Phase 7 | Complete |
+| UX-18 | Phase 7 | Complete |
 
 **Coverage:**
 - v1 requirements: 30 total
@@ -140,4 +140,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-04-08*
-*Last updated: 2026-04-09 after Phase 7 shared auto-ranking and sync scope definition*
+*Last updated: 2026-04-09 after Phase 7 shared auto-ranking and sync execution completion*
