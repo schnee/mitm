@@ -5,6 +5,95 @@ import { upsertLocationDraft } from "../../lib/api/session-client";
 
 type GeoErrorCode = "PERMISSION_DENIED" | "POSITION_UNAVAILABLE" | "TIMEOUT" | null;
 
+function isLatitudeInRange(value: number): boolean {
+  return value >= -90 && value <= 90;
+}
+
+function isLongitudeInRange(value: number): boolean {
+  return value >= -180 && value <= 180;
+}
+
+function parseCoordinatePart(raw: string, axis: "lat" | "lng"): number | null {
+  const value = raw.trim().toUpperCase();
+  if (!value) {
+    return null;
+  }
+
+  const decimalMatch = value.match(/^[-+]?(?:\d+\.?\d*|\.\d+)$/);
+  if (decimalMatch) {
+    const parsed = Number.parseFloat(value);
+    if (!Number.isFinite(parsed)) {
+      return null;
+    }
+    if (axis === "lat" ? isLatitudeInRange(parsed) : isLongitudeInRange(parsed)) {
+      return parsed;
+    }
+    return null;
+  }
+
+  const hemisphereMatch = value.match(/[NSEW]/);
+  const hemisphere = hemisphereMatch?.[0] ?? null;
+  if (hemisphere) {
+    if (axis === "lat" && (hemisphere === "E" || hemisphere === "W")) {
+      return null;
+    }
+    if (axis === "lng" && (hemisphere === "N" || hemisphere === "S")) {
+      return null;
+    }
+  }
+
+  const normalized = value
+    .replace(/[NSEW]/g, " ")
+    .replace(/[°º'′"″]/g, " ")
+    .replace(/:/g, " ")
+    .replace(/,/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (!normalized) {
+    return null;
+  }
+
+  const parts = normalized.split(" ");
+  if (parts.length < 1 || parts.length > 3) {
+    return null;
+  }
+
+  const degreesRaw = Number.parseFloat(parts[0]);
+  const minutesRaw = parts.length >= 2 ? Number.parseFloat(parts[1]) : 0;
+  const secondsRaw = parts.length === 3 ? Number.parseFloat(parts[2]) : 0;
+
+  if (![degreesRaw, minutesRaw, secondsRaw].every((item) => Number.isFinite(item))) {
+    return null;
+  }
+
+  if (Math.abs(minutesRaw) >= 60 || Math.abs(secondsRaw) >= 60) {
+    return null;
+  }
+
+  const signFromDegrees = degreesRaw < 0 ? -1 : 1;
+  const signFromHemisphere =
+    hemisphere === "S" || hemisphere === "W" ? -1 : hemisphere === "N" || hemisphere === "E" ? 1 : null;
+
+  if (signFromHemisphere !== null && signFromDegrees !== signFromHemisphere && degreesRaw !== 0) {
+    return null;
+  }
+
+  const sign = signFromHemisphere ?? signFromDegrees;
+  const absoluteValue = Math.abs(degreesRaw) + Math.abs(minutesRaw) / 60 + Math.abs(secondsRaw) / 3600;
+  const parsed = sign * absoluteValue;
+
+  if (!Number.isFinite(parsed)) {
+    return null;
+  }
+
+  if (axis === "lat" ? isLatitudeInRange(parsed) : isLongitudeInRange(parsed)) {
+    return parsed;
+  }
+
+  return null;
+}
+
 export function LocationCaptureForm({
   sessionId,
   participantId,
@@ -31,14 +120,22 @@ export function LocationCaptureForm({
       return;
     }
 
-    const match = value.match(/^\s*([-+]?\d*\.?\d+)\s*,\s*([-+]?\d*\.?\d+)\s*$/);
-    if (!match) {
-      setCoordinatesHint("Use format: 30.271371, -97.759000");
+    const parts = value.split(",");
+    if (parts.length !== 2) {
+      setCoordinatesHint("Use `lat, lng` in decimal or HMS (for example 30.271371, -97.759000 or 30 16 17 N, 97 45 32 W).");
       return;
     }
 
-    setLat(match[1]);
-    setLng(match[2]);
+    const parsedLat = parseCoordinatePart(parts[0], "lat");
+    const parsedLng = parseCoordinatePart(parts[1], "lng");
+
+    if (parsedLat === null || parsedLng === null) {
+      setCoordinatesHint("Use `lat, lng` in decimal or HMS (for example 30.271371, -97.759000 or 30 16 17 N, 97 45 32 W).");
+      return;
+    }
+
+    setLat(String(parsedLat));
+    setLng(String(parsedLng));
     setCoordinatesHint("");
   };
 
@@ -46,8 +143,15 @@ export function LocationCaptureForm({
     try {
       setStatusType("loading");
       setStatusMessage("Loading: saving manual location draft.");
-      const parsedLat = Number.parseFloat(lat);
-      const parsedLng = Number.parseFloat(lng);
+      const parsedLat = parseCoordinatePart(lat, "lat");
+      const parsedLng = parseCoordinatePart(lng, "lng");
+
+      if (parsedLat === null || parsedLng === null) {
+        setStatusType("error");
+        setStatusMessage("Error: invalid coordinates. Use decimal or HMS format and retry.");
+        return;
+      }
+
       await upsertLocationDraft({
         mode: "manual",
         sessionId,
@@ -154,7 +258,7 @@ export function LocationCaptureForm({
             id="coordinates-input"
             value={coordinates}
             onChange={(event) => handleCoordinatesChange(event.target.value)}
-            placeholder="30.271371, -97.759000"
+            placeholder="30.271371, -97.759000 or 30 16 17 N, 97 45 32 W"
           />
         </label>
         {coordinatesHint && <p className="muted">Waiting: {coordinatesHint}</p>}

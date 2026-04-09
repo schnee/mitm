@@ -203,16 +203,15 @@ export default function JoinPage({ params }: JoinPageProps) {
     }
   };
 
-  const shortlist =
-    (sync.snapshot?.shortlist.length ?? 0) >= localShortlist.length
-      ? (sync.snapshot?.shortlist ?? localShortlist)
-      : localShortlist;
+  const snapshotShortlist = sync.snapshot?.shortlist ?? [];
+  const snapshotReactions = sync.snapshot?.reactions ?? [];
+  const snapshotRankedResults = sync.snapshot?.rankedResults ?? [];
+
+  const shortlist = snapshotShortlist.length >= localShortlist.length ? snapshotShortlist : localShortlist;
   const confirmedPlace = sync.snapshot?.confirmedPlace ?? localConfirmedPlace;
-  const reactions = sync.snapshot?.reactions ?? localReactions;
+  const reactions = snapshotReactions.length >= localReactions.length ? snapshotReactions : localReactions;
   const rankedResults =
-    (sync.snapshot?.rankedResults.length ?? 0) >= localRankedResults.length
-      ? (sync.snapshot?.rankedResults ?? localRankedResults)
-      : localRankedResults;
+    snapshotRankedResults.length >= localRankedResults.length ? snapshotRankedResults : localRankedResults;
   const rankingLifecycleState: RankingLifecycleState = sync.snapshot?.rankingLifecycle?.state ?? "waiting";
   const partnerParticipantId =
     sync.snapshot?.participants.find((item) => item.participantId !== participantId)?.participantId ?? null;
