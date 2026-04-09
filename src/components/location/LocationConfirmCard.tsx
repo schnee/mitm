@@ -16,24 +16,54 @@ export function LocationConfirmCard({
   inputsReady: boolean;
   onConfirmed: (confirmedAt: string) => void;
 }) {
-  const [status, setStatus] = useState("Awaiting confirmation");
+  const [statusType, setStatusType] = useState<"idle" | "loading" | "waiting" | "success" | "error">("idle");
+  const [status, setStatus] = useState("Idle: confirm your location when your draft is ready.");
 
   useEffect(() => {
     if (inputsReady) {
-      setStatus("Confirmed. Inputs ready for ranking.");
+      setStatusType("success");
+      setStatus("Success: confirmed. Inputs are ready for ranking.");
     }
   }, [inputsReady]);
 
   const runConfirm = async () => {
-    const result = await confirmLocation({ sessionId, participantId });
-    setStatus(result.inputsReady ? "Confirmed. Inputs ready for ranking." : "Confirmed. Waiting for other participant.");
-    onConfirmed(result.confirmedAt);
+    try {
+      setStatusType("loading");
+      setStatus("Loading: confirming your location.");
+      const result = await confirmLocation({ sessionId, participantId });
+      if (result.inputsReady) {
+        setStatusType("success");
+        setStatus("Success: confirmed. Inputs are ready for ranking.");
+      } else {
+        setStatusType("waiting");
+        setStatus("Waiting: your location is confirmed. Waiting for the other participant.");
+      }
+      onConfirmed(result.confirmedAt);
+    } catch {
+      setStatusType("error");
+      setStatus("Error: unable to confirm location right now. Please retry.");
+    }
   };
 
+  const statusClass =
+    statusType === "loading"
+      ? "status-loading"
+      : statusType === "waiting"
+        ? "status-waiting"
+        : statusType === "success"
+          ? "status-success"
+          : statusType === "error"
+            ? "status-error"
+            : "status-idle";
+
   return (
-    <section>
-      <h2>Confirm your location</h2>
+    <section className="panel stage" aria-labelledby="location-confirm-title">
+      <header className="section-header">
+        <h2 id="location-confirm-title">Confirm your location</h2>
+        <p>Confirm once your draft looks right. This unlocks ranking for both participants.</p>
+      </header>
       <button
+        className="btn-primary"
         type="button"
         disabled={!draftSaved}
         onClick={() => {
@@ -42,8 +72,10 @@ export function LocationConfirmCard({
       >
         Confirm location
       </button>
-      {!draftSaved && <p>Save a location draft before confirming.</p>}
-      <p>{status}</p>
+      {!draftSaved && <p className="status-badge status-waiting">Waiting: save a location draft before confirming.</p>}
+      <p className={`status-badge ${statusClass}`} role="status" aria-live="polite">
+        {status}
+      </p>
     </section>
   );
 }

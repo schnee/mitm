@@ -42,6 +42,16 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **PLAT-01**: Core flow works on mobile web and desktop web from modern browsers.
 - [x] **PLAT-02**: Core decision funnel events are captured for analytics (`session_start`, `inputs_set`, `results_returned`, `decision_confirmed`).
 
+### v1.x UX Polish (UX-only Scope)
+
+- [ ] **UX-06**: Redesign create-session startup screen with clear hierarchy, confidence copy, and primary CTA.
+- [ ] **UX-07**: Redesign negotiation/ranking screen for readability, explainability clarity, and faster decision actions.
+- [ ] **UX-08**: Improve loading/empty/error/success states across startup, ranking, shortlist, and confirmation.
+- [ ] **UX-09**: Ensure polished responsive behavior on mobile + desktop breakpoints for the full flow.
+- [ ] **UX-10**: Accessibility polish baseline (focus visibility, labels, contrast, keyboard operability for key actions).
+
+Scope guardrail: UX polish only for v1.x; no fairness algorithm or provider changes.
+
 ## v2 Requirements
 
 Deferred to future release. Tracked but not in current roadmap.
@@ -96,12 +106,17 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DECS-03 | Phase 3 | Complete |
 | PLAT-01 | Phase 4 | Complete |
 | PLAT-02 | Phase 4 | Complete |
+| UX-06 | Phase 6 | Planned |
+| UX-07 | Phase 6 | Planned |
+| UX-08 | Phase 6 | Planned |
+| UX-09 | Phase 6 | Planned |
+| UX-10 | Phase 6 | Planned |
 
 **Coverage:**
-- v1 requirements: 17 total
-- Mapped to phases: 17
+- v1 requirements: 22 total
+- Mapped to phases: 22
 - Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-04-08*
-*Last updated: 2026-04-09 after Phase 4 completion and launch matrix pass*
+*Last updated: 2026-04-09 after Phase 6 UX polish scope definition*

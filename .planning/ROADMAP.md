@@ -2,7 +2,7 @@
 
 ## Overview
 
-This roadmap delivers the MVP in dependency order: establish two-person session and consented input reliability first, prove fair ranking quality second, close decisions collaboratively third, then launch with cross-device reliability and instrumentation so stabilization is data-driven.
+This roadmap delivers the MVP in dependency order: establish two-person session and consented input reliability first, prove fair ranking quality second, close decisions collaboratively third, then launch with cross-device reliability and instrumentation so stabilization is data-driven, followed by a final UX polish pass for production-grade feel.
 
 ## Phases
 
@@ -15,6 +15,7 @@ This roadmap delivers the MVP in dependency order: establish two-person session 
 - [x] **Phase 3: Shared Shortlist & Confirmation** - Turn ranked options into one mutually confirmed destination.
 - [x] **Phase 4: Launch Readiness & Stabilization** - Validate cross-browser funnel reliability and instrument decision funnel analytics.
 - [x] **Phase 5: UX Refresh & Decision Confidence** - Improve clarity, trust, and speed of choice through a focused post-launch UX refresh.
+- [x] **Phase 6: UX Polish & Professional Experience** - Polish startup, negotiation/ranking, and shared decision flows to feel production-grade across devices.
 
 ## Dependency Map and Sequencing Rationale
 
@@ -22,6 +23,7 @@ This roadmap delivers the MVP in dependency order: establish two-person session 
 - **Phase 2 → Phase 3**: Shortlisting/confirmation only works once credible ranked results exist.
 - **Phase 3 → Phase 4**: Launch reliability and instrumentation require full end-to-end flow.
 - **Phase 4 → Phase 5**: UX optimization should be informed by real funnel telemetry and stabilized cross-browser behavior.
+- **Phase 5 → Phase 6**: Professional-grade polish should build on validated UX patterns and telemetry from the refresh cycle.
 
 Rationale: this order follows hard product dependencies and minimizes rework; each phase ends with a user-verifiable capability.
 
@@ -236,6 +238,40 @@ Plans:
 - [x] 05-03-PLAN.md — Run UX validation pass and instrument new interaction telemetry for optimization loops.
 **UI hint**: yes
 
+### Phase 6: UX Polish & Professional Experience
+**Goal**: Make startup, negotiation/ranking, and shared decision experiences feel consistently professional, fast, and trustworthy on mobile and desktop.
+**Depends on**: Phase 5
+**Requirements**: UX-06, UX-07, UX-08, UX-09, UX-10
+**Objective**: Deliver implementation-ready UX polish that improves clarity, confidence, and action speed without changing fairness logic or provider integrations.
+**Core Deliverables**:
+- Redesigned create-session startup screen with stronger hierarchy, confidence copy, and a clear primary CTA.
+- Redesigned negotiation/ranking screen with improved readability, explainability clarity, and faster decision actions.
+- Unified loading/empty/error/success states across startup, ranking, shortlist, and confirmation stages.
+- Responsive polish pass covering key mobile and desktop breakpoints for the full two-party flow.
+- Accessibility polish baseline for focus visibility, labels, contrast, and keyboard operability on core actions.
+**Success Metrics**:
+- **Leading**: Reduced time from session start screen view to successful session creation.
+- **Leading**: Increased rate of first decision action (react/shortlist/confirm path) after results render.
+- **Lagging**: Improved completion rate from `session_start` to `decision_confirmed` with lower UX-related drop-off.
+**Major Risks**:
+- Visual polish work may unintentionally regress familiar interaction patterns.
+- State-feedback updates can introduce inconsistency if not applied uniformly across screens.
+- Responsive and accessibility refinements may expose hidden layout and interaction edge cases.
+**Assumptions**:
+- Core ranking and provider behavior are stable enough that UX polish is now highest-impact work.
+- Current telemetry can detect improvements in speed-to-action and decision completion.
+- Two-party MVP scope remains fixed during this phase.
+**Non-Goals**:
+- Changes to fairness algorithm inputs, weights, or ranking back-end logic.
+- New places/routing provider integrations or provider abstraction expansion.
+- Product-scope expansion beyond the two-participant MVP.
+**Plans**: 3 plans
+Plans:
+- [x] 06-01-PLAN.md — Polish create-session startup flow with confidence-first hierarchy and CTA clarity.
+- [x] 06-02-PLAN.md — Redesign negotiation/ranking experience for explainability clarity and faster decisions.
+- [x] 06-03-PLAN.md — Standardize cross-flow states, responsive behavior, and accessibility baseline validation.
+**UI hint**: yes
+
 ## Progress
 
 | Phase | Plans Complete | Status | Completed |
@@ -245,3 +281,4 @@ Plans:
 | 3. Shared Shortlist & Confirmation | 3/3 | Complete | 03-01, 03-02, 03-03 |
 | 4. Launch Readiness & Stabilization | 3/3 | Complete | 04-01, 04-02, 04-03 |
 | 5. UX Refresh & Decision Confidence | 3/3 | Complete | 05-01, 05-02, 05-03 |
+| 6. UX Polish & Professional Experience | 3/3 | Complete | 06-01, 06-02, 06-03 |

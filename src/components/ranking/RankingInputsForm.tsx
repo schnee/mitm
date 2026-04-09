@@ -26,7 +26,8 @@ export function RankingInputsForm({
 }) {
   const [split, setSplit] = useState<WillingnessSplit>("50_50");
   const [tags, setTags] = useState<PreferenceTag[]>(["coffee"]);
-  const [status, setStatus] = useState("Set your split and preferences.");
+  const [statusType, setStatusType] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [status, setStatus] = useState("Idle: choose your travel split and preference tags.");
 
   const toggleTag = (tag: PreferenceTag) => {
     setTags((current) =>
@@ -36,21 +37,32 @@ export function RankingInputsForm({
 
   const submit = async () => {
     try {
+      setStatusType("loading");
+      setStatus("Loading: saving ranking inputs.");
       await upsertRankingInputs({ sessionId, participantId, split, tags });
-      setStatus("Ranking inputs saved.");
+      setStatusType("success");
+      setStatus("Success: ranking inputs saved.");
       onSaved();
     } catch {
-      setStatus("Unable to save ranking inputs. Check your selection and retry.");
+      setStatusType("error");
+      setStatus("Error: unable to save ranking inputs. Check your selection and retry.");
     }
   };
 
+  const statusClass = statusType === "loading" ? "status-loading" : statusType === "success" ? "status-success" : statusType === "error" ? "status-error" : "status-idle";
+
   return (
-    <section>
-      <h2>Ranking inputs</h2>
-      <fieldset>
+    <section className="panel stage" aria-labelledby="ranking-inputs-title">
+      <header className="section-header">
+        <h2 id="ranking-inputs-title">Ranking inputs</h2>
+        <p>Set your travel willingness and preference tags before running ranking.</p>
+      </header>
+
+      <fieldset className="panel input-stack">
         <legend>Travel split</legend>
-        <label>
+        <label htmlFor="split-50-50">
           <input
+            id="split-50-50"
             type="radio"
             name="split"
             value="50_50"
@@ -59,8 +71,9 @@ export function RankingInputsForm({
           />
           50/50
         </label>
-        <label>
+        <label htmlFor="split-60-40">
           <input
+            id="split-60-40"
             type="radio"
             name="split"
             value="60_40"
@@ -69,8 +82,9 @@ export function RankingInputsForm({
           />
           60/40
         </label>
-        <label>
+        <label htmlFor="split-70-30">
           <input
+            id="split-70-30"
             type="radio"
             name="split"
             value="70_30"
@@ -81,29 +95,37 @@ export function RankingInputsForm({
         </label>
       </fieldset>
 
-      <fieldset>
+      <fieldset className="panel input-stack">
         <legend>Preference tags</legend>
-        {TAG_LABELS.map((tag) => (
-          <label key={tag.value}>
-            <input
-              type="checkbox"
-              checked={tags.includes(tag.value)}
-              onChange={() => toggleTag(tag.value)}
-            />
-            {tag.label}
-          </label>
-        ))}
+        <div className="chip-list">
+          {TAG_LABELS.map((tag) => (
+            <label key={tag.value} className="chip" htmlFor={`tag-${tag.value}`}>
+              <input
+                id={`tag-${tag.value}`}
+                type="checkbox"
+                checked={tags.includes(tag.value)}
+                onChange={() => toggleTag(tag.value)}
+              />
+              {tag.label}
+            </label>
+          ))}
+        </div>
       </fieldset>
 
-      <button
-        type="button"
-        onClick={() => {
-          void submit();
-        }}
-      >
-        Save ranking inputs
-      </button>
-      <p>{status}</p>
+      <div className="btn-row">
+        <button
+          className="btn-primary"
+          type="button"
+          onClick={() => {
+            void submit();
+          }}
+        >
+          Save ranking inputs
+        </button>
+      </div>
+      <p className={`status-badge ${statusClass}`} role="status" aria-live="polite">
+        {status}
+      </p>
     </section>
   );
 }

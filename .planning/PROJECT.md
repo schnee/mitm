@@ -22,7 +22,11 @@ Turn a slow, awkward "where should we meet?" negotiation into a fast and fair de
 
 ### Active
 
-- None. All v1 active requirements are now validated.
+- [ ] Phase 6 UX polish: redesign create-session startup screen for hierarchy, confidence copy, and clear primary CTA (UX-06)
+- [ ] Phase 6 UX polish: redesign negotiation/ranking screen for readability, explainability clarity, and faster decision actions (UX-07)
+- [ ] Phase 6 UX polish: standardize loading/empty/error/success states across startup, ranking, shortlist, and confirmation (UX-08)
+- [ ] Phase 6 UX polish: responsive behavior refinement for mobile and desktop breakpoints across end-to-end flow (UX-09)
+- [ ] Phase 6 UX polish: accessibility baseline upgrades for focus visibility, labels, contrast, and keyboard operability (UX-10)
 
 ### Out of Scope
 
@@ -55,6 +59,7 @@ Turn a slow, awkward "where should we meet?" negotiation into a fast and fair de
 | Use percentage-based willingness split (for example 70/30) | Mirrors real negotiation language and user intent | - Pending |
 | Launch with tag-based preferences before deeper personalization | Fast to implement while still improving recommendation quality | - Pending |
 | Build mobile web first, then evaluate native apps | Enables faster validation and lower initial complexity | - Pending |
+| Keep Phase 6 scoped to UX polish only | Maintains execution focus and avoids re-opening validated ranking/provider decisions | Decided 2026-04-09 |
 | Deploy frontend on Cloudflare | Fast global edge delivery aligns with web-first MVP and mobile responsiveness goals | Decided 2026-04-08 |
 | Deploy backend on Google Cloud | Supports managed backend services and future scaling flexibility for session/realtime/ranking workloads | Decided 2026-04-08 |
 | Use session-first ephemeral persistence (Alternative 3) | Creating a server session at User 1 start reduces flow fragility while TTL limits sensitive retention | Decided 2026-04-08 |
@@ -77,4 +82,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-09 after Phase 4 completion and full launch matrix pass*
+*Last updated: 2026-04-09 after Phase 6 UX polish planning transition*

@@ -183,7 +183,12 @@ test("completes full funnel and validates telemetry completeness", async ({ page
 
   await page.goto(`${appUrl}/s/demo-token?asHost=1&sessionId=demo-session&participantId=demo-host`);
 
-  await page.getByRole("button", { name: "Save ranking inputs" }).click();
+  const saveInputsButton = page.getByRole("button", { name: "Save ranking inputs" });
+  await saveInputsButton.focus();
+  await expect(saveInputsButton).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(page.getByText("Success: ranking inputs saved.")).toBeVisible();
+
   await page.getByRole("button", { name: "Run ranking" }).click();
   await expect(page.getByText("Fairness delta: 2 min")).toBeVisible();
   await expect(page.getByRole("button", { name: "Accept" })).toBeVisible();
