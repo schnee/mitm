@@ -28,7 +28,7 @@ export function RankingInputsForm({
   const [split, setSplit] = useState<WillingnessSplit>("50_50");
   const [tags, setTags] = useState<PreferenceTag[]>(["coffee"]);
   const [statusType, setStatusType] = useState<"idle" | "loading" | "success" | "error">("idle");
-  const [status, setStatus] = useState("Idle: choose your travel split and preference tags.");
+  const [status, setStatus] = useState("Idle: choose your travel split and meet-up tags.");
 
   const toggleTag = (tag: PreferenceTag) => {
     setTags((current) =>
@@ -39,18 +39,18 @@ export function RankingInputsForm({
   const submit = async () => {
     try {
       setStatusType("loading");
-      setStatus("Loading: saving ranking inputs.");
+      setStatus("Loading: saving meet-up preferences.");
       const result = await upsertRankingInputs({ sessionId, participantId, split, tags });
       setStatusType("success");
       setStatus(
         result.rankingLifecycle.state === "waiting"
-          ? "Success: ranking inputs saved. Waiting for your partner to finish."
-          : "Success: ranking inputs saved. Generating shared suggestions."
+          ? "Success: preferences saved. Waiting for your partner to finish."
+          : "Success: preferences saved. Generating shared suggestions."
       );
       onSaved({ rankingInputsReady: result.rankingInputsReady, rankingLifecycle: result.rankingLifecycle });
     } catch {
       setStatusType("error");
-      setStatus("Error: unable to save ranking inputs. Check your selection and retry.");
+      setStatus("Error: unable to save meet-up preferences. Check your selection and retry.");
     }
   };
 
@@ -59,8 +59,8 @@ export function RankingInputsForm({
   return (
     <section className="panel stage" aria-labelledby="ranking-inputs-title">
       <header className="section-header">
-        <h2 id="ranking-inputs-title">Ranking inputs</h2>
-        <p>Set your travel willingness and preference tags to start shared ranking.</p>
+        <h2 id="ranking-inputs-title">Meet-up preferences</h2>
+        <p>Set your travel willingness and tags to generate shared suggestions.</p>
       </header>
 
       <fieldset className="panel input-stack">
@@ -125,7 +125,7 @@ export function RankingInputsForm({
             void submit();
           }}
         >
-          Save ranking inputs
+          Save meet-up preferences
         </button>
       </div>
       <p className={`status-badge ${statusClass}`} role="status" aria-live="polite">

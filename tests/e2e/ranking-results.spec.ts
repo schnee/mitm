@@ -125,7 +125,7 @@ test("auto-ranking lifecycle renders shared results and retry messaging", async 
         body: JSON.stringify({
           error: "RANKING_GENERATION_FAILED",
           retryable: true,
-          message: "Saved location and ranking inputs are preserved. Retry with Refresh ranking."
+          message: "Saved locations and meet-up preferences are preserved. Retry with Refresh suggestions."
         })
       });
       return;
@@ -192,20 +192,20 @@ test("auto-ranking lifecycle renders shared results and retry messaging", async 
   await page.goto(`${appUrl}/s/demo-token?asHost=1&sessionId=demo-session&participantId=demo-host`);
 
   await expect(page.getByRole("button", { name: "Run ranking" })).toHaveCount(0);
-  await expect(page.getByText("shared ranking is ready", { exact: false })).toBeVisible();
+  await expect(page.getByText("shared suggestions are ready", { exact: false })).toBeVisible();
 
-  await page.getByRole("button", { name: "Save ranking inputs" }).click();
-  await expect(page.getByText("shared ranking is ready", { exact: false })).toBeVisible();
+  await page.getByRole("button", { name: "Save meet-up preferences" }).click();
+  await expect(page.getByText("shared suggestions are ready", { exact: false })).toBeVisible();
 
   await expect(page.getByText("Fairness delta:", { exact: false })).toBeVisible();
   await expect(page.getByRole("button", { name: "Accept" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Pass" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Add to shortlist" })).toBeVisible();
 
-  await page.getByRole("button", { name: "Refresh ranking" }).click();
-  await expect(page.getByText("Saved locations and ranking inputs are still preserved", { exact: false })).toBeVisible();
-  await page.getByRole("button", { name: "Refresh ranking" }).click();
-  await expect(page.getByText("shared ranking refreshed", { exact: false })).toBeVisible();
+  await page.getByRole("button", { name: "Refresh suggestions" }).click();
+  await expect(page.getByText("Saved locations and meet-up preferences are still preserved", { exact: false })).toBeVisible();
+  await page.getByRole("button", { name: "Refresh suggestions" }).click();
+  await expect(page.getByText("shared suggestions refreshed", { exact: false })).toBeVisible();
 
   await page.getByRole("button", { name: "Accept" }).click();
   await page.getByRole("button", { name: "Add to shortlist" }).click();

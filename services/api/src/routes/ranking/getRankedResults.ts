@@ -27,7 +27,7 @@ export async function getRankedResultsHandler(
         body: {
           error: "RANKING_GENERATION_FAILED",
           retryable: error.retryable,
-          message: "Saved location and ranking inputs are preserved. Retry with Refresh ranking."
+          message: "Saved locations and meet-up preferences are preserved. Retry with Refresh suggestions."
         }
       };
     }
