@@ -93,6 +93,33 @@ cp deploy/cloudflare/.dev.vars.example deploy/cloudflare/.dev.vars
 npx wrangler@latest dev --config deploy/cloudflare/wrangler.toml
 ```
 
+## Cloudflare repository layout and watch-path strategy
+
+- Current `mitm` layout is a root Next.js app with a separate `services/api` backend (not a `frontend/` + `backend/` split like `hex`).
+- Implication: Cloudflare cannot target a `frontend/` directory in `mitm` as-is because that directory does not exist.
+
+Option A (recommended initially): keep the current layout and use Cloudflare Build Watch Paths so frontend deployments trigger only for frontend-relevant changes.
+
+Include examples:
+
+- `src/**`
+- `package.json`
+- `package-lock.json`
+- `next.config.*`
+- `tsconfig.json`
+- `deploy/cloudflare/**`
+
+Exclude examples:
+
+- `services/api/**`
+- `deploy/cloud-run/**`
+- `.planning/**`
+- `tests/**` (optional)
+
+Option B (future): refactor into a `frontend/` + `backend/` split for cleaner deployment isolation, with migration overhead (moved paths, CI updates, script/env rewiring).
+
+Recommendation: start with watch paths now, and refactor layout later only if operational friction justifies it.
+
 ## Minimal production env checklist
 
 - API: `APP_URL`, `CORS_ORIGIN`, `GOOGLE_MAPS_API_KEY`, `GOOGLE_MAPS_PLACES_RADIUS_METERS`
