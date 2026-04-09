@@ -1,0 +1,45 @@
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+substitutions:
+  _REGION: us-central1
+  _REPO: meet-me-in-the-middle
+  _SERVICE: mitm-api
+  _APP_URL: https://meet.example.com
+  _CORS_ORIGIN: https://meet.example.com
+  _PLACES_RADIUS: "2500"
+  _MAPS_SECRET: GOOGLE_MAPS_API_KEY
+  _IMAGE: ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:${SHORT_SHA}
+
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -f
+      - deploy/cloud-run/api.Dockerfile
+      - -t
+      - ${_IMAGE}
+      - .
+
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - ${_IMAGE}
+
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - ${_SERVICE}
+      - --project=$PROJECT_ID
+      - --region=${_REGION}
+      - --platform=managed
+      - --image=${_IMAGE}
+      - --allow-unauthenticated
+      - --port=8080
+      - --set-env-vars=APP_URL=${_APP_URL},CORS_ORIGIN=${_CORS_ORIGIN},GOOGLE_MAPS_PLACES_RADIUS_METERS=${_PLACES_RADIUS}
+      - --update-secrets=GOOGLE_MAPS_API_KEY=${_MAPS_SECRET}:latest
+
+images:
+  - ${_IMAGE}

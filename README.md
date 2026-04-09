@@ -1,5 +1,15 @@
 # Meet Me in the Middle
 
+## Production deployment scaffold
+
+Deployment config scaffolding for Cloud Run (API) + Cloudflare/OpenNext (web) is documented in `docs/deployment/production-cloud-run-cloudflare.md`.
+
+Quick command entrypoints:
+
+- `npm run deploy:api:cloudrun`
+- `npm run build:cloudflare`
+- `npm run deploy:cloudflare`
+
 ## Local setup
 
 1. Install dependencies:
@@ -64,8 +74,8 @@ This walkthrough assumes `GOOGLE_MAPS_API_KEY` is set so ranking returns candida
    - Browser A: `40.7128`, `-74.0060`
    - Browser B: `40.7306`, `-73.9352`
 4. In both browsers, click `Save manual location`, then `Confirm location`.
-5. In both browsers, save ranking preferences with `Save ranking inputs`.
-6. In either browser, click `Run ranking`, then `Add to shortlist`, then `Confirm this place`.
+5. In both browsers, save meet-up preferences with `Save meet-up preferences`.
+6. Wait for shared suggestions to appear automatically, then `Add to shortlist`, then `Confirm this place`.
 7. Confirm both browsers show the confirmed place and `Open in Maps` link.
 
 ## Automated tests
@@ -86,7 +96,7 @@ npm run test:e2e:launch
 
 ## Troubleshooting
 
-- `Run ranking` returns no results:
+- `Shared suggestions` returns no results:
   - Confirm `GOOGLE_MAPS_API_KEY` is set in `.env.local`
   - Confirm Places API + Distance Matrix API are enabled and billing is active
   - Restart API terminal after env changes

@@ -5,6 +5,10 @@
   "scripts": {
     "dev:api": "tsx services/api/src/dev-server.ts",
     "dev:web": "next dev -p 3000",
+    "build:web": "next build",
+    "build:cloudflare": "npx @opennextjs/cloudflare@latest build",
+    "deploy:cloudflare": "npm run build:cloudflare && npx wrangler@latest deploy --config deploy/cloudflare/wrangler.toml",
+    "deploy:api:cloudrun": "gcloud run deploy mitm-api --source . --region us-central1 --allow-unauthenticated --env-vars-file deploy/cloud-run/cloudrun.env --set-secrets GOOGLE_MAPS_API_KEY=GOOGLE_MAPS_API_KEY:latest",
     "test": "vitest run",
     "test:e2e:launch": "npx playwright test tests/e2e/funnel-compatibility.spec.ts --project=\"Desktop Chrome\" --project=\"Desktop Safari\" --project=\"Pixel 5\" --project=\"iPhone 12\""
   },

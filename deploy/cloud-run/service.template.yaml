@@ -1,0 +1,35 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: mitm-api
+  annotations:
+    run.googleapis.com/ingress: all
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/minScale: "0"
+        autoscaling.knative.dev/maxScale: "20"
+    spec:
+      containerConcurrency: 80
+      timeoutSeconds: 60
+      containers:
+        - image: REGION-docker.pkg.dev/PROJECT_ID/meet-me-in-the-middle/api:TAG
+          ports:
+            - containerPort: 8080
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: API_PORT
+              value: "8080"
+            - name: APP_URL
+              value: https://meet.example.com
+            - name: CORS_ORIGIN
+              value: https://meet.example.com
+            - name: GOOGLE_MAPS_PLACES_RADIUS_METERS
+              value: "2500"
+            - name: GOOGLE_MAPS_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: GOOGLE_MAPS_API_KEY
+                  key: latest
