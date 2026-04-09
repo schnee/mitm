@@ -15,7 +15,7 @@ This roadmap delivers the MVP in dependency order: establish two-person session 
 - [x] **Phase 3: Shared Shortlist & Confirmation** - Turn ranked options into one mutually confirmed destination.
 - [x] **Phase 4: Launch Readiness & Stabilization** - Validate cross-browser funnel reliability and instrument decision funnel analytics.
 - [x] **Phase 5: UX Refresh & Decision Confidence** - Improve clarity, trust, and speed of choice through a focused post-launch UX refresh.
-- [ ] **Phase 6: UX Polish & Professional Experience** - Polish startup, negotiation/ranking, and shared decision flows to feel production-grade across devices.
+- [x] **Phase 6: UX Polish & Professional Experience** - Polish startup, negotiation/ranking, and shared decision flows to feel production-grade across devices.
 
 ## Dependency Map and Sequencing Rationale
 
@@ -267,9 +267,9 @@ Plans:
 - Product-scope expansion beyond the two-participant MVP.
 **Plans**: 3 plans
 Plans:
-- [ ] 06-01-PLAN.md — Polish create-session startup flow with confidence-first hierarchy and CTA clarity.
-- [ ] 06-02-PLAN.md — Redesign negotiation/ranking experience for explainability clarity and faster decisions.
-- [ ] 06-03-PLAN.md — Standardize cross-flow states, responsive behavior, and accessibility baseline validation.
+- [x] 06-01-PLAN.md — Polish create-session startup flow with confidence-first hierarchy and CTA clarity.
+- [x] 06-02-PLAN.md — Redesign negotiation/ranking experience for explainability clarity and faster decisions.
+- [x] 06-03-PLAN.md — Standardize cross-flow states, responsive behavior, and accessibility baseline validation.
 **UI hint**: yes
 
 ## Progress
@@ -281,4 +281,4 @@ Plans:
 | 3. Shared Shortlist & Confirmation | 3/3 | Complete | 03-01, 03-02, 03-03 |
 | 4. Launch Readiness & Stabilization | 3/3 | Complete | 04-01, 04-02, 04-03 |
 | 5. UX Refresh & Decision Confidence | 3/3 | Complete | 05-01, 05-02, 05-03 |
-| 6. UX Polish & Professional Experience | 0/3 | Planned | 06-01, 06-02, 06-03 |
+| 6. UX Polish & Professional Experience | 3/3 | Complete | 06-01, 06-02, 06-03 |

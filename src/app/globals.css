@@ -1,0 +1,272 @@
+:root {
+  --bg: #f2f5f2;
+  --bg-accent: #e6efe8;
+  --surface: #ffffff;
+  --surface-muted: #f7f9f7;
+  --border: #d7dfd8;
+  --text: #112218;
+  --text-muted: #4e5f53;
+  --primary: #2d6a4f;
+  --primary-strong: #1f513b;
+  --secondary: #2f5f85;
+  --danger: #9f2f3f;
+  --warning: #8a5a14;
+  --success: #1f7a50;
+  --shadow: 0 14px 34px rgba(17, 34, 24, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Avenir Next", "Segoe UI", sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(circle at top right, #dceee1 0%, transparent 44%),
+    radial-gradient(circle at bottom left, #dce6ef 0%, transparent 36%),
+    var(--bg);
+}
+
+main {
+  min-height: 100vh;
+}
+
+a {
+  color: var(--secondary);
+}
+
+:focus-visible {
+  outline: 3px solid #f4ab42;
+  outline-offset: 2px;
+}
+
+.app-shell {
+  width: min(1024px, 100% - 2rem);
+  margin: 0 auto;
+  padding: 2rem 0 3rem;
+}
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  padding: 1.1rem;
+}
+
+.page-stack {
+  display: grid;
+  gap: 1rem;
+}
+
+.section-header h1,
+.section-header h2,
+.section-header h3 {
+  margin: 0;
+}
+
+.section-header p {
+  margin: 0.45rem 0 0;
+  color: var(--text-muted);
+}
+
+.btn-primary,
+.btn-secondary,
+.btn-subtle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 999px;
+  font-size: 0.97rem;
+  font-weight: 700;
+  padding: 0.65rem 1.05rem;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+}
+
+.btn-primary {
+  color: #ffffff;
+  background: linear-gradient(120deg, var(--primary), #3c8262);
+  box-shadow: 0 8px 16px rgba(31, 81, 59, 0.28);
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: linear-gradient(120deg, var(--primary-strong), var(--primary));
+}
+
+.btn-secondary {
+  color: #ffffff;
+  background: linear-gradient(120deg, var(--secondary), #4f7fa5);
+  box-shadow: 0 8px 16px rgba(47, 95, 133, 0.24);
+}
+
+.btn-subtle {
+  color: var(--text);
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+}
+
+.btn-primary:disabled,
+.btn-secondary:disabled,
+.btn-subtle:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none;
+}
+
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.status-idle {
+  background: #e7eef4;
+  color: #264766;
+}
+
+.status-loading {
+  background: #fff4de;
+  color: var(--warning);
+}
+
+.status-waiting {
+  background: #eceff2;
+  color: #445766;
+}
+
+.status-success {
+  background: #def4e7;
+  color: var(--success);
+}
+
+.status-error {
+  background: #f8dfe3;
+  color: var(--danger);
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+.split-grid {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.stage {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.input-stack {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.input-stack label {
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+fieldset {
+  border: 1px solid var(--border);
+}
+
+legend {
+  font-weight: 700;
+  padding: 0 0.3rem;
+}
+
+.input-stack input {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  padding: 0.58rem 0.7rem;
+  font-size: 0.95rem;
+  background: #ffffff;
+}
+
+.chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.chip {
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  padding: 0.34rem 0.65rem;
+  font-size: 0.85rem;
+  background: var(--surface-muted);
+}
+
+.card-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.result-card {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: #ffffff;
+  padding: 0.9rem;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.4rem;
+}
+
+.startup-hero {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.startup-links {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.startup-links a,
+.startup-links code {
+  word-break: break-all;
+}
+
+@media (min-width: 768px) {
+  .app-shell {
+    width: min(1100px, 100% - 3.5rem);
+    padding-top: 2.5rem;
+  }
+
+  .panel {
+    padding: 1.4rem;
+  }
+
+  .split-grid {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+}

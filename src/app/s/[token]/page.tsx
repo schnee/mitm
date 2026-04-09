@@ -101,13 +101,13 @@ export default function JoinPage({ params }: JoinPageProps) {
   const [draftSaved, setDraftSaved] = useState(false);
   const [confirmedAt, setConfirmedAt] = useState<string | null>(null);
   const [rankingInputsSaved, setRankingInputsSaved] = useState(false);
-  const [rankingStatus, setRankingStatus] = useState("Waiting for ranking input.");
+  const [rankingStatus, setRankingStatus] = useState("Waiting: save ranking inputs before running ranking.");
   const [rankedResults, setRankedResults] = useState<RankedVenue[]>([]);
   const [localShortlist, setLocalShortlist] = useState<ShortlistVenue[]>([]);
   const [localReactions, setLocalReactions] = useState<VenueReactionSummary[]>([]);
   const [reactionPendingVenueIds, setReactionPendingVenueIds] = useState<string[]>([]);
   const [localConfirmedPlace, setLocalConfirmedPlace] = useState<ConfirmedPlace | null>(null);
-  const [decisionStatus, setDecisionStatus] = useState("Add a result to shortlist to begin deciding.");
+  const [decisionStatus, setDecisionStatus] = useState("Idle: add a ranked result to shortlist to begin deciding.");
   const { token } = use(params);
   const searchParams = useSearchParams();
   const sync = useSessionSync(sessionId);
@@ -189,12 +189,13 @@ export default function JoinPage({ params }: JoinPageProps) {
       return;
     }
 
+    setRankingStatus("Loading: generating ranked results.");
     try {
       const response = await getRankedResults(sessionId);
       setRankedResults(response.results);
-      setRankingStatus(`Ranking generated at ${response.generatedAt}`);
+      setRankingStatus(`Success: ranking generated at ${response.generatedAt}`);
     } catch {
-      setRankingStatus("Unable to run ranking. Ensure both participants saved ranking inputs.");
+      setRankingStatus("Error: unable to run ranking. Ensure both participants saved ranking inputs.");
     }
   };
 
@@ -227,9 +228,9 @@ export default function JoinPage({ params }: JoinPageProps) {
         etaParticipantB: venue.etaParticipantB
       });
       setLocalShortlist(response.shortlist);
-      setDecisionStatus("Shortlist updated.");
+      setDecisionStatus("Success: shortlist updated.");
     } catch {
-      setDecisionStatus("Unable to update shortlist right now.");
+      setDecisionStatus("Error: unable to update shortlist right now.");
     }
   };
 
@@ -241,9 +242,9 @@ export default function JoinPage({ params }: JoinPageProps) {
     try {
       const response = await confirmVenue({ sessionId, participantId, venueId });
       setLocalConfirmedPlace(response.confirmedPlace);
-      setDecisionStatus("Place confirmed.");
+      setDecisionStatus("Success: place confirmed.");
     } catch {
-      setDecisionStatus("This session already has a different confirmed place.");
+      setDecisionStatus("Error: this session already has a different confirmed place.");
     }
   };
 
@@ -272,86 +273,157 @@ export default function JoinPage({ params }: JoinPageProps) {
         const remaining = current.filter((item) => item.venueId !== response.reaction.venueId);
         return [...remaining, response.reaction];
       });
-      setDecisionStatus(`You ${reaction}ed ${venue.name}.`);
+      setDecisionStatus(`Success: you ${reaction}ed ${venue.name}.`);
     } catch {
-      setDecisionStatus("Unable to save your reaction right now.");
+      setDecisionStatus("Error: unable to save your reaction right now.");
     } finally {
       setReactionPendingVenueIds((current) => current.filter((item) => item !== venue.venueId));
     }
   };
 
+  const rankingStatusClass = rankingStatus.startsWith("Success")
+    ? "status-success"
+    : rankingStatus.startsWith("Error")
+      ? "status-error"
+      : rankingStatus.startsWith("Loading")
+        ? "status-loading"
+        : "status-waiting";
+
+  const decisionStatusClass = decisionStatus.startsWith("Success")
+    ? "status-success"
+    : decisionStatus.startsWith("Error")
+      ? "status-error"
+      : decisionStatus.startsWith("Loading")
+        ? "status-loading"
+        : decisionStatus.startsWith("Waiting")
+          ? "status-waiting"
+          : "status-idle";
+
+  const syncStatusClass =
+    sync.syncState === "reconnecting" || sync.error ? "status-error" : sync.syncState === "syncing" ? "status-loading" : "status-success";
+
   return (
     <main>
-      {state === "joining" && <p>Joining session...</p>}
-      {state === "joined" && (
-        <>
-          <p>Joined. You can continue to location setup.</p>
-          <p>Sync state: {sync.syncState}</p>
-          {sync.snapshot && <ParticipantStatus participants={sync.snapshot.participants} />}
-          {sessionId && participantId && (
-            <>
-              <LocationCaptureForm
-                sessionId={sessionId}
-                participantId={participantId}
-                onDraftSaved={() => setDraftSaved(true)}
-              />
-              <LocationConfirmCard
-                sessionId={sessionId}
-                participantId={participantId}
-                draftSaved={draftSaved}
-                inputsReady={Boolean(sync.snapshot?.inputsReady)}
-                onConfirmed={(nextConfirmedAt) => setConfirmedAt(nextConfirmedAt)}
-              />
-            </>
-          )}
-          {confirmedAt && <p>Location confirmed at {confirmedAt}</p>}
-          {sync.snapshot?.inputsReady && <p>Inputs ready for ranking.</p>}
-          {sync.snapshot?.inputsReady && sessionId && participantId && (
-            <>
-              <RankingInputsForm
-                sessionId={sessionId}
-                participantId={participantId}
-                onSaved={() => setRankingInputsSaved(true)}
-              />
-              <button
-                type="button"
-                disabled={!rankingInputsSaved}
-                onClick={() => {
-                  void runRanking();
-                }}
-              >
-                Run ranking
-              </button>
-              {!rankingInputsSaved && <p>Save ranking inputs before running ranking.</p>}
-              <p>{rankingStatus}</p>
-              <RankedResultsList
-                results={rankedResults}
-                onAddToShortlist={(venue) => {
-                  void addToShortlist(venue);
-                }}
-                shortlistVenueIds={shortlist.map((item) => item.venueId)}
-                reactions={reactions}
-                participantId={participantId ?? undefined}
-                onReact={(venue, reaction) => {
-                  void reactToVenue(venue, reaction);
-                }}
-                reactionPendingVenueIds={reactionPendingVenueIds}
-                reactionStatusByVenueId={reactionStatusByVenueId}
-              />
-              <p>{decisionStatus}</p>
-              <ShortlistPanel
-                shortlist={shortlist}
-                confirmedPlace={confirmedPlace}
-                onConfirm={(venueId) => {
-                  void confirmShortlistedVenue(venueId);
-                }}
-              />
-              {confirmedPlace && <ConfirmedPlaceCard confirmedPlace={confirmedPlace} />}
-            </>
-          )}
-        </>
-      )}
-      {state === "join_error" && <p>Unable to join this session. Please request a new link.</p>}
+      <div className="app-shell page-stack">
+        {state === "joining" && <p className="status-badge status-loading">Loading: joining session.</p>}
+
+        {state === "joined" && (
+          <>
+            <section className="panel stage" aria-labelledby="session-stage-title">
+              <header className="section-header">
+                <h1 id="session-stage-title">Meet Me In The Middle</h1>
+                <p>Session in progress. Work through each stage: location, ranking, shortlist, and final confirmation.</p>
+              </header>
+              <p className={`status-badge ${syncStatusClass}`} role="status" aria-live="polite">
+                {sync.error
+                  ? `Error: sync issue detected (${sync.error}). Actions still work; updates may be delayed.`
+                  : sync.syncState === "reconnecting"
+                    ? "Error: reconnecting to live session updates."
+                    : sync.syncState === "syncing"
+                      ? "Loading: syncing session updates."
+                      : "Success: live sync connected."}
+              </p>
+              <p className="status-badge status-success">Success: joined. Continue to location setup.</p>
+            </section>
+
+            {sync.snapshot && <ParticipantStatus participants={sync.snapshot.participants} />}
+
+            {sessionId && participantId && (
+              <section className="stage" aria-label="Location stage">
+                <LocationCaptureForm
+                  sessionId={sessionId}
+                  participantId={participantId}
+                  onDraftSaved={() => setDraftSaved(true)}
+                />
+                <LocationConfirmCard
+                  sessionId={sessionId}
+                  participantId={participantId}
+                  draftSaved={draftSaved}
+                  inputsReady={Boolean(sync.snapshot?.inputsReady)}
+                  onConfirmed={(nextConfirmedAt) => setConfirmedAt(nextConfirmedAt)}
+                />
+                <p className={`status-badge ${confirmedAt ? "status-success" : "status-waiting"}`} role="status" aria-live="polite">
+                  {confirmedAt
+                    ? `Success: location confirmed at ${confirmedAt}`
+                    : "Waiting: confirm your location to continue."}
+                </p>
+              </section>
+            )}
+
+            {sync.snapshot?.inputsReady && sessionId && participantId && (
+              <section className="stage" aria-label="Ranking and decision stage">
+                <RankingInputsForm
+                  sessionId={sessionId}
+                  participantId={participantId}
+                  onSaved={() => setRankingInputsSaved(true)}
+                />
+
+                <section className="panel stage" aria-labelledby="run-ranking-title">
+                  <h2 id="run-ranking-title">Run ranking</h2>
+                  <p className="muted">Use saved ranking inputs to generate results for shared decisions.</p>
+                  <div className="btn-row">
+                    <button
+                      className="btn-primary"
+                      type="button"
+                      disabled={!rankingInputsSaved}
+                      onClick={() => {
+                        void runRanking();
+                      }}
+                    >
+                      Run ranking
+                    </button>
+                  </div>
+                  {!rankingInputsSaved && (
+                    <p className="status-badge status-waiting">Waiting: save ranking inputs before running ranking.</p>
+                  )}
+                  <p className={`status-badge ${rankingStatusClass}`} role="status" aria-live="polite">
+                    {rankingStatus}
+                  </p>
+                </section>
+
+                <RankedResultsList
+                  results={rankedResults}
+                  onAddToShortlist={(venue) => {
+                    void addToShortlist(venue);
+                  }}
+                  shortlistVenueIds={shortlist.map((item) => item.venueId)}
+                  reactions={reactions}
+                  participantId={participantId ?? undefined}
+                  onReact={(venue, reaction) => {
+                    void reactToVenue(venue, reaction);
+                  }}
+                  reactionPendingVenueIds={reactionPendingVenueIds}
+                  reactionStatusByVenueId={reactionStatusByVenueId}
+                />
+
+                <p className={`status-badge ${decisionStatusClass}`} role="status" aria-live="polite">
+                  {decisionStatus}
+                </p>
+
+                <ShortlistPanel
+                  shortlist={shortlist}
+                  confirmedPlace={confirmedPlace}
+                  onConfirm={(venueId) => {
+                    void confirmShortlistedVenue(venueId);
+                  }}
+                />
+
+                {confirmedPlace && <ConfirmedPlaceCard confirmedPlace={confirmedPlace} />}
+              </section>
+            )}
+
+            {!sync.snapshot?.inputsReady && (
+              <p className="status-badge status-waiting" role="status" aria-live="polite">
+                Waiting: both participants must confirm locations before ranking.
+              </p>
+            )}
+          </>
+        )}
+
+        {state === "join_error" && (
+          <p className="status-badge status-error">Error: unable to join this session. Please request a new link.</p>
+        )}
+      </div>
     </main>
   );
 }

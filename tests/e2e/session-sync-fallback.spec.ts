@@ -76,6 +76,8 @@ test("keeps session flow synced when EventSource is unavailable", async ({ page 
 
   await page.goto(`${appUrl}/s/demo-token?asHost=1&sessionId=demo-session&participantId=demo-host`);
 
-  await expect(page.getByText("Inputs ready for ranking.")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Run ranking" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Run ranking" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Shared shortlist" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Confirm this place" })).toBeVisible();
 });
