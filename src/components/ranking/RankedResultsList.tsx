@@ -42,7 +42,7 @@ export function RankedResultsList({
         <h2 id="ranked-results-title">Ranked results</h2>
         <p>Review the fairness rationale first, then react or shortlist quickly.</p>
       </header>
-      {results.length === 0 && <p className="status-badge status-waiting">Waiting: no results yet. Save ranking inputs and run ranking.</p>}
+      {results.length === 0 && <p className="status-badge status-waiting">Waiting: no shared results yet. Save ranking inputs and wait for generation, or use Refresh ranking.</p>}
       <ol className="card-list">
         {results.map((result) => (
           <li key={result.venueId} className="result-card">

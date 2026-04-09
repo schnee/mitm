@@ -7,6 +7,7 @@ import {
   getRankedResults,
   joinSessionByToken,
   type ConfirmedPlace,
+  type RankingLifecycleState,
   type RankedVenue,
   type ShortlistVenue,
   type VenueReactionSummary,
@@ -100,9 +101,9 @@ export default function JoinPage({ params }: JoinPageProps) {
   const [participantId, setParticipantId] = useState<string | null>(null);
   const [draftSaved, setDraftSaved] = useState(false);
   const [confirmedAt, setConfirmedAt] = useState<string | null>(null);
-  const [rankingInputsSaved, setRankingInputsSaved] = useState(false);
-  const [rankingStatus, setRankingStatus] = useState("Waiting: save ranking inputs before running ranking.");
-  const [rankedResults, setRankedResults] = useState<RankedVenue[]>([]);
+  const [rankingStatus, setRankingStatus] = useState("Waiting: save ranking inputs to start shared ranking.");
+  const [rankingRefreshPending, setRankingRefreshPending] = useState(false);
+  const [localRankedResults, setLocalRankedResults] = useState<RankedVenue[]>([]);
   const [localShortlist, setLocalShortlist] = useState<ShortlistVenue[]>([]);
   const [localReactions, setLocalReactions] = useState<VenueReactionSummary[]>([]);
   const [reactionPendingVenueIds, setReactionPendingVenueIds] = useState<string[]>([]);
@@ -184,18 +185,21 @@ export default function JoinPage({ params }: JoinPageProps) {
     };
   }, [searchParams, token]);
 
-  const runRanking = async () => {
-    if (!sessionId) {
+  const refreshRanking = async () => {
+    if (!sessionId || !sync.snapshot?.rankingInputsReady) {
       return;
     }
 
-    setRankingStatus("Loading: generating ranked results.");
+    setRankingRefreshPending(true);
+    setRankingStatus("Loading: refreshing shared ranked results.");
     try {
       const response = await getRankedResults(sessionId);
-      setRankedResults(response.results);
-      setRankingStatus(`Success: ranking generated at ${response.generatedAt}`);
+      setLocalRankedResults(response.results);
+      setRankingStatus(`Success: shared ranking refreshed at ${response.generatedAt}`);
     } catch {
-      setRankingStatus("Error: unable to run ranking. Ensure both participants saved ranking inputs.");
+      setRankingStatus("Error: unable to refresh ranking right now. Saved locations and ranking inputs are still preserved.");
+    } finally {
+      setRankingRefreshPending(false);
     }
   };
 
@@ -205,6 +209,11 @@ export default function JoinPage({ params }: JoinPageProps) {
       : localShortlist;
   const confirmedPlace = sync.snapshot?.confirmedPlace ?? localConfirmedPlace;
   const reactions = sync.snapshot?.reactions ?? localReactions;
+  const rankedResults =
+    (sync.snapshot?.rankedResults.length ?? 0) >= localRankedResults.length
+      ? (sync.snapshot?.rankedResults ?? localRankedResults)
+      : localRankedResults;
+  const rankingLifecycleState: RankingLifecycleState = sync.snapshot?.rankingLifecycle?.state ?? "waiting";
   const partnerParticipantId =
     sync.snapshot?.participants.find((item) => item.participantId !== participantId)?.participantId ?? null;
   const reactionStatusByVenueId = buildReactionStatusByVenueId(reactions, participantId, partnerParticipantId);
@@ -289,6 +298,24 @@ export default function JoinPage({ params }: JoinPageProps) {
         ? "status-loading"
         : "status-waiting";
 
+  const sharedLifecycleStatus =
+    rankingLifecycleState === "failed"
+      ? "Error: ranking generation failed. Saved locations and ranking inputs are preserved. Use Refresh ranking to retry."
+      : rankingLifecycleState === "ready"
+        ? "Success: shared ranking is ready for both participants."
+        : rankingLifecycleState === "generating"
+          ? "Loading: generating shared suggestions from both participants' saved inputs."
+          : "Waiting: ranking inputs saved. Waiting for your partner to finish.";
+
+  const sharedLifecycleStatusClass =
+    rankingLifecycleState === "failed"
+      ? "status-error"
+      : rankingLifecycleState === "ready"
+        ? "status-success"
+        : rankingLifecycleState === "generating"
+          ? "status-loading"
+          : "status-waiting";
+
   const decisionStatusClass = decisionStatus.startsWith("Success")
     ? "status-success"
     : decisionStatus.startsWith("Error")
@@ -355,27 +382,33 @@ export default function JoinPage({ params }: JoinPageProps) {
                 <RankingInputsForm
                   sessionId={sessionId}
                   participantId={participantId}
-                  onSaved={() => setRankingInputsSaved(true)}
+                  onSaved={({ rankingLifecycle }) => {
+                    setRankingStatus(
+                      rankingLifecycle.state === "waiting"
+                        ? "Waiting: ranking inputs saved. Waiting for your partner to finish."
+                        : "Loading: ranking inputs saved. Generating shared suggestions."
+                    );
+                  }}
                 />
 
                 <section className="panel stage" aria-labelledby="run-ranking-title">
-                  <h2 id="run-ranking-title">Run ranking</h2>
-                  <p className="muted">Use saved ranking inputs to generate results for shared decisions.</p>
+                  <h2 id="run-ranking-title">Shared ranking status</h2>
+                  <p className="muted">Ranking now orchestrates from saved inputs. Use refresh only if results are delayed or need recompute.</p>
+                  <p className={`status-badge ${sharedLifecycleStatusClass}`} role="status" aria-live="polite">
+                    {sharedLifecycleStatus}
+                  </p>
                   <div className="btn-row">
                     <button
-                      className="btn-primary"
+                      className="btn-secondary"
                       type="button"
-                      disabled={!rankingInputsSaved}
+                      disabled={!Boolean(sync.snapshot?.rankingInputsReady) || rankingRefreshPending}
                       onClick={() => {
-                        void runRanking();
+                        void refreshRanking();
                       }}
                     >
-                      Run ranking
+                      Refresh ranking
                     </button>
                   </div>
-                  {!rankingInputsSaved && (
-                    <p className="status-badge status-waiting">Waiting: save ranking inputs before running ranking.</p>
-                  )}
                   <p className={`status-badge ${rankingStatusClass}`} role="status" aria-live="polite">
                     {rankingStatus}
                   </p>
