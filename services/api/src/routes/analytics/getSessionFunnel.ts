@@ -9,6 +9,14 @@ const REQUIRED_FUNNEL_EVENTS = [
 
 type RequiredFunnelEvent = (typeof REQUIRED_FUNNEL_EVENTS)[number];
 
+function toEpoch(value: string | undefined): number | null {
+  if (!value) {
+    return null;
+  }
+  const epoch = Date.parse(value);
+  return Number.isNaN(epoch) ? null : epoch;
+}
+
 export async function getSessionFunnelHandler(
   sessionId: string,
   deps: { repository: SessionRepository }
@@ -22,13 +30,33 @@ export async function getSessionFunnelHandler(
       },
       {} as Record<RequiredFunnelEvent, boolean>
     );
+    const reactionEvents = events.filter((item) => item.event === "result_reacted");
+    const shortlistEvents = events.filter((item) => item.event === "shortlist_opened");
+    const firstReactionAt = reactionEvents[0]?.occurredAt ?? null;
+    const firstShortlistAt = shortlistEvents[0]?.occurredAt ?? null;
+    const firstReactionEpoch = toEpoch(firstReactionAt ?? undefined);
+    const firstShortlistEpoch = toEpoch(firstShortlistAt ?? undefined);
+    const reactionToShortlistSeconds =
+      firstReactionEpoch !== null && firstShortlistEpoch !== null
+        ? Math.max(0, Math.round((firstShortlistEpoch - firstReactionEpoch) / 1000))
+        : null;
+    const acceptCount = reactionEvents.filter((item) => item.metadata?.reaction === "accept").length;
+    const passCount = reactionEvents.filter((item) => item.metadata?.reaction === "pass").length;
 
     return {
       status: 200,
       body: {
         sessionId,
         events,
-        completeness
+        completeness,
+        interactionSummary: {
+          reactionCount: reactionEvents.length,
+          acceptCount,
+          passCount,
+          firstReactionAt,
+          firstShortlistAt,
+          reactionToShortlistSeconds
+        }
       }
     };
   } catch (error) {

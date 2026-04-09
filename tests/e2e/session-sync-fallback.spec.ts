@@ -17,6 +17,7 @@ test("keeps session flow synced when EventSource is unavailable", async ({ page 
         updatedAt: "2026-01-01T10:00:00.000Z",
         inputsReady: true,
         shortlist: [],
+        reactions: [],
         confirmedPlace: null,
         participants: [
           {

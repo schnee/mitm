@@ -215,8 +215,27 @@ describe("ranking results", () => {
 
     const first = await getRankedResultsHandler({ sessionId: created.sessionId }, { service });
     expect(first.status).toBe(200);
-    const firstBody = first.body as { results: Array<{ venueId: string }> };
+    const firstBody = first.body as {
+      results: Array<{
+        venueId: string;
+        etaParticipantA: number;
+        etaParticipantB: number;
+        fairnessScore: number;
+        preferenceScore: number;
+        totalScore: number;
+        fairnessDeltaMinutes: number;
+      }>;
+    };
     expect(firstBody.results[0]?.venueId).toBe("coffee-spot");
+    expect(firstBody.results[0]).toMatchObject({
+      fairnessScore: expect.any(Number),
+      preferenceScore: expect.any(Number),
+      totalScore: expect.any(Number),
+      fairnessDeltaMinutes: expect.any(Number)
+    });
+    expect(firstBody.results[0]?.fairnessDeltaMinutes).toBe(
+      Math.abs((firstBody.results[0]?.etaParticipantA ?? 0) - (firstBody.results[0]?.etaParticipantB ?? 0))
+    );
 
     ranking.upsertRankingInputs({
       sessionId: created.sessionId,
@@ -233,7 +252,21 @@ describe("ranking results", () => {
 
     const second = await getRankedResultsHandler({ sessionId: created.sessionId }, { service });
     expect(second.status).toBe(200);
-    const secondBody = second.body as { results: Array<{ venueId: string }> };
+    const secondBody = second.body as {
+      results: Array<{
+        venueId: string;
+        fairnessScore: number;
+        preferenceScore: number;
+        totalScore: number;
+        fairnessDeltaMinutes: number;
+      }>;
+    };
     expect(secondBody.results[0]?.venueId).toBe("cocktail-room");
+    expect(secondBody.results[0]).toMatchObject({
+      fairnessScore: expect.any(Number),
+      preferenceScore: expect.any(Number),
+      totalScore: expect.any(Number),
+      fairnessDeltaMinutes: expect.any(Number)
+    });
   });
 });

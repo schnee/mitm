@@ -81,6 +81,23 @@ export interface ConfirmedPlace {
   confirmedAt: string;
 }
 
+export type VenueReactionType = "accept" | "pass";
+
+export interface VenueReaction {
+  sessionId: string;
+  venueId: string;
+  participantId: string;
+  reaction: VenueReactionType;
+  reactedAt: string;
+}
+
+export interface VenueReactionSummary {
+  venueId: string;
+  acceptCount: number;
+  passCount: number;
+  reactionsByParticipant: Record<string, VenueReactionType>;
+}
+
 export interface SessionSnapshot {
   sessionId: string;
   status: SessionStatus;
@@ -88,10 +105,18 @@ export interface SessionSnapshot {
   participants: SessionSnapshotParticipant[];
   inputsReady: boolean;
   shortlist: ShortlistVenue[];
+  reactions: VenueReactionSummary[];
   confirmedPlace: ConfirmedPlace | null;
 }
 
-export type FunnelEventName = "session_start" | "inputs_set" | "results_returned" | "decision_confirmed";
+export type FunnelEventName =
+  | "session_start"
+  | "inputs_set"
+  | "results_returned"
+  | "decision_confirmed"
+  | "result_reacted"
+  | "shortlist_opened"
+  | "reaction_to_shortlist";
 
 export type FunnelEventMetadataValue = string | number | boolean | null;
 

@@ -88,6 +88,55 @@ describe("decision state", () => {
     const snapshot = repository.getSessionSnapshot(created.sessionId);
     expect(snapshot?.shortlist).toHaveLength(1);
     expect(snapshot?.shortlist[0]?.venueId).toBe("coffee-spot");
+    expect(snapshot?.reactions).toEqual([]);
     expect(snapshot?.confirmedPlace).toBeNull();
+  });
+
+  it("upserts and overwrites participant reactions per venue", () => {
+    const repository = new SessionRepository();
+    const created = repository.createSession({ joinToken: "react1234567890123", role: "host" });
+    const joined = repository.joinSession({ joinToken: "react1234567890123", role: "invitee" });
+
+    repository.upsertVenueReaction({
+      sessionId: created.sessionId,
+      participantId: created.participantId,
+      venueId: "coffee-spot",
+      reaction: "accept"
+    });
+
+    const updated = repository.upsertVenueReaction({
+      sessionId: created.sessionId,
+      participantId: created.participantId,
+      venueId: "coffee-spot",
+      reaction: "pass"
+    });
+
+    repository.upsertVenueReaction({
+      sessionId: created.sessionId,
+      participantId: joined.participantId,
+      venueId: "coffee-spot",
+      reaction: "accept"
+    });
+
+    expect(updated).toMatchObject({
+      venueId: "coffee-spot",
+      acceptCount: 0,
+      passCount: 1,
+      reactionsByParticipant: {
+        [created.participantId]: "pass"
+      }
+    });
+
+    const snapshot = repository.getSessionSnapshot(created.sessionId);
+    expect(snapshot?.reactions).toHaveLength(1);
+    expect(snapshot?.reactions[0]).toMatchObject({
+      venueId: "coffee-spot",
+      acceptCount: 1,
+      passCount: 1,
+      reactionsByParticipant: {
+        [created.participantId]: "pass",
+        [joined.participantId]: "accept"
+      }
+    });
   });
 });

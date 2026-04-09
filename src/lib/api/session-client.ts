@@ -42,6 +42,15 @@ export interface ConfirmedPlace {
   confirmedAt: string;
 }
 
+export type VenueReactionType = "accept" | "pass";
+
+export interface VenueReactionSummary {
+  venueId: string;
+  acceptCount: number;
+  passCount: number;
+  reactionsByParticipant: Record<string, VenueReactionType>;
+}
+
 export interface SessionSnapshotResponse {
   sessionId: string;
   status: "created" | "joined" | "locating" | "ranked" | "confirmed" | "expired";
@@ -49,6 +58,7 @@ export interface SessionSnapshotResponse {
   participants: SessionSnapshotParticipant[];
   inputsReady: boolean;
   shortlist: ShortlistVenue[];
+  reactions: VenueReactionSummary[];
   confirmedPlace: ConfirmedPlace | null;
 }
 
@@ -73,6 +83,27 @@ export interface RankedVenue {
   etaParticipantB: number;
   category: string;
   openNow: boolean | null;
+  fairnessScore: number;
+  preferenceScore: number;
+  totalScore: number;
+  fairnessDeltaMinutes: number;
+}
+
+export async function upsertVenueReaction(input: {
+  sessionId: string;
+  venueId: string;
+  participantId: string;
+  reaction: VenueReactionType;
+}): Promise<{ reaction: VenueReactionSummary }> {
+  const response = await fetch(`${API_BASE_URL}/v1/decision/reaction`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input)
+  });
+  if (!response.ok) {
+    throw new Error(`upsertVenueReaction failed: ${response.status}`);
+  }
+  return (await response.json()) as { reaction: VenueReactionSummary };
 }
 
 export async function upsertShortlistVenue(input: {

@@ -14,12 +14,14 @@ This roadmap delivers the MVP in dependency order: establish two-person session 
 - [x] **Phase 2: Fair Ranking & Recommendation Core** - Generate and rank venue candidates by travel-time fairness and preference relevance.
 - [x] **Phase 3: Shared Shortlist & Confirmation** - Turn ranked options into one mutually confirmed destination.
 - [x] **Phase 4: Launch Readiness & Stabilization** - Validate cross-browser funnel reliability and instrument decision funnel analytics.
+- [x] **Phase 5: UX Refresh & Decision Confidence** - Improve clarity, trust, and speed of choice through a focused post-launch UX refresh.
 
 ## Dependency Map and Sequencing Rationale
 
 - **Phase 1 → Phase 2**: Ranking needs valid sessions and confirmed participant locations.
 - **Phase 2 → Phase 3**: Shortlisting/confirmation only works once credible ranked results exist.
 - **Phase 3 → Phase 4**: Launch reliability and instrumentation require full end-to-end flow.
+- **Phase 4 → Phase 5**: UX optimization should be informed by real funnel telemetry and stabilized cross-browser behavior.
 
 Rationale: this order follows hard product dependencies and minimizes rework; each phase ends with a user-verifiable capability.
 
@@ -201,6 +203,39 @@ Plans:
 - [x] 04-02-PLAN.md — Harden session sync with SSE fallback to prevent browser-specific flow blockers.
 - [x] 04-03-PLAN.md — Add cross-browser launch verification suite and telemetry completeness endpoint.
 
+### Phase 5: UX Refresh & Decision Confidence
+**Goal**: Improve decision confidence and reduce time-to-confirm by making ranking rationale and choice actions clearer across mobile and desktop.
+**Depends on**: Phase 4
+**Requirements**: UXEX-01, UXEX-02
+**Objective**: Convert launch insights into UX improvements that increase engagement with top results and make consensus faster without changing core ranking logic.
+**Core Deliverables**:
+- End-to-end UX refresh for ranking, shortlist, and confirmation steps with clearer visual hierarchy and state feedback.
+- Explainable fairness breakdown card for each ranked venue so users understand why options are recommended.
+- Quick react actions (accept/pass) on candidate venues to speed shortlist convergence.
+- Updated empty/loading/error states and microcopy to reduce ambiguity during collaborative decision moments.
+**Success Metrics**:
+- **Leading**: Increase in ranked-result interaction rate (open details, react, shortlist) after `results_returned`.
+- **Leading**: Reduction in median time from `results_returned` to first shortlist action.
+- **Lagging**: Increase in `decision_confirmed` conversion and improved fairness-confidence score in post-session feedback.
+**Major Risks**:
+- Visual and interaction changes may introduce regressions in familiar flows.
+- Explainability elements could add cognitive load if not concise.
+- Additional interaction states can create sync edge cases between participants.
+**Assumptions**:
+- Existing ranking quality is sufficient; UX clarity is now the largest bottleneck.
+- Users value transparent fairness rationale when comparing options.
+- Current telemetry is detailed enough to target the highest-impact UX bottlenecks.
+**Non-Goals**:
+- Replacing core fairness algorithm inputs or weighting model.
+- Adding new places/routing providers.
+- Introducing native mobile app experiences or account-based personalization.
+**Plans**: 3 plans
+Plans:
+- [x] 05-01-PLAN.md — Redesign ranking list and venue details with explainability-first information hierarchy.
+- [x] 05-02-PLAN.md — Add accept/pass reaction interactions with conflict-safe shared-state updates.
+- [x] 05-03-PLAN.md — Run UX validation pass and instrument new interaction telemetry for optimization loops.
+**UI hint**: yes
+
 ## Progress
 
 | Phase | Plans Complete | Status | Completed |
@@ -209,3 +244,4 @@ Plans:
 | 2. Fair Ranking & Recommendation Core | 3/3 | Complete | 02-01, 02-02, 02-03 |
 | 3. Shared Shortlist & Confirmation | 3/3 | Complete | 03-01, 03-02, 03-03 |
 | 4. Launch Readiness & Stabilization | 3/3 | Complete | 04-01, 04-02, 04-03 |
+| 5. UX Refresh & Decision Confidence | 3/3 | Complete | 05-01, 05-02, 05-03 |

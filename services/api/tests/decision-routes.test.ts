@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { SessionRepository } from "../src/modules/session/repository";
 import { confirmVenueHandler } from "../src/routes/decision/confirmVenue";
 import { upsertShortlistVenueHandler } from "../src/routes/decision/upsertShortlistVenue";
+import { upsertVenueReactionHandler } from "../src/routes/decision/upsertVenueReaction";
 
 function createRankedSession() {
   const repository = new SessionRepository();
@@ -136,5 +137,63 @@ describe("decision routes", () => {
     );
     expect(conflicting.status).toBe(409);
     expect(conflicting.body).toEqual({ error: "PLACE_ALREADY_CONFIRMED" });
+  });
+
+  it("accepts valid reaction payload", async () => {
+    const { repository, created } = createRankedSession();
+
+    const response = await upsertVenueReactionHandler(
+      {
+        sessionId: created.sessionId,
+        participantId: created.participantId,
+        venueId: "coffee-spot",
+        reaction: "accept"
+      },
+      { repository }
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({
+      reaction: {
+        venueId: "coffee-spot",
+        acceptCount: 1,
+        passCount: 0,
+        reactionsByParticipant: {
+          [created.participantId]: "accept"
+        }
+      }
+    });
+  });
+
+  it("rejects invalid reaction payload", async () => {
+    const { repository, created } = createRankedSession();
+    const response = await upsertVenueReactionHandler(
+      {
+        sessionId: created.sessionId,
+        participantId: created.participantId,
+        venueId: "coffee-spot",
+        reaction: "maybe"
+      },
+      { repository }
+    );
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({ error: "INVALID_DECISION_PAYLOAD" });
+  });
+
+  it("returns session not found for reaction by unknown participant", async () => {
+    const { repository, created } = createRankedSession();
+    const response = await upsertVenueReactionHandler(
+      {
+        sessionId: created.sessionId,
+        participantId: "missing-participant",
+        venueId: "coffee-spot",
+        reaction: "pass"
+      },
+      { repository }
+    );
+
+    expect(response.status).toBe(404);
+    expect(response.body).toEqual({ error: "SESSION_NOT_FOUND" });
   });
 });
