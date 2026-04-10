@@ -11,11 +11,11 @@ function markerClassName(input: {
   if (input.confirmedVenueId === input.venueId) {
     return "marker-confirmed";
   }
-  if (input.selectedVenueId === input.venueId) {
-    return "marker-selected";
-  }
   if (input.shortlistVenueIds.includes(input.venueId)) {
     return "marker-shortlisted";
+  }
+  if (input.selectedVenueId === input.venueId) {
+    return "marker-selected";
   }
   return "marker-default";
 }
@@ -35,20 +35,14 @@ export function RankedSpotsMap({
 }) {
   const mapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
-  if (!mapsApiKey) {
-    return (
-      <section className="panel stage map-container" aria-label="Ranked spots map">
-        <h3>Map unavailable</h3>
-        <p className="status-badge status-waiting">
-          Waiting: set NEXT_PUBLIC_GOOGLE_MAPS_API_KEY to enable interactive map markers. List-only mode remains available.
-        </p>
-      </section>
-    );
-  }
-
   return (
     <section className="panel stage map-container" aria-label="Ranked spots map">
       <h3>Ranked spots map</h3>
+      {!mapsApiKey && (
+        <p className="status-badge status-waiting">
+          Waiting: set NEXT_PUBLIC_GOOGLE_MAPS_API_KEY to enable interactive map markers. List-only mode remains available.
+        </p>
+      )}
       <p className="muted">Interactive marker list is synchronized with the ranked spots list.</p>
       <div className="map-marker-grid" role="list">
         {results.map((result) => {
