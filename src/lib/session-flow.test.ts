@@ -32,7 +32,23 @@ describe("deriveSessionFlow", () => {
     expect(flow.steps.find((step) => step.id === "location")?.summary).toBe("Location: Confirmed");
   });
 
-  it("marks shortlist summary and blocks confirm by self when needed", () => {
+  it("keeps partner blocker ownership when only my preferences are saved", () => {
+    const flow = deriveSessionFlow({
+      myLocationConfirmed: true,
+      partnerLocationConfirmed: true,
+      myPreferencesSaved: true,
+      partnerPreferencesSaved: false,
+      rankedResultsCount: 0,
+      shortlistCount: 0,
+      confirmedVenueId: null
+    });
+
+    expect(flow.activeStepId).toBe("spots");
+    expect(flow.steps.find((step) => step.id === "spots")?.blockedBy).toBe("partner");
+    expect(flow.steps.find((step) => step.id === "spots")?.summary).toBe("Spots: Waiting for partner preferences");
+  });
+
+  it("keeps confirm as active after shortlist when waiting on self", () => {
     const flow = deriveSessionFlow({
       myLocationConfirmed: true,
       partnerLocationConfirmed: true,
@@ -44,7 +60,7 @@ describe("deriveSessionFlow", () => {
     });
 
     expect(flow.activeStepId).toBe("confirm");
-    expect(flow.steps.find((step) => step.id === "shortlist")?.summary).toContain("Shortlist:");
+    expect(flow.steps.find((step) => step.id === "shortlist")?.summary).toBe("Shortlist: 1 spot");
     expect(flow.steps.find((step) => step.id === "confirm")?.blockedBy).toBe("self");
   });
 });

@@ -6,13 +6,13 @@ import { confirmLocation } from "../../lib/api/session-client";
 export function LocationConfirmCard({
   sessionId,
   participantId,
-  draftSaved,
+  draftReady,
   inputsReady,
   onConfirmed
 }: {
   sessionId: string;
   participantId: string;
-  draftSaved: boolean;
+  draftReady: boolean;
   inputsReady: boolean;
   onConfirmed: (confirmedAt: string) => void;
 }) {
@@ -65,14 +65,14 @@ export function LocationConfirmCard({
       <button
         className="btn-primary"
         type="button"
-        disabled={!draftSaved}
+        disabled={!draftReady}
         onClick={() => {
           void runConfirm();
         }}
       >
         Confirm location
       </button>
-      {!draftSaved && <p className="status-badge status-waiting">Waiting: save a location draft before confirming.</p>}
+      {!draftReady && <p className="status-badge status-waiting">Waiting: save a location draft before confirming.</p>}
       <p className={`status-badge ${statusClass}`} role="status" aria-live="polite">
         {status}
       </p>

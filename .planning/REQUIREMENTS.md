@@ -11,13 +11,13 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [x] **SESS-01**: User can create a two-person meetup session and receive a shareable join link.
 - [x] **SESS-02**: Invitee can join session from link without creating an account.
-- [ ] **SESS-03**: Both participants can see synchronized session state (inputs, shortlist, confirmation status).
+- [x] **SESS-03**: Both participants can see synchronized session state (inputs, shortlist, confirmation status).
 
 ### Location and Consent
 
 - [x] **LOCT-01**: User can provide location via current location permission or typed address.
-- [ ] **LOCT-02**: User can review and confirm the location used for ranking before results are generated.
-- [ ] **LOCT-03**: If geolocation fails or is denied, user can complete flow via manual location entry.
+- [x] **LOCT-02**: User can review and confirm the location used for ranking before results are generated.
+- [x] **LOCT-03**: If geolocation fails or is denied, user can complete flow via manual location entry.
 
 ### Travel Fairness and Preferences
 
@@ -54,9 +54,9 @@ Scope guardrail: UX polish only for v1.x; no fairness algorithm or provider chan
 
 ### v1.x Shared Auto-Ranking & Synced Results (UX/Flow Orchestration Scope)
 
-- [ ] **UX-11**: After a participant saves ranking inputs, UI transitions immediately to a clear next state: waiting for other participant if only one has saved, generating suggestions when both are ready.
+- [x] **UX-11**: After a participant saves ranking inputs, UI transitions immediately to a clear next state: waiting for other participant if only one has saved, generating suggestions when both are ready.
 - [x] **UX-12**: System computes one canonical ranked list per session using both participants' saved ranking inputs while preserving current split handling and preference merge behavior.
-- [ ] **UX-13**: Canonical ranked results persist at session scope and synchronize to both participants so both see the same ordered list without manual rerun.
+- [x] **UX-13**: Canonical ranked results persist at session scope and synchronize to both participants so both see the same ordered list without manual rerun.
 - [x] **UX-14**: `Run ranking` is removed as a required primary action from the main flow; optional secondary `Refresh ranking` remains available for retry/recompute.
 - [x] **UX-15**: If ranking generation fails (provider error, missing prerequisites, transient failure), users see actionable messaging with retry path and no loss of prior progress.
 - [x] **UX-16**: Ranking generation is idempotent and conflict-safe under concurrent saves from both participants, preventing duplicate/conflicting list states.
@@ -73,7 +73,7 @@ Scope guardrail: keep split decision behavior conceptually unchanged; do not cha
 - [x] **UX-22**: Add a sticky primary CTA area on mobile that always presents the single next action for the current user.
 - [ ] **UX-23**: Introduce a map-first "Ranked spots" view with synchronized markers and list items (tap list highlights marker; tap marker focuses list item).
 - [ ] **UX-24**: Update map state when shortlist changes: shortlisted spots use distinct marker styling, and confirmed spot is visually locked/highlighted.
-- [ ] **UX-25**: Add concise, state-specific feedback for waiting/loading/error/success, including partner-progress updates (for example, "Waiting for partner to save preferences").
+- [x] **UX-25**: Add concise, state-specific feedback for waiting/loading/error/success, including partner-progress updates (for example, "Waiting for partner to save preferences").
 - [ ] **UX-26**: Preserve responsive usability and accessibility across mobile and desktop (focus order, tap targets, contrast, keyboard fallback for core actions).
 
 Scope guardrails:
@@ -127,10 +127,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 |-------------|-------|--------|
 | SESS-01 | Phase 9 | Verified (Phase 1 VERIFICATION) |
 | SESS-02 | Phase 9 | Verified (Phase 1 VERIFICATION) |
-| SESS-03 | Phase 10 | Pending |
+| SESS-03 | Phase 10 | Complete |
 | LOCT-01 | Phase 9 | Verified (Phase 1 VERIFICATION) |
-| LOCT-02 | Phase 10 | Pending |
-| LOCT-03 | Phase 10 | Pending |
+| LOCT-02 | Phase 10 | Complete |
+| LOCT-03 | Phase 10 | Complete |
 | FAIR-01 | Phase 9 | Verified (Phase 2 VERIFICATION) |
 | PREF-01 | Phase 9 | Verified (Phase 2 VERIFICATION) |
 | PREF-02 | Phase 9 | Verified (Phase 2 VERIFICATION) |
@@ -147,9 +147,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | UX-08 | Phase 9 | Verified (Phase 6 VERIFICATION) |
 | UX-09 | Phase 9 | Verified (Phase 6 VERIFICATION) |
 | UX-10 | Phase 9 | Verified (Phase 6 VERIFICATION) |
-| UX-11 | Phase 10 | Pending |
+| UX-11 | Phase 10 | Complete |
 | UX-12 | Phase 9 | Verified (Phase 7 VERIFICATION) |
-| UX-13 | Phase 10 | Pending |
+| UX-13 | Phase 10 | Complete |
 | UX-14 | Phase 9 | Verified (Phase 7 VERIFICATION) |
 | UX-15 | Phase 9 | Verified (Phase 7 VERIFICATION) |
 | UX-16 | Phase 9 | Verified (Phase 7 VERIFICATION) |
@@ -161,7 +161,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | UX-22 | Phase 9 | Verified (Phase 8 VERIFICATION) |
 | UX-23 | Phase 11 | Pending |
 | UX-24 | Phase 11 | Pending |
-| UX-25 | Phase 10 | Pending |
+| UX-25 | Phase 10 | Complete |
 | UX-26 | Phase 11 | Pending |
 
 **Coverage:**

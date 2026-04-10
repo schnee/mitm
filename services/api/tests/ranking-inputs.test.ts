@@ -51,6 +51,12 @@ describe("ranking inputs", () => {
       rankingLifecycle: { state: "waiting", lastErrorCode: null }
     });
 
+    const afterFirstSnapshot = sessions.getSessionSnapshot(created.sessionId);
+    const firstHost = afterFirstSnapshot?.participants.find((participant) => participant.role === "host");
+    const firstInvitee = afterFirstSnapshot?.participants.find((participant) => participant.role === "invitee");
+    expect(firstHost?.rankingInputsUpdatedAt).toEqual(expect.any(String));
+    expect(firstInvitee?.rankingInputsUpdatedAt).toBeNull();
+
     const second = await upsertRankingInputsHandler(
       {
         sessionId: created.sessionId,
@@ -71,6 +77,7 @@ describe("ranking inputs", () => {
     expect(snapshot?.rankingInputsReady).toBe(true);
     expect(snapshot?.rankingLifecycle).toMatchObject({ state: "generating" });
     expect(snapshot?.rankedResults).toEqual([]);
+    expect(snapshot?.participants.every((participant) => participant.rankingInputsUpdatedAt)).toBe(true);
 
     const events = sessions.listSessionEvents(created.sessionId);
     const orchestrationEvents = events.filter(

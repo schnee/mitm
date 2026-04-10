@@ -19,7 +19,7 @@ This roadmap delivers the MVP in dependency order: establish two-person session 
 - [x] **Phase 7: Shared Auto-Ranking & Synced Results** - Replace manual per-user ranking trigger with one canonical session-level ranked list that appears automatically for both participants after inputs are saved. (completed 2026-04-09)
 - [x] **Phase 8: Mobile-First Guided Flow & Map-Driven Decisioning** - Reduce scroll and decision friction through guided step flow, two-person progress visibility, and synchronized map/list decisioning. (completed 2026-04-10)
 - [ ] **Phase 9: Verification Coverage & Traceability Recovery** - Close audit blockers by producing phase-level verification evidence and reconciling requirement traceability to implementation reality.
-- [ ] **Phase 10: Session Continuity & State Persistence Hardening** - Fix refresh/rejoin continuity for location confirm and preference completion state so guided progression survives reloads.
+- [x] **Phase 10: Session Continuity & State Persistence Hardening** - Fix refresh/rejoin continuity for location confirm and preference completion state so guided progression survives reloads. (completed 2026-04-10)
 - [ ] **Phase 11: Map-First Provider Integration Completion** - Replace map fallback UI with provider-backed map interactions and complete shortlist/confirmed marker-state parity.
 
 ## Dependency Map and Sequencing Rationale
@@ -382,7 +382,11 @@ Plans:
 **Depends on**: Phase 9
 **Requirements**: SESS-03, LOCT-02, LOCT-03, UX-11, UX-13, UX-25
 **Gap Closure**: Closes integration GAP-01 and GAP-03 plus refresh/rejoin broken flows.
-**Plans**: 0 plans (to be created)
+**Plans**: 3 plans
+Plans:
+- [x] 10-01-PLAN.md — Extend canonical session snapshot contracts and tests to expose participant draft/preference continuity fields.
+- [x] 10-02-PLAN.md — Refactor guided-flow progression to snapshot-derived continuity state for reload-safe location/preference behavior.
+- [x] 10-03-PLAN.md — Add reload-focused e2e regressions for continuity, partner-progress messaging, and next-action correctness.
 
 ### Phase 11: Map-First Provider Integration Completion
 **Goal**: Deliver true provider-backed map-first ranked spots experience with synchronized marker/list behavior and accessible interaction parity.
@@ -404,5 +408,5 @@ Plans:
 | 7. Shared Auto-Ranking & Synced Results | 3/3 | Complete   | 2026-04-09 |
 | 8. Mobile-First Guided Flow & Map-Driven Decisioning | 3/3 | Complete | 08-01, 08-02, 08-03 |
 | 9. Verification Coverage & Traceability Recovery | 0/0 | Planned | - |
-| 10. Session Continuity & State Persistence Hardening | 0/0 | Planned | - |
+| 10. Session Continuity & State Persistence Hardening | 3/3 | Complete    | 2026-04-10 |
 | 11. Map-First Provider Integration Completion | 0/0 | Planned | - |

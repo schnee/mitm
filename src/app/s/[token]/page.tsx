@@ -27,6 +27,7 @@ import { RankedSpotsMap } from "../../../components/ranking/RankedSpotsMap";
 import { ShortlistPanel } from "../../../components/decision/ShortlistPanel";
 import { ConfirmedPlaceCard } from "../../../components/decision/ConfirmedPlaceCard";
 import { deriveSessionFlow } from "../../../lib/session-flow";
+import { deriveDraftReady, derivePreferencesSaved } from "../../../lib/session-continuity";
 
 type JoinState = "joining" | "joined" | "join_error";
 
@@ -223,12 +224,14 @@ export default function JoinPage({ params }: JoinPageProps) {
     sync.snapshot?.participants.find((item) => item.participantId !== participantId)?.participantId ?? null;
   const me = sync.snapshot?.participants.find((item) => item.participantId === participantId) ?? null;
   const partner = sync.snapshot?.participants.find((item) => item.participantId !== participantId) ?? null;
+  const myDraftReady = deriveDraftReady(me?.locationDraftUpdatedAt, draftSaved);
+  const myPreferencesPersisted = derivePreferencesSaved(me?.rankingInputsUpdatedAt, myPreferencesSaved);
   const reactionStatusByVenueId = buildReactionStatusByVenueId(reactions, participantId, partnerParticipantId);
 
   const flow = deriveSessionFlow({
     myLocationConfirmed: Boolean(me?.locationConfirmedAt || confirmedAt),
     partnerLocationConfirmed: Boolean(partner?.locationConfirmedAt),
-    myPreferencesSaved: myPreferencesSaved || rankingLifecycleState !== "waiting",
+    myPreferencesSaved: myPreferencesPersisted,
     partnerPreferencesSaved: Boolean(sync.snapshot?.rankingInputsReady),
     rankedResultsCount: rankedResults.length,
     shortlistCount: shortlist.length,
@@ -426,17 +429,17 @@ export default function JoinPage({ params }: JoinPageProps) {
                                 participantId={participantId}
                                 onDraftSaved={() => setDraftSaved(true)}
                               />
-                              <LocationConfirmCard
-                                sessionId={sessionId}
-                                participantId={participantId}
-                                draftSaved={draftSaved}
-                                inputsReady={Boolean(sync.snapshot?.inputsReady)}
-                                onConfirmed={(nextConfirmedAt) => setConfirmedAt(nextConfirmedAt)}
-                              />
+                                <LocationConfirmCard
+                                  sessionId={sessionId}
+                                  participantId={participantId}
+                                  draftReady={myDraftReady}
+                                  inputsReady={Boolean(sync.snapshot?.inputsReady)}
+                                  onConfirmed={(nextConfirmedAt) => setConfirmedAt(nextConfirmedAt)}
+                                />
                               <p className={`status-badge ${confirmedAt ? "status-success" : "status-waiting"}`} role="status" aria-live="polite">
                                 {confirmedAt
                                   ? `Success: location confirmed at ${confirmedAt}`
-                                  : "Waiting: confirm your location to continue."}
+                                  : "Waiting for partner: confirm your location, then wait for your partner to confirm."}
                               </p>
                             </div>
                           )}
@@ -458,7 +461,7 @@ export default function JoinPage({ params }: JoinPageProps) {
                                 />
                               ) : (
                                 <p className="status-badge status-waiting" role="status" aria-live="polite">
-                                  Waiting: both participants must confirm locations before preferences can be saved.
+                                  Waiting for partner: both participants must confirm locations before preferences can be saved.
                                 </p>
                               )}
                             </div>

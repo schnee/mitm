@@ -292,6 +292,170 @@ test("auto-ranking lifecycle renders shared results and retry messaging", async 
   await expect(page.getByRole("heading", { name: "Confirmed destination" })).toBeVisible();
 });
 
+test("reload keeps manual draft continuity and allows post-refresh location confirm", async ({ page }) => {
+  const appUrl = process.env.E2E_APP_URL ?? "http://localhost:3000";
+  const now = new Date().toISOString();
+  const draftUpdatedAt = "2026-01-01T10:03:00.000Z";
+  let locationConfirmed = false;
+  let confirmRequests = 0;
+
+  await page.route("**/v1/sessions/reload-location-session", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        sessionId: "reload-location-session",
+        status: "joined",
+        updatedAt: now,
+        inputsReady: false,
+        rankingInputsReady: false,
+        rankingLifecycle: {
+          state: "waiting",
+          lastErrorCode: null,
+          generationRequestId: null
+        },
+        rankedResults: [],
+        shortlist: [],
+        reactions: [],
+        confirmedPlace: null,
+        participants: [
+          {
+            participantId: "demo-host",
+            role: "host",
+            joinedAt: "2026-01-01T10:00:00.000Z",
+            locationDraftUpdatedAt: draftUpdatedAt,
+            locationConfirmedAt: locationConfirmed ? "2026-01-01T10:04:00.000Z" : null
+          },
+          {
+            participantId: "demo-invitee",
+            role: "invitee",
+            joinedAt: "2026-01-01T10:01:00.000Z",
+            locationConfirmedAt: null
+          }
+        ]
+      })
+    });
+  });
+
+  await page.route("**/v1/sessions/reload-location-session/events**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ events: [] }) });
+  });
+
+  await page.route("**/v1/location/draft", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ expireAt: "2026-01-01T11:00:00.000Z" })
+    });
+  });
+
+  await page.route("**/v1/location/confirm", async (route) => {
+    confirmRequests += 1;
+    locationConfirmed = true;
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        confirmedAt: "2026-01-01T10:04:00.000Z",
+        inputsReady: true
+      })
+    });
+  });
+
+  await page.goto(`${appUrl}/s/demo-token?asHost=1&sessionId=reload-location-session&participantId=demo-host`);
+  await page.getByLabel("Address label").fill("Downtown");
+  await page.getByLabel("Latitude").fill("30.271371");
+  await page.getByLabel("Longitude").fill("-97.759000");
+  await expect(page.getByRole("button", { name: "Save manual location" })).toBeVisible();
+  await page.getByRole("button", { name: "Save manual location" }).click();
+
+  await page.reload();
+
+  const confirmLocationButton = page.getByLabel("Confirm your location").getByRole("button", { name: "Confirm location" });
+  await expect(confirmLocationButton).toBeEnabled();
+  await confirmLocationButton.click();
+
+  await expect(page.locator('[data-step-id="preferences"][data-step-active="true"]')).toBeVisible();
+  await expect(page.getByText("Location: Confirmed", { exact: false })).toBeVisible();
+  expect(confirmRequests).toBe(1);
+});
+
+test("reload keeps preference lifecycle status and single next action CTA", async ({ page }) => {
+  const appUrl = process.env.E2E_APP_URL ?? "http://localhost:3000";
+  const now = new Date().toISOString();
+  const rankingInputsUpdatedAt = "2026-01-01T10:05:00.000Z";
+  let rankingInputsSaved = false;
+
+  await page.route("**/v1/sessions/reload-preferences-session", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        sessionId: "reload-preferences-session",
+        status: "joined",
+        updatedAt: now,
+        inputsReady: true,
+        rankingInputsReady: rankingInputsSaved,
+        rankingLifecycle: {
+          state: rankingInputsSaved ? "generating" : "waiting",
+          lastErrorCode: null,
+          generationRequestId: rankingInputsSaved ? "req-reload" : null
+        },
+        rankedResults: [],
+        shortlist: [],
+        reactions: [],
+        confirmedPlace: null,
+        participants: [
+          {
+            participantId: "demo-host",
+            role: "host",
+            joinedAt: "2026-01-01T10:00:00.000Z",
+            rankingInputsUpdatedAt: rankingInputsSaved ? rankingInputsUpdatedAt : null,
+            locationConfirmedAt: "2026-01-01T10:02:00.000Z"
+          },
+          {
+            participantId: "demo-invitee",
+            role: "invitee",
+            joinedAt: "2026-01-01T10:01:00.000Z",
+            locationConfirmedAt: "2026-01-01T10:03:00.000Z"
+          }
+        ]
+      })
+    });
+  });
+
+  await page.route("**/v1/sessions/reload-preferences-session/events**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ events: [] }) });
+  });
+
+  await page.route("**/v1/ranking/inputs", async (route) => {
+    rankingInputsSaved = true;
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        split: "60_40",
+        tags: ["coffee"],
+        updatedAt: now,
+        rankingInputsReady: true,
+        rankingLifecycle: {
+          state: "generating",
+          lastErrorCode: null,
+          generationRequestId: "req-reload"
+        }
+      })
+    });
+  });
+
+  await page.goto(`${appUrl}/s/demo-token?asHost=1&sessionId=reload-preferences-session&participantId=demo-host`);
+  await page.getByRole("button", { name: "Save meet-up preferences" }).click();
+  await page.reload();
+
+  await expect(page.locator('[data-step-id="spots"][data-step-active="true"]')).toBeVisible();
+  await expect(page.getByText("Loading shared suggestions from both saved preferences", { exact: false })).toBeVisible();
+  await expect(page.locator(".next-action-button")).toHaveCount(1);
+});
+
 test("sticky rails expose blocker ownership and lifecycle status copy", async ({ page }) => {
   const appUrl = process.env.E2E_APP_URL ?? "http://localhost:3000";
   const now = new Date().toISOString();

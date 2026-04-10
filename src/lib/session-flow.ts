@@ -24,8 +24,17 @@ export function deriveSessionFlow(input: DeriveSessionFlowInput): { activeStepId
   const locationCompleted = input.myLocationConfirmed;
   const preferencesCompleted = input.myPreferencesSaved;
   const spotsCompleted = input.shortlistCount > 0 || Boolean(input.confirmedVenueId);
-  const shortlistCompleted = Boolean(input.confirmedVenueId);
+  const shortlistCompleted = input.shortlistCount > 0 || Boolean(input.confirmedVenueId);
   const confirmCompleted = Boolean(input.confirmedVenueId);
+  const spotsBlockedBy: "self" | "partner" | null = !preferencesCompleted
+    ? input.partnerPreferencesSaved
+      ? "self"
+      : "partner"
+    : spotsCompleted
+      ? null
+      : input.partnerPreferencesSaved
+        ? "self"
+        : "partner";
 
   const steps: SessionFlowStep[] = [
     {
@@ -46,16 +55,12 @@ export function deriveSessionFlow(input: DeriveSessionFlowInput): { activeStepId
       id: "spots",
       title: "Spots",
       completed: spotsCompleted,
-      blockedBy: !preferencesCompleted
-        ? input.partnerPreferencesSaved
-          ? "self"
-          : "partner"
-        : spotsCompleted
-          ? null
-          : input.partnerPreferencesSaved
-            ? "self"
-            : "partner",
-      summary: spotsCompleted ? "Spots: map + list synced" : "Spots: Waiting"
+      blockedBy: spotsBlockedBy,
+      summary: spotsCompleted
+        ? "Spots: map + list synced"
+        : spotsBlockedBy === "partner"
+          ? "Spots: Waiting for partner preferences"
+          : "Spots: Waiting"
     },
     {
       id: "shortlist",

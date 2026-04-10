@@ -20,7 +20,7 @@ function isRankingLifecycle(value: unknown): value is RankingLifecycleResponse {
   );
 }
 
-function mergeEvent(snapshot: SessionSnapshotResponse, event: SessionEventResponse): SessionSnapshotResponse {
+export function mergeSessionEvent(snapshot: SessionSnapshotResponse, event: SessionEventResponse): SessionSnapshotResponse {
   if (event.eventType === "session_updated") {
     const nextStatus =
       typeof event.diff?.status === "string" ? (event.diff.status as SessionSnapshotResponse["status"]) : snapshot.status;
@@ -44,6 +44,31 @@ function mergeEvent(snapshot: SessionSnapshotResponse, event: SessionEventRespon
       ? event.diff.rankingLifecycle
       : snapshot.rankingLifecycle;
     const nextRankedResults = Array.isArray(event.diff?.rankedResults) ? event.diff.rankedResults : snapshot.rankedResults;
+    const shouldPatchParticipantContinuity =
+      typeof event.diff?.locationDraftUpdatedAt === "string" ||
+      typeof event.diff?.locationConfirmedAt === "string" ||
+      typeof event.diff?.rankingInputsUpdatedAt === "string";
+    const nextParticipants = shouldPatchParticipantContinuity && event.participantId
+      ? snapshot.participants.map((item) =>
+          item.participantId === event.participantId
+            ? {
+                ...item,
+                locationDraftUpdatedAt:
+                  typeof event.diff?.locationDraftUpdatedAt === "string"
+                    ? event.diff.locationDraftUpdatedAt
+                    : item.locationDraftUpdatedAt,
+                locationConfirmedAt:
+                  typeof event.diff?.locationConfirmedAt === "string"
+                    ? event.diff.locationConfirmedAt
+                    : item.locationConfirmedAt,
+                rankingInputsUpdatedAt:
+                  typeof event.diff?.rankingInputsUpdatedAt === "string"
+                    ? event.diff.rankingInputsUpdatedAt
+                    : item.rankingInputsUpdatedAt
+              }
+            : item
+        )
+      : snapshot.participants;
 
     return {
       ...snapshot,
@@ -55,6 +80,7 @@ function mergeEvent(snapshot: SessionSnapshotResponse, event: SessionEventRespon
       rankingInputsReady: nextRankingInputsReady,
       rankingLifecycle: nextRankingLifecycle,
       rankedResults: nextRankedResults,
+      participants: nextParticipants,
       updatedAt: event.updatedAt
     };
   }
@@ -125,7 +151,7 @@ export function useSessionSync(sessionId: string | null) {
         if (!current) {
           return current;
         }
-        return events.reduce(mergeEvent, current);
+        return events.reduce(mergeSessionEvent, current);
       });
     };
 
@@ -196,7 +222,7 @@ export function useSessionSync(sessionId: string | null) {
         try {
           const event = JSON.parse(message.data) as SessionEventResponse;
           latestUpdatedAt = event.updatedAt;
-          setSnapshot((current) => (current ? mergeEvent(current, event) : current));
+          setSnapshot((current) => (current ? mergeSessionEvent(current, event) : current));
         } catch {
           setError("Invalid event payload");
         }

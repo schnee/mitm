@@ -15,7 +15,9 @@ export interface SessionSnapshotParticipant {
   participantId: string;
   role: "host" | "invitee";
   joinedAt: string;
+  locationDraftUpdatedAt: string | null;
   locationConfirmedAt: string | null;
+  rankingInputsUpdatedAt: string | null;
 }
 
 export interface ShortlistVenue {
@@ -80,6 +82,7 @@ export interface SessionEventDiffResponse {
   participantCount?: number;
   locationDraftUpdatedAt?: string;
   locationConfirmedAt?: string;
+  rankingInputsUpdatedAt?: string;
   shortlist?: ShortlistVenue[];
   reactions?: VenueReactionSummary[];
   confirmedPlace?: ConfirmedPlace | null;
