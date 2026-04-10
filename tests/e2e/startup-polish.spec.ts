@@ -21,14 +21,13 @@ test("startup screen shows polished hierarchy and state transitions", async ({ p
 
   await page.goto(appUrl);
 
-  await expect(page.getByRole("heading", { name: "Meet halfway without the back-and-forth." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Meet Me In The Middle" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Create session" })).toBeVisible();
 
   await page.getByRole("button", { name: "Create session" }).click();
 
   await expect(page.getByText("Loading: creating your shared session now.")).toBeVisible();
-  await expect(page.getByText("Session ID:", { exact: false })).toBeVisible();
-  await expect(page.getByText("Invitee Join URL:", { exact: false })).toBeVisible();
-  await expect(page.getByText("Host Continue URL:", { exact: false })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Copy invite link" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Continue as host" })).toBeVisible();
+  await expect(page.getByText("Copy the invite link and send it to the other person", { exact: false })).toBeVisible();
 });

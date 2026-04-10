@@ -8,7 +8,6 @@ type HostState = "idle" | "creating" | "created" | "error";
 interface CreatedSession {
   inviteeJoinUrl: string;
   hostContinueUrl: string;
-  sessionId: string;
 }
 
 interface HostSessionContext {
@@ -19,7 +18,8 @@ interface HostSessionContext {
 export default function HostPage() {
   const [state, setState] = useState<HostState>("idle");
   const [createdSession, setCreatedSession] = useState<CreatedSession | null>(null);
-  const [linkStatus, setLinkStatus] = useState("Ready to create a session.");
+  const [includeBriefInstructions, setIncludeBriefInstructions] = useState(true);
+  const [linkStatus, setLinkStatus] = useState("Copy the invite link, then paste and send it to your invitee.");
 
   const statusClassByState: Record<HostState, string> = {
     idle: "status-idle",
@@ -31,7 +31,7 @@ export default function HostPage() {
   const statusCopyByState: Record<HostState, string> = {
     idle: "Idle: start a session when you are ready.",
     creating: "Loading: creating your shared session now.",
-    created: "Success: session is ready to share.",
+    created: "",
     error: "Error: unable to create session. Please retry."
   };
 
@@ -61,11 +61,10 @@ export default function HostPage() {
       hostContinueUrl.searchParams.set("asHost", "1");
 
       setCreatedSession({
-        sessionId: created.sessionId,
         inviteeJoinUrl: joinUrl.toString(),
         hostContinueUrl: hostContinueUrl.toString()
       });
-      setLinkStatus("Copy the invite link or continue as host.");
+      setLinkStatus("Copy the invite link, then paste and send it to your invitee.");
       setState("created");
     } catch {
       setLinkStatus("Retry session creation in a moment.");
@@ -78,11 +77,26 @@ export default function HostPage() {
       return;
     }
 
+    const inviteCopy = includeBriefInstructions
+      ? [
+          "You're invited to Meet Me in the Middle so we can quickly choose a fair place to meet.",
+          "1) Open this link.",
+          "2) Set your location and meet-up preferences.",
+          "3) Review the ranked spots together.",
+          "",
+          createdSession.inviteeJoinUrl
+        ].join("\n")
+      : createdSession.inviteeJoinUrl;
+
     try {
-      await navigator.clipboard.writeText(createdSession.inviteeJoinUrl);
-      setLinkStatus("Success: invite link copied.");
+      await navigator.clipboard.writeText(inviteCopy);
+      setLinkStatus(
+        includeBriefInstructions
+          ? "Copied message and invite link. Paste it and send it to your invitee."
+          : "Copied invite link only. Paste it and send it to your invitee."
+      );
     } catch {
-      setLinkStatus("Error: could not copy. Please copy manually.");
+      setLinkStatus("Could not copy automatically. Tap Copy invite link again to retry.");
     }
   };
 
@@ -93,8 +107,8 @@ export default function HostPage() {
           <header className="section-header">
             <h1 id="startup-title">Meet Me In The Middle</h1>
             <p>
-              Start a shared meetup session in one step. Get a private invite link and continue to ranking and final
-              decision.
+              Start a shared meetup session in one step. Get a private invite link and continue to your shared
+              suggestions and final decision.
             </p>
           </header>
 
@@ -112,32 +126,34 @@ export default function HostPage() {
             </button>
           </div>
 
-          <p className={`status-badge ${statusClassByState[state]}`} aria-live="polite">
-            {statusCopyByState[state]}
-          </p>
+          {state !== "created" && (
+            <p className={`status-badge ${statusClassByState[state]}`} aria-live="polite">
+              {statusCopyByState[state]}
+            </p>
+          )}
         </section>
 
         {state === "created" && createdSession && (
           <section className="panel startup-links" aria-labelledby="session-ready-title">
             <header className="section-header">
               <h2 id="session-ready-title">Session ready</h2>
-              <p>Share the join URL, then continue as host.</p>
+              <p>Copy the invite link and send it to the other person, then continue as host.</p>
             </header>
-            <p>
-              <strong>Session ID:</strong> <code>{createdSession.sessionId}</code>
-            </p>
-            <p>
-              <strong>Invitee Join URL:</strong>{" "}
-              <a href={createdSession.inviteeJoinUrl} target="_blank" rel="noreferrer">
-                {createdSession.inviteeJoinUrl}
-              </a>
-            </p>
-            <p>
-              <strong>Host Continue URL:</strong>{" "}
-              <a href={createdSession.hostContinueUrl} target="_blank" rel="noreferrer">
-                {createdSession.hostContinueUrl}
-              </a>
-            </p>
+            <label>
+              <input
+                type="checkbox"
+                checked={includeBriefInstructions}
+                onChange={(event) => {
+                  setIncludeBriefInstructions(event.target.checked);
+                  setLinkStatus(
+                    event.target.checked
+                      ? "Copying will include a brief invite message and the link."
+                      : "Copying will include only the invite link."
+                  );
+                }}
+              />{" "}
+              Include brief instructions
+            </label>
             <div className="btn-row">
               <button
                 className="btn-secondary"
@@ -151,7 +167,7 @@ export default function HostPage() {
               <button
                 className="btn-primary"
                 type="button"
-                onClick={() => window.open(createdSession.hostContinueUrl, "_blank", "noopener,noreferrer")}
+                onClick={() => window.location.assign(createdSession.hostContinueUrl)}
               >
                 Continue as host
               </button>
