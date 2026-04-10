@@ -253,3 +253,55 @@ test("auto-ranking lifecycle renders shared results and retry messaging", async 
   await expect(page.getByText("Spots: 1 available", { exact: false })).toBeVisible();
   await expect(page.getByText("Shared shortlist", { exact: false })).toBeVisible();
 });
+
+test("sticky rails expose blocker ownership and lifecycle status copy", async ({ page }) => {
+  const appUrl = process.env.E2E_APP_URL ?? "http://localhost:3000";
+  const now = new Date().toISOString();
+
+  await page.route("**/v1/sessions/partner-wait-session", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        sessionId: "partner-wait-session",
+        status: "joined",
+        updatedAt: now,
+        inputsReady: true,
+        rankingInputsReady: false,
+        rankingLifecycle: {
+          state: "generating",
+          lastErrorCode: null,
+          generationRequestId: "req-partner"
+        },
+        rankedResults: [],
+        shortlist: [],
+        reactions: [],
+        confirmedPlace: null,
+        participants: [
+          {
+            participantId: "demo-host",
+            role: "host",
+            joinedAt: "2026-01-01T10:00:00.000Z",
+            locationConfirmedAt: "2026-01-01T10:02:00.000Z"
+          },
+          {
+            participantId: "demo-invitee",
+            role: "invitee",
+            joinedAt: "2026-01-01T10:01:00.000Z",
+            locationConfirmedAt: "2026-01-01T10:03:00.000Z"
+          }
+        ]
+      })
+    });
+  });
+
+  await page.route("**/v1/sessions/partner-wait-session/events**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ events: [] }) });
+  });
+
+  await page.goto(`${appUrl}/s/demo-token?asHost=1&sessionId=partner-wait-session&participantId=demo-host`);
+
+  await expect(page.getByText("Waiting for partner", { exact: false })).toBeVisible();
+  await expect(page.locator(".next-action-button")).toHaveCount(1);
+  await expect(page.getByText("Loading shared suggestions from both saved preferences", { exact: false })).toBeVisible();
+});
