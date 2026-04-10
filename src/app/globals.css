@@ -282,6 +282,35 @@ legend {
   color: var(--success);
 }
 
+.session-progress-sticky {
+  position: sticky;
+  top: 0.5rem;
+  z-index: 10;
+}
+
+.status-inline-partner {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.next-action-rail {
+  position: sticky;
+  bottom: 0;
+  z-index: 12;
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.next-action-button {
+  width: 100%;
+  min-height: 44px;
+}
+
 @media (min-width: 768px) {
   .app-shell {
     width: min(1100px, 100% - 3.5rem);
