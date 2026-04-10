@@ -13,6 +13,12 @@
   --warning: #8a5a14;
   --success: #1f7a50;
   --shadow: 0 14px 34px rgba(17, 34, 24, 0.08);
+
+  /* Marker state colors */
+  --marker-default: #6b7280;
+  --marker-selected: #3b82f6;
+  --marker-shortlisted: #f59e0b;
+  --marker-confirmed: #10b981;
 }
 
 * {
@@ -349,6 +355,37 @@ legend {
 .map-list-layout {
   display: grid;
   gap: 0.75rem;
+}
+
+/* Provider map container */
+.map-panel {
+  min-height: 300px;
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* Custom marker styling */
+.custom-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+}
+
+.custom-marker:hover {
+  transform: scale(1.1);
+}
+
+.custom-marker.marker-selected {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.6);
+}
+
+/* Map fallback container */
+.map-fallback-container {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
 }
 
 @media (min-width: 768px) {
