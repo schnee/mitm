@@ -18,6 +18,7 @@ export function RankedResultsList({
   results,
   onAddToShortlist,
   shortlistVenueIds,
+  confirmedVenueId,
   reactions,
   participantId,
   onReact,
@@ -29,6 +30,7 @@ export function RankedResultsList({
   results: RankedVenue[];
   onAddToShortlist?: (venue: RankedVenue) => void;
   shortlistVenueIds?: string[];
+  confirmedVenueId?: string | null;
   reactions?: VenueReactionSummary[];
   participantId?: string;
   onReact?: (venue: RankedVenue, reaction: VenueReactionType) => void;
@@ -38,6 +40,7 @@ export function RankedResultsList({
   onVenueFocus?: (venueId: string) => void;
 }) {
   const shortlistedSet = new Set(shortlistVenueIds ?? []);
+  const confirmedSet = confirmedVenueId ? new Set([confirmedVenueId]) : new Set<string>();
   const reactionByVenueId = new Map((reactions ?? []).map((item) => [item.venueId, item]));
   const pendingSet = new Set(reactionPendingVenueIds ?? []);
   const itemRefs = useRef<Map<string, HTMLLIElement>>(new Map());
@@ -61,7 +64,10 @@ export function RankedResultsList({
   }, []);
 
   const getCardState = (venueId: string): "confirmed" | "shortlisted" | "selected" | "default" => {
-    if (shortlistVenueIds?.includes(venueId)) {
+    if (confirmedSet.has(venueId)) {
+      return "confirmed";
+    }
+    if (shortlistedSet.has(venueId)) {
       return "shortlisted";
     }
     if (selectedVenueId === venueId) {
@@ -82,16 +88,17 @@ export function RankedResultsList({
           const cardState = getCardState(result.venueId);
           const isSelected = selectedVenueId === result.venueId;
           const isShortlisted = shortlistedSet.has(result.venueId);
+          const isConfirmed = confirmedSet.has(result.venueId);
           
           return (
             <li 
               key={result.venueId} 
               ref={setRef(result.venueId)}
-              className={`result-card ${isSelected ? "result-card-selected" : ""} ${isShortlisted ? "result-card-shortlisted" : ""}`}
+              className={`result-card ${isSelected ? "result-card-selected" : ""} ${isShortlisted ? "result-card-shortlisted" : ""} ${isConfirmed ? "result-card-confirmed" : ""}`}
             >
-              {(isSelected || isShortlisted) && (
+              {cardState !== "default" && (
                 <span className={`state-badge state-badge-${cardState}`}>
-                  {cardState === "shortlisted" ? "Shortlisted" : isSelected ? "Selected" : ""}
+                  {cardState === "confirmed" ? "Confirmed" : cardState === "shortlisted" ? "Shortlisted" : "Selected"}
                 </span>
               )}
               <h3>{result.name}</h3>

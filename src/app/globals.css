@@ -382,6 +382,27 @@ legend {
   color: var(--success);
 }
 
+/* Map and list accessibility - 44x44 min touch targets */
+.map-container button,
+.result-card button,
+.result-card a {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Live region for screen reader announcements */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .map-list-layout {
   display: grid;
   gap: 0.75rem;

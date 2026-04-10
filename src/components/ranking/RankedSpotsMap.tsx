@@ -8,6 +8,7 @@ import {
   useMap
 } from "@vis.gl/react-google-maps";
 import type { RankedVenue } from "../../lib/api/session-client";
+import { emitMapTelemetry, type MapTelemetryEvent } from "../../lib/client-telemetry";
 
 function markerClassName(input: {
   venueId: string;
@@ -159,15 +160,6 @@ export function RankedSpotsMap({
   const [showFallback, setShowFallback] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const mapRef = useRef<ReturnType<typeof useMap> | null>(null);
-
-  const handleMapLoad = useCallback(() => {
-    setMapLoaded(true);
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
-    }
-  }, []);
 
   useEffect(() => {
     if (!mapsApiKey) {
@@ -179,6 +171,8 @@ export function RankedSpotsMap({
     timeoutRef.current = setTimeout(() => {
       if (!mapLoaded) {
         setShowFallback(true);
+        emitMapTelemetry("map_load_failed", { reason: "timeout" });
+        emitMapTelemetry("map_fallback_shown", { reason: "timeout" });
       }
     }, 5000);
 
@@ -193,11 +187,36 @@ export function RankedSpotsMap({
     setIsRetrying(true);
     setShowFallback(false);
     setMapLoaded(false);
+    emitMapTelemetry("map_retry_clicked", {});
 
     // Reset after a brief delay to retry
     setTimeout(() => {
       setIsRetrying(false);
+      // After retry, if map loads successfully, emit recovered
+      setTimeout(() => {
+        if (!showFallback) {
+          emitMapTelemetry("map_recovered", {});
+        }
+      }, 6000);
     }, 1000);
+  }, [showFallback]);
+
+  const handleMapLoad = useCallback(() => {
+    setMapLoaded(true);
+    // Only emit recovered if we previously showed fallback
+    if (showFallback) {
+      emitMapTelemetry("map_recovered", {});
+    }
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+  }, [showFallback]);
+
+  const handleMapError = useCallback(() => {
+    setShowFallback(true);
+    emitMapTelemetry("map_load_failed", { reason: "error" });
+    emitMapTelemetry("map_fallback_shown", { reason: "error" });
   }, []);
 
   const shouldShowProviderMap = mapsApiKey && !showFallback;
@@ -253,7 +272,7 @@ export function RankedSpotsMap({
       )}
 
       {shouldShowProviderMap && (
-        <APIProvider apiKey={mapsApiKey} onLoad={handleMapLoad} solutionChannel="GMP_DEV">
+        <APIProvider apiKey={mapsApiKey} onLoad={handleMapLoad} onError={handleMapError} solutionChannel="GMP_DEV">
           <Map
             mapId="ranked-spots-map"
             defaultCenter={{ lat: 40.7128, lng: -74.006 }}

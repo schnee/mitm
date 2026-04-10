@@ -518,6 +518,7 @@ export default function JoinPage({ params }: JoinPageProps) {
                                   void addToShortlist(venue);
                                 }}
                                 shortlistVenueIds={shortlist.map((item) => item.venueId)}
+                                confirmedVenueId={confirmedPlace?.venueId ?? null}
                                 reactions={reactions}
                                 participantId={participantId ?? undefined}
                                 onReact={(venue, reaction) => {
