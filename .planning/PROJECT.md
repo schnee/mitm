@@ -27,10 +27,10 @@ Turn a slow, awkward "where should we meet?" negotiation into a fast and fair de
 - [x] Phase 7 orchestration: make `Refresh ranking` optional secondary action while removing required `Run ranking` in main flow (UX-14)
 - [x] Phase 7 orchestration: provide actionable ranking-failure retry states that preserve location/ranking progress (UX-15)
 - [x] Phase 7 orchestration: ensure idempotent concurrent-save handling, lifecycle telemetry, and responsive shared-results consistency (UX-16, UX-17, UX-18)
-- [ ] Phase 8 UX orchestration: replace long vertical flow with guided single-active-step progression and collapsed completed-step summaries (UX-19, UX-20)
-- [ ] Phase 8 UX orchestration: add sticky two-person session status + mobile next-action CTA to reduce uncertainty and unblock progression (UX-21, UX-22)
-- [ ] Phase 8 map-first decisioning: synchronize ranked spots between markers and list interactions with clear shortlist/confirmed marker states (UX-23, UX-24)
-- [ ] Phase 8 state clarity/accessibility: deliver concise partner-progress feedback states with responsive + accessible behavior on mobile/desktop (UX-25, UX-26)
+- [x] Phase 8 UX orchestration: replace long vertical flow with guided single-active-step progression and collapsed completed-step summaries (UX-19, UX-20) (validated in Phase 8)
+- [x] Phase 8 UX orchestration: add sticky two-person session status + mobile next-action CTA to reduce uncertainty and unblock progression (UX-21, UX-22) (validated in Phase 8)
+- [x] Phase 8 map-first decisioning: synchronize ranked spots between markers and list interactions with clear shortlist/confirmed marker states (UX-23, UX-24) (validated in Phase 8)
+- [x] Phase 8 state clarity/accessibility: deliver concise partner-progress feedback states with responsive + accessible behavior on mobile/desktop (UX-25, UX-26) (validated in Phase 8)
 
 ### Out of Scope
 
@@ -46,7 +46,7 @@ Turn a slow, awkward "where should we meet?" negotiation into a fast and fair de
 - For MVP, single-region rollout and limited provider integrations reduce operational risk.
 - Success depends on converting intent into confirmed meeting places quickly.
 - Ranking orchestration now prioritizes one shared, auto-generated list so both participants converge without manual reruns.
-- Next focus is mobile-first guided/collapsible flow and map-driven decisioning to reduce scroll friction without expanding MVP scope.
+- Current state: milestone v1.0 is complete with guided mobile flow, sticky two-person status/CTA guidance, and synchronized map/list decisioning.
 
 ## Constraints
 
@@ -67,7 +67,7 @@ Turn a slow, awkward "where should we meet?" negotiation into a fast and fair de
 | Build mobile web first, then evaluate native apps | Enables faster validation and lower initial complexity | - Pending |
 | Keep Phase 6 scoped to UX polish only | Maintains execution focus and avoids re-opening validated ranking/provider decisions | Decided 2026-04-09 |
 | Keep Phase 7 scoped to shared ranking flow orchestration only | Improves coordination speed/trust while preserving validated fairness algorithm and provider integrations | Decided 2026-04-09 |
-| Keep Phase 8 scoped to guided flow and map/list decision UX only | Reduces friction and coordination ambiguity while preserving two-participant model, fairness fundamentals, provider integrations, and existing backend contracts | Planned 2026-04-10 |
+| Keep Phase 8 scoped to guided flow and map/list decision UX only | Reduces friction and coordination ambiguity while preserving two-participant model, fairness fundamentals, provider integrations, and existing backend contracts | Decided 2026-04-10 |
 | Deploy frontend on Cloudflare | Fast global edge delivery aligns with web-first MVP and mobile responsiveness goals | Decided 2026-04-08 |
 | Deploy backend on Google Cloud | Supports managed backend services and future scaling flexibility for session/realtime/ranking workloads | Decided 2026-04-08 |
 | Use session-first ephemeral persistence (Alternative 3) | Creating a server session at User 1 start reduces flow fragility while TTL limits sensitive retention | Decided 2026-04-08 |
@@ -90,4 +90,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-10 after Phase 8 scoping (mobile-first guided flow and map-driven decisioning)*
+*Last updated: 2026-04-10 after Phase 8 completion (guided flow, status rails, and map/list synchronization)*
