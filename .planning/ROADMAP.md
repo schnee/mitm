@@ -17,7 +17,7 @@ This roadmap delivers the MVP in dependency order: establish two-person session 
 - [x] **Phase 5: UX Refresh & Decision Confidence** - Improve clarity, trust, and speed of choice through a focused post-launch UX refresh.
 - [x] **Phase 6: UX Polish & Professional Experience** - Polish startup, negotiation/ranking, and shared decision flows to feel production-grade across devices.
 - [x] **Phase 7: Shared Auto-Ranking & Synced Results** - Replace manual per-user ranking trigger with one canonical session-level ranked list that appears automatically for both participants after inputs are saved. (completed 2026-04-09)
-- [ ] **Phase 8: Mobile-First Guided Flow & Map-Driven Decisioning** - Reduce scroll and decision friction through guided step flow, two-person progress visibility, and synchronized map/list decisioning.
+- [x] **Phase 8: Mobile-First Guided Flow & Map-Driven Decisioning** - Reduce scroll and decision friction through guided step flow, two-person progress visibility, and synchronized map/list decisioning. (completed 2026-04-10)
 
 ## Dependency Map and Sequencing Rationale
 
