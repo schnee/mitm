@@ -292,6 +292,81 @@ test("auto-ranking lifecycle renders shared results and retry messaging", async 
   await expect(page.getByRole("heading", { name: "Confirmed destination" })).toBeVisible();
 });
 
+test("reload preserves ability to confirm location from saved draft", async ({ page }) => {
+  const appUrl = process.env.E2E_APP_URL ?? "http://localhost:3000";
+  const now = new Date().toISOString();
+
+  await page.route("**/v1/sessions/reload-location-session", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        sessionId: "reload-location-session",
+        status: "joined",
+        updatedAt: now,
+        inputsReady: false,
+        rankingInputsReady: false,
+        rankingLifecycle: {
+          state: "waiting",
+          lastErrorCode: null,
+          generationRequestId: null
+        },
+        rankedResults: [],
+        shortlist: [],
+        reactions: [],
+        confirmedPlace: null,
+        participants: [
+          {
+            participantId: "demo-host",
+            role: "host",
+            joinedAt: "2026-01-01T10:00:00.000Z",
+            locationConfirmedAt: null
+          },
+          {
+            participantId: "demo-invitee",
+            role: "invitee",
+            joinedAt: "2026-01-01T10:01:00.000Z",
+            locationConfirmedAt: null
+          }
+        ]
+      })
+    });
+  });
+
+  await page.route("**/v1/sessions/reload-location-session/events**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ events: [] }) });
+  });
+
+  await page.route("**/v1/location/draft", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ expireAt: "2026-01-01T11:00:00.000Z" })
+    });
+  });
+
+  await page.route("**/v1/location/confirm", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        confirmedAt: "2026-01-01T10:04:00.000Z",
+        inputsReady: true
+      })
+    });
+  });
+
+  await page.goto(`${appUrl}/s/demo-token?asHost=1&sessionId=reload-location-session&participantId=demo-host`);
+  await page.getByLabel("Address label").fill("Downtown");
+  await page.getByLabel("Latitude").fill("30.271371");
+  await page.getByLabel("Longitude").fill("-97.759000");
+  await page.getByRole("button", { name: "Save manual location" }).click();
+
+  await page.reload();
+
+  await expect(page.getByLabel("Confirm your location").getByRole("button", { name: "Confirm location" })).toBeEnabled();
+});
+
 test("sticky rails expose blocker ownership and lifecycle status copy", async ({ page }) => {
   const appUrl = process.env.E2E_APP_URL ?? "http://localhost:3000";
   const now = new Date().toISOString();
