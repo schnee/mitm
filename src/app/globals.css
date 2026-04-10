@@ -311,6 +311,36 @@ legend {
   min-height: 44px;
 }
 
+.map-container {
+  min-height: 180px;
+}
+
+.map-marker-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.marker-default {
+  background: #edf2f8;
+  color: #2d4a66;
+}
+
+.marker-selected {
+  background: #d9ecff;
+  color: #113b66;
+}
+
+.marker-shortlisted {
+  background: #efe5ff;
+  color: #4f2f7a;
+}
+
+.marker-confirmed {
+  background: #def4e7;
+  color: var(--success);
+}
+
 @media (min-width: 768px) {
   .app-shell {
     width: min(1100px, 100% - 3.5rem);
