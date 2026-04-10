@@ -17,6 +17,8 @@ import {
 } from "../../../lib/api/session-client";
 import { useSessionSync } from "../../../hooks/useSessionSync";
 import { ParticipantStatus } from "../../../components/session/ParticipantStatus";
+import { SessionProgressBar } from "../../../components/session/SessionProgressBar";
+import { NextActionRail } from "../../../components/session/NextActionRail";
 import { LocationCaptureForm } from "../../../components/location/LocationCaptureForm";
 import { LocationConfirmCard } from "../../../components/location/LocationConfirmCard";
 import { RankingInputsForm } from "../../../components/ranking/RankingInputsForm";
@@ -232,6 +234,26 @@ export default function JoinPage({ params }: JoinPageProps) {
   });
   const { activeStepId, steps } = flow;
 
+  const nextActionLabel =
+    activeStepId === "location"
+      ? "Confirm location"
+      : activeStepId === "preferences"
+        ? "Save preferences"
+        : activeStepId === "spots"
+          ? "Review ranked spots"
+          : activeStepId === "shortlist"
+            ? "Pick shortlist spot"
+            : "Confirm final place";
+
+  const nextActionStatus: "idle" | "loading" | "waiting" | "success" | "error" =
+    rankingLifecycleState === "failed"
+      ? "error"
+      : rankingLifecycleState === "generating"
+        ? "loading"
+        : activeStepId === "confirm" && confirmedPlace
+          ? "success"
+          : "waiting";
+
   const addToShortlist = async (venue: RankedVenue) => {
     if (!sessionId || !participantId) {
       return;
@@ -314,12 +336,12 @@ export default function JoinPage({ params }: JoinPageProps) {
 
   const sharedLifecycleStatus =
     rankingLifecycleState === "failed"
-                  ? "Error: suggestion generation failed. Saved locations and meet-up preferences are preserved. Use Refresh suggestions to retry."
+      ? "Error: partner-save sync delayed, retry available"
       : rankingLifecycleState === "ready"
-        ? "Success: shared suggestions are ready for both participants."
+        ? "Success: both participants can proceed to shortlist"
         : rankingLifecycleState === "generating"
-          ? "Loading: generating shared suggestions from both participants' saved inputs."
-          : "Waiting: meet-up preferences saved. Waiting for your partner to finish.";
+          ? "Loading shared suggestions from both saved preferences"
+          : "Waiting for partner to confirm location";
 
   const sharedLifecycleStatusClass =
     rankingLifecycleState === "failed"
@@ -370,16 +392,23 @@ export default function JoinPage({ params }: JoinPageProps) {
             {sync.snapshot && <ParticipantStatus participants={sync.snapshot.participants} />}
 
             {sessionId && participantId && (
-              <section className="guided-stepper" aria-label="Guided session steps">
-                {steps.map((step) => {
-                  const isActive = activeStepId === step.id;
-                  return (
-                    <section
-                      key={step.id}
-                      className={`panel guided-step ${isActive ? "active" : ""}`}
-                      data-step-id={step.id}
-                      data-step-active={isActive ? "true" : "false"}
-                    >
+              <>
+                <SessionProgressBar
+                  steps={steps}
+                  activeStepId={activeStepId}
+                  meRole={me?.role ?? "host"}
+                  partnerRole={partner?.role ?? null}
+                />
+                <section className="guided-stepper" aria-label="Guided session steps">
+                  {steps.map((step) => {
+                    const isActive = activeStepId === step.id;
+                    return (
+                      <section
+                        key={step.id}
+                        className={`panel guided-step ${isActive ? "active" : ""}`}
+                        data-step-id={step.id}
+                        data-step-active={isActive ? "true" : "false"}
+                      >
                       <header className="section-header">
                         <h2>{step.title}</h2>
                       </header>
@@ -500,10 +529,19 @@ export default function JoinPage({ params }: JoinPageProps) {
                           )}
                         </>
                       )}
-                    </section>
-                  );
-                })}
-              </section>
+                      </section>
+                    );
+                  })}
+                </section>
+                <NextActionRail
+                  label={nextActionLabel}
+                  status={nextActionStatus}
+                  onClick={() => {
+                    const active = document.querySelector<HTMLElement>(`[data-step-id="${activeStepId}"]`);
+                    active?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }}
+                />
+              </>
             )}
           </>
         )}

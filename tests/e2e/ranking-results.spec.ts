@@ -231,7 +231,10 @@ test("auto-ranking lifecycle renders shared results and retry messaging", async 
   await page.getByLabel("Latitude").fill("30.271371");
   await page.getByLabel("Longitude").fill("-97.759000");
   await page.getByRole("button", { name: "Save manual location" }).click();
-  await page.getByRole("button", { name: "Confirm location" }).click();
+  await page
+    .getByLabel("Confirm your location")
+    .getByRole("button", { name: "Confirm location" })
+    .click();
 
   await expect(page.locator('[data-step-id="preferences"][data-step-active="true"]')).toBeVisible();
   await expect(page.getByText("Location: Confirmed", { exact: false })).toBeVisible();
