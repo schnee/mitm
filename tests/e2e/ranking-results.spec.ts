@@ -383,6 +383,7 @@ test("reload keeps manual draft continuity and allows post-refresh location conf
 test("reload keeps preference lifecycle status and single next action CTA", async ({ page }) => {
   const appUrl = process.env.E2E_APP_URL ?? "http://localhost:3000";
   const now = new Date().toISOString();
+  const rankingInputsUpdatedAt = "2026-01-01T10:05:00.000Z";
   let rankingInputsSaved = false;
 
   await page.route("**/v1/sessions/reload-preferences-session", async (route) => {
@@ -409,6 +410,7 @@ test("reload keeps preference lifecycle status and single next action CTA", asyn
             participantId: "demo-host",
             role: "host",
             joinedAt: "2026-01-01T10:00:00.000Z",
+            rankingInputsUpdatedAt: rankingInputsSaved ? rankingInputsUpdatedAt : null,
             locationConfirmedAt: "2026-01-01T10:02:00.000Z"
           },
           {
