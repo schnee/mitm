@@ -82,6 +82,7 @@ export interface SessionEventDiffResponse {
   participantCount?: number;
   locationDraftUpdatedAt?: string;
   locationConfirmedAt?: string;
+  rankingInputsUpdatedAt?: string;
   shortlist?: ShortlistVenue[];
   reactions?: VenueReactionSummary[];
   confirmedPlace?: ConfirmedPlace | null;
