@@ -355,9 +355,9 @@ Plans:
   5. Existing create/join, location confirmation, preference save, shortlist, and final confirmation flows show no regression.
 **Plans**: 3 plans
 Plans:
-- [ ] 08-01-PLAN.md — Implement guided single-active-step flow with auto-collapsing completed summaries and sticky mobile CTA.
-- [ ] 08-02-PLAN.md — Add sticky two-person status bar plus state-specific partner-progress messaging across waiting/loading/error/success states.
-- [ ] 08-03-PLAN.md — Deliver map-first ranked spots with synchronized marker/list interactions and shortlist/confirmed marker-state parity.
+- [x] 08-01-PLAN.md — Implement guided single-active-step flow with auto-collapsing completed summaries and sticky mobile CTA.
+- [x] 08-02-PLAN.md — Add sticky two-person status bar plus state-specific partner-progress messaging across waiting/loading/error/success states.
+- [x] 08-03-PLAN.md — Deliver map-first ranked spots with synchronized marker/list interactions and shortlist/confirmed marker-state parity.
 **UI hint**: yes
 
 ## Progress

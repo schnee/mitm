@@ -24,7 +24,7 @@ export function deriveSessionFlow(input: DeriveSessionFlowInput): { activeStepId
   const locationCompleted = input.myLocationConfirmed;
   const preferencesCompleted = input.myPreferencesSaved;
   const spotsCompleted = input.shortlistCount > 0 || Boolean(input.confirmedVenueId);
-  const shortlistCompleted = input.shortlistCount > 0;
+  const shortlistCompleted = Boolean(input.confirmedVenueId);
   const confirmCompleted = Boolean(input.confirmedVenueId);
 
   const steps: SessionFlowStep[] = [
@@ -62,7 +62,7 @@ export function deriveSessionFlow(input: DeriveSessionFlowInput): { activeStepId
       title: "Shortlist",
       completed: shortlistCompleted,
       blockedBy: shortlistCompleted ? null : spotsCompleted ? "self" : "partner",
-      summary: shortlistCompleted ? `Shortlist: ${input.shortlistCount} spot${input.shortlistCount === 1 ? "" : "s"}` : "Shortlist: None"
+      summary: input.shortlistCount > 0 ? `Shortlist: ${input.shortlistCount} spot${input.shortlistCount === 1 ? "" : "s"}` : "Shortlist: None"
     },
     {
       id: "confirm",

@@ -219,6 +219,25 @@ test("auto-ranking lifecycle renders shared results and retry messaging", async 
     });
   });
 
+  await page.route("**/v1/decision/confirm", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        confirmedPlace: {
+          venueId: "venue-1",
+          name: "Coffee Spot",
+          category: "cafe",
+          lat: 40.72,
+          lng: -73.99,
+          navigationUrl: "https://maps.example/coffee-spot",
+          confirmedByParticipantId: "demo-host",
+          confirmedAt: "2026-01-01T10:12:00.000Z"
+        }
+      })
+    });
+  });
+
   await page.goto(`${appUrl}/s/demo-token?asHost=1&sessionId=demo-session&participantId=demo-host`);
 
   await expect(page.locator(".guided-stepper")).toBeVisible();
@@ -249,9 +268,28 @@ test("auto-ranking lifecycle renders shared results and retry messaging", async 
   await page.getByRole("button", { name: "Refresh suggestions" }).click();
   expect(refreshAttempts).toBeGreaterThanOrEqual(2);
 
-  await expect(page.locator('[data-step-id="shortlist"][data-step-active="true"]')).toBeVisible({ timeout: 10000 });
-  await expect(page.getByText("Spots: 1 available", { exact: false })).toBeVisible();
+  await expect(page.locator('[data-step-id="spots"][data-step-active="true"]')).toBeVisible({ timeout: 10000 });
+  await expect(page.getByRole("heading", { name: "Coffee Spot" })).toBeVisible();
+
+  const mapSection = page.getByLabel("Ranked spots map");
+  const markerButton = mapSection.locator(".map-marker-grid button", { hasText: "Coffee Spot" });
+  await expect(markerButton).toHaveClass(/marker-default/);
+
+  await page.getByRole("button", { name: "Focus on map" }).click();
+  await expect(markerButton).toHaveClass(/marker-selected/);
+
+  await markerButton.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.locator(".result-card-selected")).toContainText("Coffee Spot");
+
+  await page.getByRole("button", { name: "Add to shortlist" }).click();
+  await expect(page.locator('[data-step-id="shortlist"][data-step-active="true"]')).toBeVisible();
+  await expect(page.getByText("Spots: map + list synced", { exact: false })).toBeVisible();
   await expect(page.getByText("Shared shortlist", { exact: false })).toBeVisible();
+
+  await page.getByRole("button", { name: "Confirm this place" }).click();
+  await expect(page.locator('[data-step-id="confirm"][data-step-active="true"]')).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Confirmed destination" })).toBeVisible();
 });
 
 test("sticky rails expose blocker ownership and lifecycle status copy", async ({ page }) => {
