@@ -623,7 +623,9 @@ export class SessionRepository {
         participantId: item.participantId,
         role: item.role,
         joinedAt: item.joinedAt,
-        locationConfirmedAt: item.locationConfirmedAt ?? null
+        locationDraftUpdatedAt: item.locationDraftUpdatedAt ?? null,
+        locationConfirmedAt: item.locationConfirmedAt ?? null,
+        rankingInputsUpdatedAt: item.rankingInputsUpdatedAt ?? null
       }));
     return {
       sessionId,

@@ -15,7 +15,9 @@ export interface SessionSnapshotParticipant {
   participantId: string;
   role: "host" | "invitee";
   joinedAt: string;
+  locationDraftUpdatedAt: string | null;
   locationConfirmedAt: string | null;
+  rankingInputsUpdatedAt: string | null;
 }
 
 export interface ShortlistVenue {
