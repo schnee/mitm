@@ -255,6 +255,33 @@ legend {
   word-break: break-all;
 }
 
+.guided-stepper {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.guided-step {
+  border-left: 4px solid transparent;
+}
+
+.guided-step.active {
+  border-left-color: var(--primary);
+  background: #fbfefc;
+}
+
+.step-summary {
+  margin: 0;
+  padding: 0.55rem 0.7rem;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.step-summary-complete {
+  background: #def4e7;
+  color: var(--success);
+}
+
 @media (min-width: 768px) {
   .app-shell {
     width: min(1100px, 100% - 3.5rem);

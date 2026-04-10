@@ -23,6 +23,7 @@ import { RankingInputsForm } from "../../../components/ranking/RankingInputsForm
 import { RankedResultsList } from "../../../components/ranking/RankedResultsList";
 import { ShortlistPanel } from "../../../components/decision/ShortlistPanel";
 import { ConfirmedPlaceCard } from "../../../components/decision/ConfirmedPlaceCard";
+import { deriveSessionFlow } from "../../../lib/session-flow";
 
 type JoinState = "joining" | "joined" | "join_error";
 
@@ -102,6 +103,7 @@ export default function JoinPage({ params }: JoinPageProps) {
   const [draftSaved, setDraftSaved] = useState(false);
   const [confirmedAt, setConfirmedAt] = useState<string | null>(null);
   const [rankingStatus, setRankingStatus] = useState("Waiting: save meet-up preferences to start shared suggestions.");
+  const [myPreferencesSaved, setMyPreferencesSaved] = useState(false);
   const [rankingRefreshPending, setRankingRefreshPending] = useState(false);
   const [localRankedResults, setLocalRankedResults] = useState<RankedVenue[]>([]);
   const [localShortlist, setLocalShortlist] = useState<ShortlistVenue[]>([]);
@@ -215,7 +217,20 @@ export default function JoinPage({ params }: JoinPageProps) {
   const rankingLifecycleState: RankingLifecycleState = sync.snapshot?.rankingLifecycle?.state ?? "waiting";
   const partnerParticipantId =
     sync.snapshot?.participants.find((item) => item.participantId !== participantId)?.participantId ?? null;
+  const me = sync.snapshot?.participants.find((item) => item.participantId === participantId) ?? null;
+  const partner = sync.snapshot?.participants.find((item) => item.participantId !== participantId) ?? null;
   const reactionStatusByVenueId = buildReactionStatusByVenueId(reactions, participantId, partnerParticipantId);
+
+  const flow = deriveSessionFlow({
+    myLocationConfirmed: Boolean(me?.locationConfirmedAt || confirmedAt),
+    partnerLocationConfirmed: Boolean(partner?.locationConfirmedAt),
+    myPreferencesSaved: myPreferencesSaved || Boolean(sync.snapshot?.rankingInputsReady),
+    partnerPreferencesSaved: Boolean(sync.snapshot?.rankingInputsReady),
+    rankedResultsCount: rankedResults.length,
+    shortlistCount: shortlist.length,
+    confirmedVenueId: confirmedPlace?.venueId ?? null
+  });
+  const { activeStepId, steps } = flow;
 
   const addToShortlist = async (venue: RankedVenue) => {
     if (!sessionId || !participantId) {
@@ -355,98 +370,140 @@ export default function JoinPage({ params }: JoinPageProps) {
             {sync.snapshot && <ParticipantStatus participants={sync.snapshot.participants} />}
 
             {sessionId && participantId && (
-              <section className="stage" aria-label="Location stage">
-                <LocationCaptureForm
-                  sessionId={sessionId}
-                  participantId={participantId}
-                  onDraftSaved={() => setDraftSaved(true)}
-                />
-                <LocationConfirmCard
-                  sessionId={sessionId}
-                  participantId={participantId}
-                  draftSaved={draftSaved}
-                  inputsReady={Boolean(sync.snapshot?.inputsReady)}
-                  onConfirmed={(nextConfirmedAt) => setConfirmedAt(nextConfirmedAt)}
-                />
-                <p className={`status-badge ${confirmedAt ? "status-success" : "status-waiting"}`} role="status" aria-live="polite">
-                  {confirmedAt
-                    ? `Success: location confirmed at ${confirmedAt}`
-                    : "Waiting: confirm your location to continue."}
-                </p>
-              </section>
-            )}
-
-            {sync.snapshot?.inputsReady && sessionId && participantId && (
-              <section className="stage" aria-label="Suggestions and decision stage">
-                <RankingInputsForm
-                  sessionId={sessionId}
-                  participantId={participantId}
-                  onSaved={({ rankingLifecycle }) => {
-                    setRankingStatus(
-                      rankingLifecycle.state === "waiting"
-                        ? "Waiting: preferences saved. Waiting for your partner to finish."
-                        : "Loading: preferences saved. Generating shared suggestions."
-                    );
-                  }}
-                />
-
-                <section className="panel stage" aria-labelledby="run-ranking-title">
-                  <h2 id="run-ranking-title">Shared preferences status</h2>
-                  <p className={`status-badge ${sharedLifecycleStatusClass}`} role="status" aria-live="polite">
-                    {sharedLifecycleStatus}
-                  </p>
-                  <div className="btn-row">
-                    <button
-                      className="btn-secondary"
-                      type="button"
-                      disabled={!Boolean(sync.snapshot?.rankingInputsReady) || rankingRefreshPending}
-                      onClick={() => {
-                        void refreshRanking();
-                      }}
+              <section className="guided-stepper" aria-label="Guided session steps">
+                {steps.map((step) => {
+                  const isActive = activeStepId === step.id;
+                  return (
+                    <section
+                      key={step.id}
+                      className={`panel guided-step ${isActive ? "active" : ""}`}
+                      data-step-id={step.id}
+                      data-step-active={isActive ? "true" : "false"}
                     >
-                      Refresh suggestions
-                    </button>
-                  </div>
-                  <p className={`status-badge ${rankingStatusClass}`} role="status" aria-live="polite">
-                    {rankingStatus}
-                  </p>
-                </section>
+                      <header className="section-header">
+                        <h2>{step.title}</h2>
+                      </header>
 
-                <RankedResultsList
-                  results={rankedResults}
-                  onAddToShortlist={(venue) => {
-                    void addToShortlist(venue);
-                  }}
-                  shortlistVenueIds={shortlist.map((item) => item.venueId)}
-                  reactions={reactions}
-                  participantId={participantId ?? undefined}
-                  onReact={(venue, reaction) => {
-                    void reactToVenue(venue, reaction);
-                  }}
-                  reactionPendingVenueIds={reactionPendingVenueIds}
-                  reactionStatusByVenueId={reactionStatusByVenueId}
-                />
+                      {step.completed && !isActive ? (
+                        <p className="step-summary step-summary-complete">{step.summary}</p>
+                      ) : (
+                        <>
+                          {step.id === "location" && (
+                            <div className="stage">
+                              <LocationCaptureForm
+                                sessionId={sessionId}
+                                participantId={participantId}
+                                onDraftSaved={() => setDraftSaved(true)}
+                              />
+                              <LocationConfirmCard
+                                sessionId={sessionId}
+                                participantId={participantId}
+                                draftSaved={draftSaved}
+                                inputsReady={Boolean(sync.snapshot?.inputsReady)}
+                                onConfirmed={(nextConfirmedAt) => setConfirmedAt(nextConfirmedAt)}
+                              />
+                              <p className={`status-badge ${confirmedAt ? "status-success" : "status-waiting"}`} role="status" aria-live="polite">
+                                {confirmedAt
+                                  ? `Success: location confirmed at ${confirmedAt}`
+                                  : "Waiting: confirm your location to continue."}
+                              </p>
+                            </div>
+                          )}
 
-                <p className={`status-badge ${decisionStatusClass}`} role="status" aria-live="polite">
-                  {decisionStatus}
-                </p>
+                          {step.id === "preferences" && (
+                            <div className="stage">
+                              {sync.snapshot?.inputsReady ? (
+                                <RankingInputsForm
+                                  sessionId={sessionId}
+                                  participantId={participantId}
+                                  onSaved={({ rankingLifecycle }) => {
+                                    setMyPreferencesSaved(true);
+                                    setRankingStatus(
+                                      rankingLifecycle.state === "waiting"
+                                        ? "Waiting: preferences saved. Waiting for your partner to finish."
+                                        : "Loading: preferences saved. Generating shared suggestions."
+                                    );
+                                  }}
+                                />
+                              ) : (
+                                <p className="status-badge status-waiting" role="status" aria-live="polite">
+                                  Waiting: both participants must confirm locations before preferences can be saved.
+                                </p>
+                              )}
+                            </div>
+                          )}
 
-                <ShortlistPanel
-                  shortlist={shortlist}
-                  confirmedPlace={confirmedPlace}
-                  onConfirm={(venueId) => {
-                    void confirmShortlistedVenue(venueId);
-                  }}
-                />
+                          {step.id === "spots" && (
+                            <div className="stage">
+                              <section className="panel stage" aria-labelledby="run-ranking-title">
+                                <h2 id="run-ranking-title">Shared preferences status</h2>
+                                <p className={`status-badge ${sharedLifecycleStatusClass}`} role="status" aria-live="polite">
+                                  {sharedLifecycleStatus}
+                                </p>
+                                <div className="btn-row">
+                                  <button
+                                    className="btn-secondary"
+                                    type="button"
+                                    disabled={!Boolean(sync.snapshot?.rankingInputsReady) || rankingRefreshPending}
+                                    onClick={() => {
+                                      void refreshRanking();
+                                    }}
+                                  >
+                                    Refresh suggestions
+                                  </button>
+                                </div>
+                                <p className={`status-badge ${rankingStatusClass}`} role="status" aria-live="polite">
+                                  {rankingStatus}
+                                </p>
+                              </section>
 
-                {confirmedPlace && <ConfirmedPlaceCard confirmedPlace={confirmedPlace} />}
+                              <RankedResultsList
+                                results={rankedResults}
+                                onAddToShortlist={(venue) => {
+                                  void addToShortlist(venue);
+                                }}
+                                shortlistVenueIds={shortlist.map((item) => item.venueId)}
+                                reactions={reactions}
+                                participantId={participantId ?? undefined}
+                                onReact={(venue, reaction) => {
+                                  void reactToVenue(venue, reaction);
+                                }}
+                                reactionPendingVenueIds={reactionPendingVenueIds}
+                                reactionStatusByVenueId={reactionStatusByVenueId}
+                              />
+                            </div>
+                          )}
+
+                          {step.id === "shortlist" && (
+                            <div className="stage">
+                              <p className={`status-badge ${decisionStatusClass}`} role="status" aria-live="polite">
+                                {decisionStatus}
+                              </p>
+                              <ShortlistPanel
+                                shortlist={shortlist}
+                                confirmedPlace={confirmedPlace}
+                                onConfirm={(venueId) => {
+                                  void confirmShortlistedVenue(venueId);
+                                }}
+                              />
+                            </div>
+                          )}
+
+                          {step.id === "confirm" && (
+                            <div className="stage">
+                              {confirmedPlace ? (
+                                <ConfirmedPlaceCard confirmedPlace={confirmedPlace} />
+                              ) : (
+                                <p className="status-badge status-waiting">Waiting: select a shortlisted spot to confirm.</p>
+                              )}
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </section>
+                  );
+                })}
               </section>
-            )}
-
-            {!sync.snapshot?.inputsReady && (
-              <p className="status-badge status-waiting" role="status" aria-live="polite">
-                Waiting: both participants must confirm locations before suggestions are generated.
-              </p>
             )}
           </>
         )}
