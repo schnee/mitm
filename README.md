@@ -10,6 +10,12 @@ Quick command entrypoints:
 - `npm run build:cloudflare`
 - `npm run deploy:cloudflare`
 
+Deployment artifact hygiene:
+
+- Commit deployment config and scripts (`Dockerfile`, `deploy/**`, `next.config.js`, `open-next.config.ts`, `package.json`, `package-lock.json`).
+- Do not commit local runtime state or secrets (`.wrangler/`, `.env*`, `deploy/cloudflare/.dev.vars`).
+- If local deploy tooling creates temporary files, remove them before commit.
+
 ## Local setup
 
 1. Install dependencies:

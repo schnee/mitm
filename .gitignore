@@ -8,5 +8,6 @@ test-results/
 .env
 .env.local
 .open-next/
+.wrangler/
 deploy/cloudflare/.dev.vars
 data/trackstat.duckdb

@@ -1,12 +1,12 @@
 name = "mitm-web"
-main = ".open-next/worker.js"
+main = "../../.open-next/worker.js"
 compatibility_date = "2026-04-09"
 compatibility_flags = ["nodejs_compat"]
 workers_dev = true
 
 [assets]
-directory = ".open-next/assets"
+directory = "../../.open-next/assets"
 binding = "ASSETS"
 
 [vars]
-NEXT_PUBLIC_API_BASE_URL = "https://mitm-api-REPLACE_ME.a.run.app"
+NEXT_PUBLIC_API_BASE_URL = "https://mitm-api-jird3i3t7a-uc.a.run.app"
