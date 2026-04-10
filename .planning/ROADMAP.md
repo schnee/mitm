@@ -384,7 +384,7 @@ Plans:
 **Gap Closure**: Closes integration GAP-01 and GAP-03 plus refresh/rejoin broken flows.
 **Plans**: 3 plans
 Plans:
-- [ ] 10-01-PLAN.md — Extend canonical session snapshot contracts and tests to expose participant draft/preference continuity fields.
+- [x] 10-01-PLAN.md — Extend canonical session snapshot contracts and tests to expose participant draft/preference continuity fields.
 - [ ] 10-02-PLAN.md — Refactor guided-flow progression to snapshot-derived continuity state for reload-safe location/preference behavior.
 - [ ] 10-03-PLAN.md — Add reload-focused e2e regressions for continuity, partner-progress messaging, and next-action correctness.
 
@@ -408,5 +408,5 @@ Plans:
 | 7. Shared Auto-Ranking & Synced Results | 3/3 | Complete   | 2026-04-09 |
 | 8. Mobile-First Guided Flow & Map-Driven Decisioning | 3/3 | Complete | 08-01, 08-02, 08-03 |
 | 9. Verification Coverage & Traceability Recovery | 0/0 | Planned | - |
-| 10. Session Continuity & State Persistence Hardening | 0/3 | Planned | - |
+| 10. Session Continuity & State Persistence Hardening | 1/3 | In Progress|  |
 | 11. Map-First Provider Integration Completion | 0/0 | Planned | - |
