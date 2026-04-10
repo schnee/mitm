@@ -255,6 +255,102 @@ legend {
   word-break: break-all;
 }
 
+.guided-stepper {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.guided-step {
+  border-left: 4px solid transparent;
+}
+
+.guided-step.active {
+  border-left-color: var(--primary);
+  background: #fbfefc;
+}
+
+.step-summary {
+  margin: 0;
+  padding: 0.55rem 0.7rem;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.step-summary-complete {
+  background: #def4e7;
+  color: var(--success);
+}
+
+.session-progress-sticky {
+  position: sticky;
+  top: 0.5rem;
+  z-index: 10;
+}
+
+.status-inline-partner {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.next-action-rail {
+  position: sticky;
+  bottom: 0;
+  z-index: 12;
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.next-action-button {
+  width: 100%;
+  min-height: 44px;
+}
+
+.map-container {
+  min-height: 180px;
+}
+
+.map-marker-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.marker-default {
+  background: #edf2f8;
+  color: #2d4a66;
+}
+
+.marker-selected {
+  background: #d9ecff;
+  color: #113b66;
+}
+
+.marker-shortlisted {
+  background: #efe5ff;
+  color: #4f2f7a;
+}
+
+.marker-confirmed {
+  background: #def4e7;
+  color: var(--success);
+}
+
+.result-card-selected {
+  border-color: var(--secondary);
+  box-shadow: 0 0 0 2px rgba(47, 95, 133, 0.2);
+}
+
+.map-list-layout {
+  display: grid;
+  gap: 0.75rem;
+}
+
 @media (min-width: 768px) {
   .app-shell {
     width: min(1100px, 100% - 3.5rem);
@@ -266,6 +362,11 @@ legend {
   }
 
   .split-grid {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+
+  .map-list-layout {
     grid-template-columns: 1fr 1fr;
     align-items: start;
   }

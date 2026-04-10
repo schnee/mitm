@@ -65,6 +65,29 @@ Scope guardrail: UX polish only for v1.x; no fairness algorithm or provider chan
 
 Scope guardrail: keep split decision behavior conceptually unchanged; do not change fairness algorithm fundamentals or provider integrations; do not expand beyond two-user sessions.
 
+### v1.x Mobile-First Guided Flow & Map-Driven Decisioning (UX Orchestration/Presentation Scope)
+
+- [ ] **UX-19**: Replace long vertical flow with a guided stepper (Location -> Preferences -> Spots -> Shortlist -> Confirm) that shows one primary step expanded at a time.
+- [ ] **UX-20**: Completed steps auto-collapse into compact summary rows (for example, "Location: Confirmed") to reduce scrolling.
+- [ ] **UX-21**: Add a sticky session status bar that shows progress for both users (You and Partner) and clearly indicates who is blocking the next step.
+- [ ] **UX-22**: Add a sticky primary CTA area on mobile that always presents the single next action for the current user.
+- [ ] **UX-23**: Introduce a map-first "Ranked spots" view with synchronized markers and list items (tap list highlights marker; tap marker focuses list item).
+- [ ] **UX-24**: Update map state when shortlist changes: shortlisted spots use distinct marker styling, and confirmed spot is visually locked/highlighted.
+- [ ] **UX-25**: Add concise, state-specific feedback for waiting/loading/error/success, including partner-progress updates (for example, "Waiting for partner to save preferences").
+- [ ] **UX-26**: Preserve responsive usability and accessibility across mobile and desktop (focus order, tap targets, contrast, keyboard fallback for core actions).
+
+Scope guardrails:
+- Keep two-participant model unchanged.
+- Do not change fairness algorithm fundamentals or provider integrations.
+- Reuse current ranking/decision backend contracts where possible; prioritize UX orchestration and presentation.
+
+Acceptance criteria:
+- On mobile, users can complete end-to-end flow with materially less scrolling (single active step + collapsed completed steps).
+- At every point, both users can see what they need to do next and what the other participant has completed.
+- Suggestions are visible on both map and list, and shortlist/confirm actions update both representations consistently.
+- Confirmed place state is unambiguous on both clients and reflected in the map.
+- No regression in existing create/join, location confirmation, preference save, shortlist, and confirmation flows.
+
 ## v2 Requirements
 
 Deferred to future release. Tracked but not in current roadmap.
@@ -132,12 +155,20 @@ Which phases cover which requirements. Updated during roadmap creation.
 | UX-16 | Phase 7 | Complete |
 | UX-17 | Phase 7 | Complete |
 | UX-18 | Phase 7 | Complete |
+| UX-19 | Phase 8 | Planned |
+| UX-20 | Phase 8 | Planned |
+| UX-21 | Phase 8 | Planned |
+| UX-22 | Phase 8 | Planned |
+| UX-23 | Phase 8 | Planned |
+| UX-24 | Phase 8 | Planned |
+| UX-25 | Phase 8 | Planned |
+| UX-26 | Phase 8 | Planned |
 
 **Coverage:**
-- v1 requirements: 30 total
-- Mapped to phases: 30
+- v1 requirements: 38 total
+- Mapped to phases: 38
 - Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-04-08*
-*Last updated: 2026-04-09 after Phase 7 shared auto-ranking and sync execution completion*
+*Last updated: 2026-04-10 after Phase 8 scope planning (guided flow + map-driven decisioning)*

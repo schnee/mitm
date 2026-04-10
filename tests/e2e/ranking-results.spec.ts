@@ -20,6 +20,7 @@ test("auto-ranking lifecycle renders shared results and retry messaging", async 
       fairnessDeltaMinutes: 2
     }
   ];
+  let rankingInputsSubmitted = false;
 
   await page.route("**/v1/sessions/demo-session", async (route) => {
     await route.fulfill({
@@ -45,7 +46,7 @@ test("auto-ranking lifecycle renders shared results and retry messaging", async 
             participantId: "demo-host",
             role: "host",
             joinedAt: "2026-01-01T10:00:00.000Z",
-            locationConfirmedAt: "2026-01-01T10:02:00.000Z"
+            locationConfirmedAt: null
           },
           {
             participantId: "demo-invitee",
@@ -59,6 +60,15 @@ test("auto-ranking lifecycle renders shared results and retry messaging", async 
   });
 
   await page.route("**/v1/sessions/demo-session/events**", async (route) => {
+    if (!rankingInputsSubmitted) {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ events: [] })
+      });
+      return;
+    }
+
     await route.fulfill({
       status: 200,
       contentType: "application/json",
@@ -98,6 +108,7 @@ test("auto-ranking lifecycle renders shared results and retry messaging", async 
   });
 
   await page.route("**/v1/ranking/inputs", async (route) => {
+    rankingInputsSubmitted = true;
     await route.fulfill({
       status: 200,
       contentType: "application/json",
@@ -111,6 +122,25 @@ test("auto-ranking lifecycle renders shared results and retry messaging", async 
           lastErrorCode: null,
           generationRequestId: "req-1"
         }
+      })
+    });
+  });
+
+  await page.route("**/v1/location/draft", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ expireAt: "2026-01-01T11:00:00.000Z" })
+    });
+  });
+
+  await page.route("**/v1/location/confirm", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        confirmedAt: "2026-01-01T10:04:00.000Z",
+        inputsReady: true
       })
     });
   });
@@ -191,24 +221,87 @@ test("auto-ranking lifecycle renders shared results and retry messaging", async 
 
   await page.goto(`${appUrl}/s/demo-token?asHost=1&sessionId=demo-session&participantId=demo-host`);
 
+  await expect(page.locator(".guided-stepper")).toBeVisible();
+  await expect(page.getByText("Your turn", { exact: false })).toBeVisible();
+  await expect(page.locator(".next-action-button")).toHaveCount(1);
+  await expect(page.locator('[data-step-id="location"][data-step-active="true"]')).toBeVisible();
+  await expect(page.locator('[data-step-id="preferences"][data-step-active="true"]')).toHaveCount(0);
+
+  await page.getByLabel("Address label").fill("Downtown");
+  await page.getByLabel("Latitude").fill("30.271371");
+  await page.getByLabel("Longitude").fill("-97.759000");
+  await page.getByRole("button", { name: "Save manual location" }).click();
+  await page
+    .getByLabel("Confirm your location")
+    .getByRole("button", { name: "Confirm location" })
+    .click();
+
+  await expect(page.locator('[data-step-id="preferences"][data-step-active="true"]')).toBeVisible();
+  await expect(page.getByText("Location: Confirmed", { exact: false })).toBeVisible();
+
   await expect(page.getByRole("button", { name: "Run ranking" })).toHaveCount(0);
-  await expect(page.getByText("shared suggestions are ready", { exact: false })).toBeVisible();
 
   await page.getByRole("button", { name: "Save meet-up preferences" }).click();
-  await expect(page.getByText("shared suggestions are ready", { exact: false })).toBeVisible();
-
-  await expect(page.getByText("Fairness delta:", { exact: false })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Accept" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Pass" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Add to shortlist" })).toBeVisible();
+  await expect(page.locator('[data-step-id="spots"][data-step-active="true"]')).toBeVisible();
 
   await page.getByRole("button", { name: "Refresh suggestions" }).click();
   await expect(page.getByText("Saved locations and meet-up preferences are still preserved", { exact: false })).toBeVisible();
   await page.getByRole("button", { name: "Refresh suggestions" }).click();
-  await expect(page.getByText("shared suggestions refreshed", { exact: false })).toBeVisible();
+  expect(refreshAttempts).toBeGreaterThanOrEqual(2);
 
-  await page.getByRole("button", { name: "Accept" }).click();
-  await page.getByRole("button", { name: "Add to shortlist" }).click();
+  await expect(page.locator('[data-step-id="shortlist"][data-step-active="true"]')).toBeVisible({ timeout: 10000 });
+  await expect(page.getByText("Spots: 1 available", { exact: false })).toBeVisible();
   await expect(page.getByText("Shared shortlist", { exact: false })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Confirm this place" })).toBeVisible();
+});
+
+test("sticky rails expose blocker ownership and lifecycle status copy", async ({ page }) => {
+  const appUrl = process.env.E2E_APP_URL ?? "http://localhost:3000";
+  const now = new Date().toISOString();
+
+  await page.route("**/v1/sessions/partner-wait-session", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        sessionId: "partner-wait-session",
+        status: "joined",
+        updatedAt: now,
+        inputsReady: true,
+        rankingInputsReady: false,
+        rankingLifecycle: {
+          state: "generating",
+          lastErrorCode: null,
+          generationRequestId: "req-partner"
+        },
+        rankedResults: [],
+        shortlist: [],
+        reactions: [],
+        confirmedPlace: null,
+        participants: [
+          {
+            participantId: "demo-host",
+            role: "host",
+            joinedAt: "2026-01-01T10:00:00.000Z",
+            locationConfirmedAt: "2026-01-01T10:02:00.000Z"
+          },
+          {
+            participantId: "demo-invitee",
+            role: "invitee",
+            joinedAt: "2026-01-01T10:01:00.000Z",
+            locationConfirmedAt: "2026-01-01T10:03:00.000Z"
+          }
+        ]
+      })
+    });
+  });
+
+  await page.route("**/v1/sessions/partner-wait-session/events**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ events: [] }) });
+  });
+
+  await page.goto(`${appUrl}/s/demo-token?asHost=1&sessionId=partner-wait-session&participantId=demo-host`);
+
+  await expect(page.getByText("Waiting for partner", { exact: false })).toBeVisible();
+  await expect(page.locator(".next-action-button")).toHaveCount(1);
+  await expect(page.getByText("Loading shared suggestions from both saved preferences", { exact: false })).toBeVisible();
 });

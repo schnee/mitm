@@ -21,7 +21,9 @@ export function RankedResultsList({
   participantId,
   onReact,
   reactionPendingVenueIds,
-  reactionStatusByVenueId
+  reactionStatusByVenueId,
+  selectedVenueId,
+  onVenueFocus
 }: {
   results: RankedVenue[];
   onAddToShortlist?: (venue: RankedVenue) => void;
@@ -31,6 +33,8 @@ export function RankedResultsList({
   onReact?: (venue: RankedVenue, reaction: VenueReactionType) => void;
   reactionPendingVenueIds?: string[];
   reactionStatusByVenueId?: Record<string, string>;
+  selectedVenueId?: string | null;
+  onVenueFocus?: (venueId: string) => void;
 }) {
   const shortlistedSet = new Set(shortlistVenueIds ?? []);
   const reactionByVenueId = new Map((reactions ?? []).map((item) => [item.venueId, item]));
@@ -45,7 +49,7 @@ export function RankedResultsList({
       {results.length === 0 && <p className="status-badge status-waiting">Waiting: no shared spots yet. Save meet-up preferences and wait for suggestions, or use Refresh suggestions.</p>}
       <ol className="card-list">
         {results.map((result) => (
-          <li key={result.venueId} className="result-card">
+          <li key={result.venueId} className={`result-card ${selectedVenueId === result.venueId ? "result-card-selected" : ""}`}>
             <h3>{result.name}</h3>
             <p className="status-badge status-idle">Fairness delta: {result.fairnessDeltaMinutes} min</p>
             <p className="muted">Lower fairness delta means a more balanced travel burden.</p>
@@ -97,6 +101,11 @@ export function RankedResultsList({
             )}
             {onAddToShortlist && (
               <div className="btn-row">
+                {onVenueFocus && (
+                  <button className="btn-subtle" type="button" onClick={() => onVenueFocus(result.venueId)}>
+                    Focus on map
+                  </button>
+                )}
                 <button
                   className="btn-primary"
                   type="button"

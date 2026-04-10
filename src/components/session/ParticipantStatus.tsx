@@ -14,12 +14,19 @@ export function ParticipantStatus({ participants }: { participants: SessionSnaps
       <ul className="card-list">
         {sorted.map((participant) => (
           <li key={participant.participantId} className="result-card">
-            <p>
+            <p className="status-inline-partner">
               <strong>{participant.role}</strong>: joined
             </p>
             <p className={`status-badge ${participant.locationConfirmedAt ? "status-success" : "status-waiting"}`}>
               {participant.locationConfirmedAt ? "Success: location confirmed" : "Waiting: location pending"}
             </p>
+            <div className="chip-list" aria-label={`${participant.role} phase status`}>
+              <span className="chip">joined</span>
+              <span className="chip">{participant.locationConfirmedAt ? "location" : "location pending"}</span>
+              <span className="chip">preferences</span>
+              <span className="chip">results</span>
+              <span className="chip">confirmed</span>
+            </div>
           </li>
         ))}
       </ul>

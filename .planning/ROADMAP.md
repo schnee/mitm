@@ -17,6 +17,7 @@ This roadmap delivers the MVP in dependency order: establish two-person session 
 - [x] **Phase 5: UX Refresh & Decision Confidence** - Improve clarity, trust, and speed of choice through a focused post-launch UX refresh.
 - [x] **Phase 6: UX Polish & Professional Experience** - Polish startup, negotiation/ranking, and shared decision flows to feel production-grade across devices.
 - [x] **Phase 7: Shared Auto-Ranking & Synced Results** - Replace manual per-user ranking trigger with one canonical session-level ranked list that appears automatically for both participants after inputs are saved. (completed 2026-04-09)
+- [ ] **Phase 8: Mobile-First Guided Flow & Map-Driven Decisioning** - Reduce scroll and decision friction through guided step flow, two-person progress visibility, and synchronized map/list decisioning.
 
 ## Dependency Map and Sequencing Rationale
 
@@ -26,6 +27,7 @@ This roadmap delivers the MVP in dependency order: establish two-person session 
 - **Phase 4 → Phase 5**: UX optimization should be informed by real funnel telemetry and stabilized cross-browser behavior.
 - **Phase 5 → Phase 6**: Professional-grade polish should build on validated UX patterns and telemetry from the refresh cycle.
 - **Phase 6 → Phase 7**: Shared auto-ranking orchestration depends on polished state messaging and responsive UI behavior from prior UX phases.
+- **Phase 7 → Phase 8**: Guided/collapsible flow and map-driven shortlist decisioning depend on the canonical shared ranked list and synced session states delivered in Phase 7.
 
 Rationale: this order follows hard product dependencies and minimizes rework; each phase ends with a user-verifiable capability.
 
@@ -315,6 +317,49 @@ Plans:
 - [x] 07-03-PLAN.md — Polish responsive shared-results rendering and telemetry coverage for save→wait→generate→render/failure lifecycle.
 **UI hint**: yes
 
+### Phase 8: Mobile-First Guided Flow & Map-Driven Decisioning
+**Goal**: Reduce scroll and decision friction by introducing a guided, collapsible step flow, real-time two-person status visibility, and a map-first suggestions/shortlist experience.
+**Depends on**: Phase 7
+**Requirements**: UX-19, UX-20, UX-21, UX-22, UX-23, UX-24, UX-25, UX-26
+**Objective**: Improve two-person decision speed and clarity through UX orchestration and presentation upgrades while preserving existing fairness logic and provider/back-end contracts.
+**Core Deliverables**:
+- Guided stepper flow (Location -> Preferences -> Spots -> Shortlist -> Confirm) with one primary active step at a time.
+- Auto-collapsing completed-step summary rows to reduce vertical scrolling.
+- Sticky two-person session status bar that shows progress and current blocker ownership.
+- Sticky mobile primary CTA rail that always surfaces the single next action for the current user.
+- Map-first ranked spots experience with synchronized marker/list interactions.
+- Map marker state styling for shortlisted and confirmed places with clear confirmed lock/highlight treatment.
+- Concise state messaging for waiting/loading/error/success and partner-progress transitions.
+- Responsive and accessibility pass for focus order, tap targets, contrast, and keyboard fallback actions.
+**Success Metrics**:
+- **Leading**: Reduction in median mobile scroll depth and step transition friction from first input to confirmation.
+- **Leading**: Increase in sessions where users complete the current required step without confusion/backtrack.
+- **Lagging**: Improved conversion from `results_returned` to `decision_confirmed` and reduced median decision-completion time.
+**Major Risks**:
+- Added UI orchestration complexity may introduce state desync or unclear progression edge cases.
+- Map/list synchronization interactions may regress performance or usability on smaller mobile devices.
+- Sticky status/CTA regions may crowd content if responsive spacing and hierarchy are not tuned.
+**Assumptions**:
+- Canonical shared ranking/session state from Phase 7 is stable and reusable as-is.
+- Existing ranking/decision backend contracts are sufficient for map/list synchronization needs.
+- Two-participant scope remains fixed and should not expand in this phase.
+**Non-Goals**:
+- Changes to fairness algorithm fundamentals, weighting model, or split behavior.
+- Changes to places/routing provider integrations or adapter contracts.
+- Product scope expansion beyond two participants.
+**Success Criteria** (what must be TRUE):
+  1. On mobile, users can complete the full flow with materially less scrolling via one active step plus collapsed completed steps.
+  2. At every point, both users can see what they need to do next and what their partner has already completed.
+  3. Suggestions are visible on both map and list, and shortlist/confirm actions update both representations consistently.
+  4. Confirmed place state is unambiguous for both clients and clearly reflected on the map.
+  5. Existing create/join, location confirmation, preference save, shortlist, and final confirmation flows show no regression.
+**Plans**: 3 plans
+Plans:
+- [ ] 08-01-PLAN.md — Implement guided single-active-step flow with auto-collapsing completed summaries and sticky mobile CTA.
+- [ ] 08-02-PLAN.md — Add sticky two-person status bar plus state-specific partner-progress messaging across waiting/loading/error/success states.
+- [ ] 08-03-PLAN.md — Deliver map-first ranked spots with synchronized marker/list interactions and shortlist/confirmed marker-state parity.
+**UI hint**: yes
+
 ## Progress
 
 | Phase | Plans Complete | Status | Completed |
@@ -326,3 +371,4 @@ Plans:
 | 5. UX Refresh & Decision Confidence | 3/3 | Complete | 05-01, 05-02, 05-03 |
 | 6. UX Polish & Professional Experience | 3/3 | Complete | 06-01, 06-02, 06-03 |
 | 7. Shared Auto-Ranking & Synced Results | 3/3 | Complete   | 2026-04-09 |
+| 8. Mobile-First Guided Flow & Map-Driven Decisioning | 0/3 | Planned | 08-01, 08-02, 08-03 |
