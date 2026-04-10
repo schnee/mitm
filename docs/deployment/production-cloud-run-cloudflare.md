@@ -64,8 +64,10 @@ curl -fsS "$API_URL/health"
 3. Export API base URL before frontend build so the client bundle is correct:
 
 ```bash
-export NEXT_PUBLIC_API_BASE_URL="https://YOUR_API_HOST"
-npx @opennextjs/cloudflare@latest build
+export NEXT_PUBLIC_API_BASE_URL="https://mitm-api-jird3i3t7a-uc.a.run.app"
+rm -rf .next .open-next
+npm run build
+npx @opennextjs/cloudflare@latest build --config deploy/cloudflare/wrangler.toml --skipBuild
 npx wrangler@latest deploy --config deploy/cloudflare/wrangler.toml
 ```
 
