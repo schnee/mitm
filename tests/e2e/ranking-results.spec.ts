@@ -191,6 +191,10 @@ test("auto-ranking lifecycle renders shared results and retry messaging", async 
 
   await page.goto(`${appUrl}/s/demo-token?asHost=1&sessionId=demo-session&participantId=demo-host`);
 
+  await expect(page.locator(".guided-stepper")).toBeVisible();
+  await expect(page.locator('[data-step-id="location"][data-step-active="true"]')).toBeVisible();
+  await expect(page.locator('[data-step-id="preferences"][data-step-active="true"]')).toHaveCount(0);
+
   await expect(page.getByRole("button", { name: "Run ranking" })).toHaveCount(0);
   await expect(page.getByText("shared suggestions are ready", { exact: false })).toBeVisible();
 
