@@ -2,35 +2,35 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: verifying
-stopped_at: Completed 07-03-PLAN.md
-last_updated: "2026-04-09T18:15:46.873Z"
-last_activity: 2026-04-09
+status: planning
+stopped_at: Scoped Phase 8 (Mobile-First Guided Flow & Map-Driven Decisioning)
+last_updated: "2026-04-10T10:30:00.000Z"
+last_activity: 2026-04-10
 progress:
-  total_phases: 7
+  total_phases: 8
   completed_phases: 7
-  total_plans: 21
+  total_plans: 24
   completed_plans: 21
-  percent: 100
+  percent: 88
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-09)
+See: .planning/PROJECT.md (updated 2026-04-10)
 
 **Core value:** Turn a slow, awkward "where should we meet?" negotiation into a fast and fair decision both people accept.
-**Current focus:** Phase 7 complete; shared auto-ranking lifecycle and synced-result orchestration fully delivered
+**Current focus:** Phase 8 planned; mobile-first guided flow and map-driven decisioning scoped for execution
 
 ## Current Position
 
-Phase: 7 of 7 (Shared Auto-Ranking & Synced Results)
-Plan: 3 of 3 complete
-Status: Phase complete — ready for verification
-Last activity: 2026-04-09
+Phase: 8 of 8 (Mobile-First Guided Flow & Map-Driven Decisioning)
+Plan: 0 of 3 complete
+Status: Planned — ready to begin 08-01/08-02/08-03
+Last activity: 2026-04-10 (Phase 8 scope and acceptance criteria added)
 
-Progress: [██████████] 100%
+Progress: [█████████░] 88%
 
 ## Performance Metrics
 
@@ -51,11 +51,12 @@ Progress: [██████████] 100%
 | 5. UX Refresh & Decision Confidence | 3 | TBD | TBD |
 | 6. UX Polish & Professional Experience | 3 | TBD | TBD |
 | 7. Shared Auto-Ranking & Synced Results | 3 | TBD | TBD |
+| 8. Mobile-First Guided Flow & Map-Driven Decisioning | 0 | TBD | TBD |
 
 **Recent Trend:**
 
 - Last 5 plans: 06-01, 06-02, 06-03, 07-02, 07-03
-- Trend: Phase 7 completed with idempotent shared generation, retry-safe lifecycle handling, telemetry coverage, and responsive e2e validation
+- Trend: Phase 7 complete; Phase 8 planned to reduce mobile scroll friction, surface two-person blockers, and unify map/list shortlist decisioning
 
 *Updated after each plan completion*
 | Phase 07 P03 | 74 | 3 tasks | 7 files |
@@ -78,10 +79,11 @@ Recent decisions affecting current work:
 - [Phase 6] Keep UX polish scope limited to interface quality, state clarity, responsiveness, and accessibility baseline (no algorithm/provider changes).
 - [Phase 7] Keep ranking changes scoped to orchestration/synchronization reliability; preserve existing fairness algorithm fundamentals and provider integrations.
 - [Phase 07]: Keep Refresh ranking as a secondary retry/recompute action while rendering shared results from synced snapshots.
+- [Phase 8] Keep changes scoped to guided/collapsible flow and map-first presentation; preserve two-participant scope, fairness fundamentals, provider integrations, and backend contracts.
 
 ### Pending Todos
 
-- Prepare transition/next roadmap iteration (post-v1 optimization and expansion candidates).
+- Begin Phase 8 execution plans (08-01 guided flow/CTA, 08-02 status messaging, 08-03 map/list sync).
 
 ### Blockers/Concerns
 
@@ -91,5 +93,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-04-09T18:15:46.871Z
-Stopped at: Completed 07-03-PLAN.md
-Resume file: None
+Stopped at: Scoped Phase 8 (Mobile-First Guided Flow & Map-Driven Decisioning)
+Resume file: .planning/08-01-PLAN.md
