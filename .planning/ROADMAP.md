@@ -371,7 +371,11 @@ Plans:
 **Depends on**: Phase 8
 **Requirements**: SESS-01, SESS-02, LOCT-01, FAIR-01, PREF-01, PREF-02, RANK-01, RANK-02, RANK-03, DECS-01, DECS-02, DECS-03, PLAT-01, PLAT-02, UX-06, UX-07, UX-08, UX-09, UX-10, UX-12, UX-14, UX-15, UX-16, UX-17, UX-18, UX-19, UX-20, UX-21, UX-22
 **Gap Closure**: Closes audit blockers for missing phase VERIFICATION.md evidence and traceability drift.
-**Plans**: 0 plans (to be created)
+**Plans**: 3 plans
+Plans:
+- [ ] 09-01-PLAN.md — Create phase-level verification artifacts for foundational requirements (Phases 01-04).
+- [ ] 09-02-PLAN.md — Create phase-level verification artifacts for UX phases and scoped UX requirement IDs (Phases 05-08).
+- [ ] 09-03-PLAN.md — Reconcile REQUIREMENTS traceability + milestone audit using new verification evidence and produce Phase 9 verification report.
 
 ### Phase 10: Session Continuity & State Persistence Hardening
 **Goal**: Ensure refresh/rejoin continuity for location and preference progression so blocker ownership and next actions remain correct after reload.
