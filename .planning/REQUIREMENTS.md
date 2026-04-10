@@ -54,7 +54,7 @@ Scope guardrail: UX polish only for v1.x; no fairness algorithm or provider chan
 
 ### v1.x Shared Auto-Ranking & Synced Results (UX/Flow Orchestration Scope)
 
-- [ ] **UX-11**: After a participant saves ranking inputs, UI transitions immediately to a clear next state: waiting for other participant if only one has saved, generating suggestions when both are ready.
+- [x] **UX-11**: After a participant saves ranking inputs, UI transitions immediately to a clear next state: waiting for other participant if only one has saved, generating suggestions when both are ready.
 - [x] **UX-12**: System computes one canonical ranked list per session using both participants' saved ranking inputs while preserving current split handling and preference merge behavior.
 - [x] **UX-13**: Canonical ranked results persist at session scope and synchronize to both participants so both see the same ordered list without manual rerun.
 - [x] **UX-14**: `Run ranking` is removed as a required primary action from the main flow; optional secondary `Refresh ranking` remains available for retry/recompute.
@@ -73,7 +73,7 @@ Scope guardrail: keep split decision behavior conceptually unchanged; do not cha
 - [x] **UX-22**: Add a sticky primary CTA area on mobile that always presents the single next action for the current user.
 - [ ] **UX-23**: Introduce a map-first "Ranked spots" view with synchronized markers and list items (tap list highlights marker; tap marker focuses list item).
 - [ ] **UX-24**: Update map state when shortlist changes: shortlisted spots use distinct marker styling, and confirmed spot is visually locked/highlighted.
-- [ ] **UX-25**: Add concise, state-specific feedback for waiting/loading/error/success, including partner-progress updates (for example, "Waiting for partner to save preferences").
+- [x] **UX-25**: Add concise, state-specific feedback for waiting/loading/error/success, including partner-progress updates (for example, "Waiting for partner to save preferences").
 - [ ] **UX-26**: Preserve responsive usability and accessibility across mobile and desktop (focus order, tap targets, contrast, keyboard fallback for core actions).
 
 Scope guardrails:
@@ -147,7 +147,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | UX-08 | Phase 9 | Verified (Phase 6 VERIFICATION) |
 | UX-09 | Phase 9 | Verified (Phase 6 VERIFICATION) |
 | UX-10 | Phase 9 | Verified (Phase 6 VERIFICATION) |
-| UX-11 | Phase 10 | Pending |
+| UX-11 | Phase 10 | Complete |
 | UX-12 | Phase 9 | Verified (Phase 7 VERIFICATION) |
 | UX-13 | Phase 10 | Complete |
 | UX-14 | Phase 9 | Verified (Phase 7 VERIFICATION) |
@@ -161,7 +161,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | UX-22 | Phase 9 | Verified (Phase 8 VERIFICATION) |
 | UX-23 | Phase 11 | Pending |
 | UX-24 | Phase 11 | Pending |
-| UX-25 | Phase 10 | Pending |
+| UX-25 | Phase 10 | Complete |
 | UX-26 | Phase 11 | Pending |
 
 **Coverage:**
