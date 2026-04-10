@@ -380,6 +380,80 @@ test("reload keeps manual draft continuity and allows post-refresh location conf
   expect(confirmRequests).toBe(1);
 });
 
+test("reload keeps preference lifecycle status and single next action CTA", async ({ page }) => {
+  const appUrl = process.env.E2E_APP_URL ?? "http://localhost:3000";
+  const now = new Date().toISOString();
+  let rankingInputsSaved = false;
+
+  await page.route("**/v1/sessions/reload-preferences-session", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        sessionId: "reload-preferences-session",
+        status: "joined",
+        updatedAt: now,
+        inputsReady: true,
+        rankingInputsReady: rankingInputsSaved,
+        rankingLifecycle: {
+          state: rankingInputsSaved ? "generating" : "waiting",
+          lastErrorCode: null,
+          generationRequestId: rankingInputsSaved ? "req-reload" : null
+        },
+        rankedResults: [],
+        shortlist: [],
+        reactions: [],
+        confirmedPlace: null,
+        participants: [
+          {
+            participantId: "demo-host",
+            role: "host",
+            joinedAt: "2026-01-01T10:00:00.000Z",
+            locationConfirmedAt: "2026-01-01T10:02:00.000Z"
+          },
+          {
+            participantId: "demo-invitee",
+            role: "invitee",
+            joinedAt: "2026-01-01T10:01:00.000Z",
+            locationConfirmedAt: "2026-01-01T10:03:00.000Z"
+          }
+        ]
+      })
+    });
+  });
+
+  await page.route("**/v1/sessions/reload-preferences-session/events**", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ events: [] }) });
+  });
+
+  await page.route("**/v1/ranking/inputs", async (route) => {
+    rankingInputsSaved = true;
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        split: "60_40",
+        tags: ["coffee"],
+        updatedAt: now,
+        rankingInputsReady: true,
+        rankingLifecycle: {
+          state: "generating",
+          lastErrorCode: null,
+          generationRequestId: "req-reload"
+        }
+      })
+    });
+  });
+
+  await page.goto(`${appUrl}/s/demo-token?asHost=1&sessionId=reload-preferences-session&participantId=demo-host`);
+  await page.getByRole("button", { name: "Save meet-up preferences" }).click();
+  await page.reload();
+
+  await expect(page.locator('[data-step-id="spots"][data-step-active="true"]')).toBeVisible();
+  await expect(page.getByText("Loading shared suggestions from both saved preferences", { exact: false })).toBeVisible();
+  await expect(page.locator(".next-action-button")).toHaveCount(1);
+});
+
 test("sticky rails expose blocker ownership and lifecycle status copy", async ({ page }) => {
   const appUrl = process.env.E2E_APP_URL ?? "http://localhost:3000";
   const now = new Date().toISOString();
