@@ -224,7 +224,7 @@ export default function JoinPage({ params }: JoinPageProps) {
   const flow = deriveSessionFlow({
     myLocationConfirmed: Boolean(me?.locationConfirmedAt || confirmedAt),
     partnerLocationConfirmed: Boolean(partner?.locationConfirmedAt),
-    myPreferencesSaved: myPreferencesSaved || Boolean(sync.snapshot?.rankingInputsReady),
+    myPreferencesSaved: myPreferencesSaved || rankingLifecycleState !== "waiting",
     partnerPreferencesSaved: Boolean(sync.snapshot?.rankingInputsReady),
     rankedResultsCount: rankedResults.length,
     shortlistCount: shortlist.length,
