@@ -292,9 +292,12 @@ test("auto-ranking lifecycle renders shared results and retry messaging", async 
   await expect(page.getByRole("heading", { name: "Confirmed destination" })).toBeVisible();
 });
 
-test("reload preserves ability to confirm location from saved draft", async ({ page }) => {
+test("reload keeps manual draft continuity and allows post-refresh location confirm", async ({ page }) => {
   const appUrl = process.env.E2E_APP_URL ?? "http://localhost:3000";
   const now = new Date().toISOString();
+  const draftUpdatedAt = "2026-01-01T10:03:00.000Z";
+  let locationConfirmed = false;
+  let confirmRequests = 0;
 
   await page.route("**/v1/sessions/reload-location-session", async (route) => {
     await route.fulfill({
@@ -320,7 +323,8 @@ test("reload preserves ability to confirm location from saved draft", async ({ p
             participantId: "demo-host",
             role: "host",
             joinedAt: "2026-01-01T10:00:00.000Z",
-            locationConfirmedAt: null
+            locationDraftUpdatedAt: draftUpdatedAt,
+            locationConfirmedAt: locationConfirmed ? "2026-01-01T10:04:00.000Z" : null
           },
           {
             participantId: "demo-invitee",
@@ -346,6 +350,8 @@ test("reload preserves ability to confirm location from saved draft", async ({ p
   });
 
   await page.route("**/v1/location/confirm", async (route) => {
+    confirmRequests += 1;
+    locationConfirmed = true;
     await route.fulfill({
       status: 200,
       contentType: "application/json",
@@ -360,11 +366,18 @@ test("reload preserves ability to confirm location from saved draft", async ({ p
   await page.getByLabel("Address label").fill("Downtown");
   await page.getByLabel("Latitude").fill("30.271371");
   await page.getByLabel("Longitude").fill("-97.759000");
+  await expect(page.getByRole("button", { name: "Save manual location" })).toBeVisible();
   await page.getByRole("button", { name: "Save manual location" }).click();
 
   await page.reload();
 
-  await expect(page.getByLabel("Confirm your location").getByRole("button", { name: "Confirm location" })).toBeEnabled();
+  const confirmLocationButton = page.getByLabel("Confirm your location").getByRole("button", { name: "Confirm location" });
+  await expect(confirmLocationButton).toBeEnabled();
+  await confirmLocationButton.click();
+
+  await expect(page.locator('[data-step-id="preferences"][data-step-active="true"]')).toBeVisible();
+  await expect(page.getByText("Location: Confirmed", { exact: false })).toBeVisible();
+  expect(confirmRequests).toBe(1);
 });
 
 test("sticky rails expose blocker ownership and lifecycle status copy", async ({ page }) => {
