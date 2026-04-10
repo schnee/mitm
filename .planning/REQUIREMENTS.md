@@ -11,13 +11,13 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [x] **SESS-01**: User can create a two-person meetup session and receive a shareable join link.
 - [x] **SESS-02**: Invitee can join session from link without creating an account.
-- [x] **SESS-03**: Both participants can see synchronized session state (inputs, shortlist, confirmation status).
+- [ ] **SESS-03**: Both participants can see synchronized session state (inputs, shortlist, confirmation status).
 
 ### Location and Consent
 
 - [x] **LOCT-01**: User can provide location via current location permission or typed address.
-- [x] **LOCT-02**: User can review and confirm the location used for ranking before results are generated.
-- [x] **LOCT-03**: If geolocation fails or is denied, user can complete flow via manual location entry.
+- [ ] **LOCT-02**: User can review and confirm the location used for ranking before results are generated.
+- [ ] **LOCT-03**: If geolocation fails or is denied, user can complete flow via manual location entry.
 
 ### Travel Fairness and Preferences
 
@@ -44,11 +44,11 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### v1.x UX Polish (UX-only Scope)
 
-- [ ] **UX-06**: Redesign create-session startup screen with clear hierarchy, confidence copy, and primary CTA.
-- [ ] **UX-07**: Redesign negotiation/ranking screen for readability, explainability clarity, and faster decision actions.
-- [ ] **UX-08**: Improve loading/empty/error/success states across startup, ranking, shortlist, and confirmation.
-- [ ] **UX-09**: Ensure polished responsive behavior on mobile + desktop breakpoints for the full flow.
-- [ ] **UX-10**: Accessibility polish baseline (focus visibility, labels, contrast, keyboard operability for key actions).
+- [x] **UX-06**: Redesign create-session startup screen with clear hierarchy, confidence copy, and primary CTA.
+- [x] **UX-07**: Redesign negotiation/ranking screen for readability, explainability clarity, and faster decision actions.
+- [x] **UX-08**: Improve loading/empty/error/success states across startup, ranking, shortlist, and confirmation.
+- [x] **UX-09**: Ensure polished responsive behavior on mobile + desktop breakpoints for the full flow.
+- [x] **UX-10**: Accessibility polish baseline (focus visibility, labels, contrast, keyboard operability for key actions).
 
 Scope guardrail: UX polish only for v1.x; no fairness algorithm or provider changes.
 
@@ -56,8 +56,8 @@ Scope guardrail: UX polish only for v1.x; no fairness algorithm or provider chan
 
 - [ ] **UX-11**: After a participant saves ranking inputs, UI transitions immediately to a clear next state: waiting for other participant if only one has saved, generating suggestions when both are ready.
 - [x] **UX-12**: System computes one canonical ranked list per session using both participants' saved ranking inputs while preserving current split handling and preference merge behavior.
-- [x] **UX-13**: Canonical ranked results persist at session scope and synchronize to both participants so both see the same ordered list without manual rerun.
-- [ ] **UX-14**: `Run ranking` is removed as a required primary action from the main flow; optional secondary `Refresh ranking` remains available for retry/recompute.
+- [ ] **UX-13**: Canonical ranked results persist at session scope and synchronize to both participants so both see the same ordered list without manual rerun.
+- [x] **UX-14**: `Run ranking` is removed as a required primary action from the main flow; optional secondary `Refresh ranking` remains available for retry/recompute.
 - [x] **UX-15**: If ranking generation fails (provider error, missing prerequisites, transient failure), users see actionable messaging with retry path and no loss of prior progress.
 - [x] **UX-16**: Ranking generation is idempotent and conflict-safe under concurrent saves from both participants, preventing duplicate/conflicting list states.
 - [x] **UX-17**: Telemetry captures flow events: `ranking_inputs_saved`, `ranking_waiting_for_partner`, `ranking_generation_started`, `ranking_generation_succeeded`, `ranking_generation_failed`, `ranking_results_rendered`.
@@ -67,10 +67,10 @@ Scope guardrail: keep split decision behavior conceptually unchanged; do not cha
 
 ### v1.x Mobile-First Guided Flow & Map-Driven Decisioning (UX Orchestration/Presentation Scope)
 
-- [ ] **UX-19**: Replace long vertical flow with a guided stepper (Location -> Preferences -> Spots -> Shortlist -> Confirm) that shows one primary step expanded at a time.
-- [ ] **UX-20**: Completed steps auto-collapse into compact summary rows (for example, "Location: Confirmed") to reduce scrolling.
-- [ ] **UX-21**: Add a sticky session status bar that shows progress for both users (You and Partner) and clearly indicates who is blocking the next step.
-- [ ] **UX-22**: Add a sticky primary CTA area on mobile that always presents the single next action for the current user.
+- [x] **UX-19**: Replace long vertical flow with a guided stepper (Location -> Preferences -> Spots -> Shortlist -> Confirm) that shows one primary step expanded at a time.
+- [x] **UX-20**: Completed steps auto-collapse into compact summary rows (for example, "Location: Confirmed") to reduce scrolling.
+- [x] **UX-21**: Add a sticky session status bar that shows progress for both users (You and Partner) and clearly indicates who is blocking the next step.
+- [x] **UX-22**: Add a sticky primary CTA area on mobile that always presents the single next action for the current user.
 - [ ] **UX-23**: Introduce a map-first "Ranked spots" view with synchronized markers and list items (tap list highlights marker; tap marker focuses list item).
 - [ ] **UX-24**: Update map state when shortlist changes: shortlisted spots use distinct marker styling, and confirmed spot is visually locked/highlighted.
 - [ ] **UX-25**: Add concise, state-specific feedback for waiting/loading/error/success, including partner-progress updates (for example, "Waiting for partner to save preferences").
@@ -125,50 +125,51 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SESS-01 | Phase 1 | Complete |
-| SESS-02 | Phase 1 | Complete |
-| SESS-03 | Phase 1 | Complete |
-| LOCT-01 | Phase 1 | Complete |
-| LOCT-02 | Phase 1 | Complete |
-| LOCT-03 | Phase 1 | Complete |
-| FAIR-01 | Phase 2 | Complete |
-| PREF-01 | Phase 2 | Complete |
-| PREF-02 | Phase 2 | Complete |
-| RANK-01 | Phase 2 | Complete |
-| RANK-02 | Phase 2 | Complete |
-| RANK-03 | Phase 2 | Complete |
-| DECS-01 | Phase 3 | Complete |
-| DECS-02 | Phase 3 | Complete |
-| DECS-03 | Phase 3 | Complete |
-| PLAT-01 | Phase 4 | Complete |
-| PLAT-02 | Phase 4 | Complete |
-| UX-06 | Phase 6 | Planned |
-| UX-07 | Phase 6 | Planned |
-| UX-08 | Phase 6 | Planned |
-| UX-09 | Phase 6 | Planned |
-| UX-10 | Phase 6 | Planned |
-| UX-11 | Phase 7 | Complete |
-| UX-12 | Phase 7 | Complete |
-| UX-13 | Phase 7 | Complete |
-| UX-14 | Phase 7 | Complete |
-| UX-15 | Phase 7 | Complete |
-| UX-16 | Phase 7 | Complete |
-| UX-17 | Phase 7 | Complete |
-| UX-18 | Phase 7 | Complete |
-| UX-19 | Phase 8 | Planned |
-| UX-20 | Phase 8 | Planned |
-| UX-21 | Phase 8 | Planned |
-| UX-22 | Phase 8 | Planned |
-| UX-23 | Phase 8 | Planned |
-| UX-24 | Phase 8 | Planned |
-| UX-25 | Phase 8 | Planned |
-| UX-26 | Phase 8 | Planned |
+| SESS-01 | Phase 9 | Verified (Phase 1 VERIFICATION) |
+| SESS-02 | Phase 9 | Verified (Phase 1 VERIFICATION) |
+| SESS-03 | Phase 10 | Pending |
+| LOCT-01 | Phase 9 | Verified (Phase 1 VERIFICATION) |
+| LOCT-02 | Phase 10 | Pending |
+| LOCT-03 | Phase 10 | Pending |
+| FAIR-01 | Phase 9 | Verified (Phase 2 VERIFICATION) |
+| PREF-01 | Phase 9 | Verified (Phase 2 VERIFICATION) |
+| PREF-02 | Phase 9 | Verified (Phase 2 VERIFICATION) |
+| RANK-01 | Phase 9 | Verified (Phase 2 VERIFICATION) |
+| RANK-02 | Phase 9 | Verified (Phase 2 VERIFICATION) |
+| RANK-03 | Phase 9 | Needs Human (Phase 2 VERIFICATION) |
+| DECS-01 | Phase 9 | Verified (Phase 3 VERIFICATION) |
+| DECS-02 | Phase 9 | Verified (Phase 3 VERIFICATION) |
+| DECS-03 | Phase 9 | Verified (Phase 3 VERIFICATION) |
+| PLAT-01 | Phase 9 | Blocked (Phase 4 VERIFICATION) |
+| PLAT-02 | Phase 9 | Verified (Phase 4 VERIFICATION) |
+| UX-06 | Phase 9 | Verified (Phase 6 VERIFICATION) |
+| UX-07 | Phase 9 | Verified (Phase 6 VERIFICATION) |
+| UX-08 | Phase 9 | Verified (Phase 6 VERIFICATION) |
+| UX-09 | Phase 9 | Verified (Phase 6 VERIFICATION) |
+| UX-10 | Phase 9 | Verified (Phase 6 VERIFICATION) |
+| UX-11 | Phase 10 | Pending |
+| UX-12 | Phase 9 | Verified (Phase 7 VERIFICATION) |
+| UX-13 | Phase 10 | Pending |
+| UX-14 | Phase 9 | Verified (Phase 7 VERIFICATION) |
+| UX-15 | Phase 9 | Verified (Phase 7 VERIFICATION) |
+| UX-16 | Phase 9 | Verified (Phase 7 VERIFICATION) |
+| UX-17 | Phase 9 | Verified (Phase 7 VERIFICATION) |
+| UX-18 | Phase 9 | Verified (Phase 7 VERIFICATION) |
+| UX-19 | Phase 9 | Verified (Phase 8 VERIFICATION) |
+| UX-20 | Phase 9 | Verified (Phase 8 VERIFICATION) |
+| UX-21 | Phase 9 | Verified (Phase 8 VERIFICATION) |
+| UX-22 | Phase 9 | Verified (Phase 8 VERIFICATION) |
+| UX-23 | Phase 11 | Pending |
+| UX-24 | Phase 11 | Pending |
+| UX-25 | Phase 10 | Pending |
+| UX-26 | Phase 11 | Pending |
 
 **Coverage:**
 - v1 requirements: 38 total
 - Mapped to phases: 38
+- Checked off (current): 0
 - Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-04-08*
-*Last updated: 2026-04-10 after Phase 8 scope planning (guided flow + map-driven decisioning)*
+*Last updated: 2026-04-10 after Phase 9 traceability reconciliation and milestone gap closure alignment (Phases 9-11)*

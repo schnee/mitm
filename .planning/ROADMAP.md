@@ -17,7 +17,10 @@ This roadmap delivers the MVP in dependency order: establish two-person session 
 - [x] **Phase 5: UX Refresh & Decision Confidence** - Improve clarity, trust, and speed of choice through a focused post-launch UX refresh.
 - [x] **Phase 6: UX Polish & Professional Experience** - Polish startup, negotiation/ranking, and shared decision flows to feel production-grade across devices.
 - [x] **Phase 7: Shared Auto-Ranking & Synced Results** - Replace manual per-user ranking trigger with one canonical session-level ranked list that appears automatically for both participants after inputs are saved. (completed 2026-04-09)
-- [ ] **Phase 8: Mobile-First Guided Flow & Map-Driven Decisioning** - Reduce scroll and decision friction through guided step flow, two-person progress visibility, and synchronized map/list decisioning.
+- [x] **Phase 8: Mobile-First Guided Flow & Map-Driven Decisioning** - Reduce scroll and decision friction through guided step flow, two-person progress visibility, and synchronized map/list decisioning. (completed 2026-04-10)
+- [ ] **Phase 9: Verification Coverage & Traceability Recovery** - Close audit blockers by producing phase-level verification evidence and reconciling requirement traceability to implementation reality.
+- [ ] **Phase 10: Session Continuity & State Persistence Hardening** - Fix refresh/rejoin continuity for location confirm and preference completion state so guided progression survives reloads.
+- [ ] **Phase 11: Map-First Provider Integration Completion** - Replace map fallback UI with provider-backed map interactions and complete shortlist/confirmed marker-state parity.
 
 ## Dependency Map and Sequencing Rationale
 
@@ -28,6 +31,9 @@ This roadmap delivers the MVP in dependency order: establish two-person session 
 - **Phase 5 → Phase 6**: Professional-grade polish should build on validated UX patterns and telemetry from the refresh cycle.
 - **Phase 6 → Phase 7**: Shared auto-ranking orchestration depends on polished state messaging and responsive UI behavior from prior UX phases.
 - **Phase 7 → Phase 8**: Guided/collapsible flow and map-driven shortlist decisioning depend on the canonical shared ranked list and synced session states delivered in Phase 7.
+- **Phase 8 → Phase 9**: Milestone audit closure depends on explicit verification artifacts and reconciled requirements evidence.
+- **Phase 9 → Phase 10**: Continuity hardening depends on verified baseline and corrected requirement ownership.
+- **Phase 10 → Phase 11**: Map integration finalization depends on stabilized guided/session state persistence to avoid compounding regressions.
 
 Rationale: this order follows hard product dependencies and minimizes rework; each phase ends with a user-verifiable capability.
 
@@ -355,10 +361,35 @@ Plans:
   5. Existing create/join, location confirmation, preference save, shortlist, and final confirmation flows show no regression.
 **Plans**: 3 plans
 Plans:
-- [ ] 08-01-PLAN.md — Implement guided single-active-step flow with auto-collapsing completed summaries and sticky mobile CTA.
-- [ ] 08-02-PLAN.md — Add sticky two-person status bar plus state-specific partner-progress messaging across waiting/loading/error/success states.
-- [ ] 08-03-PLAN.md — Deliver map-first ranked spots with synchronized marker/list interactions and shortlist/confirmed marker-state parity.
+- [x] 08-01-PLAN.md — Implement guided single-active-step flow with auto-collapsing completed summaries and sticky mobile CTA.
+- [x] 08-02-PLAN.md — Add sticky two-person status bar plus state-specific partner-progress messaging across waiting/loading/error/success states.
+- [x] 08-03-PLAN.md — Deliver map-first ranked spots with synchronized marker/list interactions and shortlist/confirmed marker-state parity.
 **UI hint**: yes
+
+### Phase 9: Verification Coverage & Traceability Recovery
+**Goal**: Eliminate audit orphan/blocker status by producing phase-level verification evidence and reconciling requirements traceability to current implementation.
+**Depends on**: Phase 8
+**Requirements**: SESS-01, SESS-02, LOCT-01, FAIR-01, PREF-01, PREF-02, RANK-01, RANK-02, RANK-03, DECS-01, DECS-02, DECS-03, PLAT-01, PLAT-02, UX-06, UX-07, UX-08, UX-09, UX-10, UX-12, UX-14, UX-15, UX-16, UX-17, UX-18, UX-19, UX-20, UX-21, UX-22
+**Gap Closure**: Closes audit blockers for missing phase VERIFICATION.md evidence and traceability drift.
+**Plans**: 3 plans
+Plans:
+- [x] 09-01-PLAN.md — Create phase-level verification artifacts for foundational requirements (Phases 01-04).
+- [x] 09-02-PLAN.md — Create phase-level verification artifacts for UX phases and scoped UX requirement IDs (Phases 05-08).
+- [x] 09-03-PLAN.md — Reconcile REQUIREMENTS traceability + milestone audit using new verification evidence and produce Phase 9 verification report.
+
+### Phase 10: Session Continuity & State Persistence Hardening
+**Goal**: Ensure refresh/rejoin continuity for location and preference progression so blocker ownership and next actions remain correct after reload.
+**Depends on**: Phase 9
+**Requirements**: SESS-03, LOCT-02, LOCT-03, UX-11, UX-13, UX-25
+**Gap Closure**: Closes integration GAP-01 and GAP-03 plus refresh/rejoin broken flows.
+**Plans**: 0 plans (to be created)
+
+### Phase 11: Map-First Provider Integration Completion
+**Goal**: Deliver true provider-backed map-first ranked spots experience with synchronized marker/list behavior and accessible interaction parity.
+**Depends on**: Phase 10
+**Requirements**: UX-23, UX-24, UX-26
+**Gap Closure**: Closes integration GAP-02 and map-first decisioning flow break.
+**Plans**: 0 plans (to be created)
 
 ## Progress
 
@@ -371,4 +402,7 @@ Plans:
 | 5. UX Refresh & Decision Confidence | 3/3 | Complete | 05-01, 05-02, 05-03 |
 | 6. UX Polish & Professional Experience | 3/3 | Complete | 06-01, 06-02, 06-03 |
 | 7. Shared Auto-Ranking & Synced Results | 3/3 | Complete   | 2026-04-09 |
-| 8. Mobile-First Guided Flow & Map-Driven Decisioning | 0/3 | Planned | 08-01, 08-02, 08-03 |
+| 8. Mobile-First Guided Flow & Map-Driven Decisioning | 3/3 | Complete | 08-01, 08-02, 08-03 |
+| 9. Verification Coverage & Traceability Recovery | 0/0 | Planned | - |
+| 10. Session Continuity & State Persistence Hardening | 0/0 | Planned | - |
+| 11. Map-First Provider Integration Completion | 0/0 | Planned | - |
