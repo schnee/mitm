@@ -23,6 +23,7 @@ import { LocationCaptureForm } from "../../../components/location/LocationCaptur
 import { LocationConfirmCard } from "../../../components/location/LocationConfirmCard";
 import { RankingInputsForm } from "../../../components/ranking/RankingInputsForm";
 import { RankedResultsList } from "../../../components/ranking/RankedResultsList";
+import { RankedSpotsMap } from "../../../components/ranking/RankedSpotsMap";
 import { ShortlistPanel } from "../../../components/decision/ShortlistPanel";
 import { ConfirmedPlaceCard } from "../../../components/decision/ConfirmedPlaceCard";
 import { deriveSessionFlow } from "../../../lib/session-flow";
@@ -112,6 +113,7 @@ export default function JoinPage({ params }: JoinPageProps) {
   const [localReactions, setLocalReactions] = useState<VenueReactionSummary[]>([]);
   const [reactionPendingVenueIds, setReactionPendingVenueIds] = useState<string[]>([]);
   const [localConfirmedPlace, setLocalConfirmedPlace] = useState<ConfirmedPlace | null>(null);
+  const [selectedVenueId, setSelectedVenueId] = useState<string | null>(null);
   const [decisionStatus, setDecisionStatus] = useState("Idle: add a ranked spot to shortlist to begin deciding.");
   const { token } = use(params);
   const searchParams = useSearchParams();
@@ -463,7 +465,7 @@ export default function JoinPage({ params }: JoinPageProps) {
                           )}
 
                           {step.id === "spots" && (
-                            <div className="stage">
+                            <div className="stage map-list-layout">
                               <section className="panel stage" aria-labelledby="run-ranking-title">
                                 <h2 id="run-ranking-title">Shared preferences status</h2>
                                 <p className={`status-badge ${sharedLifecycleStatusClass}`} role="status" aria-live="polite">
@@ -486,6 +488,14 @@ export default function JoinPage({ params }: JoinPageProps) {
                                 </p>
                               </section>
 
+                              <RankedSpotsMap
+                                results={rankedResults}
+                                shortlistVenueIds={shortlist.map((item) => item.venueId)}
+                                confirmedVenueId={confirmedPlace?.venueId ?? null}
+                                selectedVenueId={selectedVenueId}
+                                onMarkerSelect={(venueId) => setSelectedVenueId(venueId)}
+                              />
+
                               <RankedResultsList
                                 results={rankedResults}
                                 onAddToShortlist={(venue) => {
@@ -499,6 +509,8 @@ export default function JoinPage({ params }: JoinPageProps) {
                                 }}
                                 reactionPendingVenueIds={reactionPendingVenueIds}
                                 reactionStatusByVenueId={reactionStatusByVenueId}
+                                selectedVenueId={selectedVenueId}
+                                onVenueFocus={(venueId) => setSelectedVenueId(venueId)}
                               />
                             </div>
                           )}

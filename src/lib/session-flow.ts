@@ -55,7 +55,7 @@ export function deriveSessionFlow(input: DeriveSessionFlowInput): { activeStepId
           : input.partnerPreferencesSaved
             ? "self"
             : "partner",
-      summary: spotsCompleted ? `Spots: ${input.rankedResultsCount} available` : "Spots: Waiting"
+      summary: spotsCompleted ? "Spots: map + list synced" : "Spots: Waiting"
     },
     {
       id: "shortlist",
