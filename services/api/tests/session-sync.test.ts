@@ -60,8 +60,11 @@ describe("session sync", () => {
     };
 
     const host = body.participants.find((participant) => participant.role === "host");
+    const invitee = body.participants.find((participant) => participant.role === "invitee");
     expect(host?.locationDraftUpdatedAt).toEqual(expect.any(String));
     expect(host?.rankingInputsUpdatedAt).toEqual(expect.any(String));
+    expect(invitee?.locationDraftUpdatedAt).toBeNull();
+    expect(invitee?.rankingInputsUpdatedAt).toBeNull();
   });
 
   it("emits participant_joined and session_updated events", async () => {

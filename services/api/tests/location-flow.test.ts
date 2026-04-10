@@ -9,6 +9,7 @@ describe("location flow", () => {
     const sessions = new SessionRepository();
     const locations = new LocationRepository(sessions);
     const created = sessions.createSession({ joinToken: "locdraft1234567890", role: "host" });
+    expect(sessions.getSessionSnapshot(created.sessionId)?.participants[0]?.locationDraftUpdatedAt).toBeNull();
 
     const geolocation = await upsertLocationDraftHandler(
       {
@@ -22,6 +23,7 @@ describe("location flow", () => {
       { repository: locations }
     );
     expect(geolocation.status).toBe(200);
+    expect(sessions.getSessionSnapshot(created.sessionId)?.participants[0]?.locationDraftUpdatedAt).toEqual(expect.any(String));
 
     const manual = await upsertLocationDraftHandler(
       {
@@ -35,6 +37,7 @@ describe("location flow", () => {
       { repository: locations }
     );
     expect(manual.status).toBe(200);
+    expect(sessions.getSessionSnapshot(created.sessionId)?.participants[0]?.locationDraftUpdatedAt).toEqual(expect.any(String));
   });
 
   it("confirm endpoint sets confirmedAt only if draft exists", async () => {
