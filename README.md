@@ -2,7 +2,7 @@
 
 ## Production deployment scaffold
 
-Deployment config scaffolding for Cloud Run (API) + Cloudflare/OpenNext (web) is documented in `docs/deployment/production-cloud-run-cloudflare.md`.
+Known-good production deployment steps for Cloud Run (API) + Cloudflare/OpenNext (web), including troubleshooting and Cloudflare watcher guidance, are documented in `docs/deployment/production-cloud-run-cloudflare.md`.
 
 Quick command entrypoints:
 

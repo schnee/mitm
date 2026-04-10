@@ -1,126 +1,118 @@
-# Production deployment scaffold
+# Production deployment (Cloud Run API + Cloudflare/OpenNext web)
 
-This repository now includes deployment scaffolding for:
+This document reflects a known-good production deployment flow that has been run successfully.
 
-- API on Google Cloud Run
-- Web frontend on Cloudflare Workers using OpenNext
+## Known-good production runbook (Cloud Run)
 
-No deployment has been executed by this scaffold.
-
-## Files added
-
-- `deploy/cloud-run/api.Dockerfile`: container image definition for the API service
-- `deploy/cloud-run/cloudrun.env.example`: env vars template for Cloud Run runtime settings
-- `deploy/cloud-run/service.template.yaml`: Cloud Run service template with env placeholders
-- `deploy/cloud-run/cloudbuild.api.yaml`: Cloud Build pipeline for build + push + Cloud Run deploy
-- `deploy/cloudflare/wrangler.toml`: Cloudflare Worker config targeting OpenNext output
-- `deploy/cloudflare/.dev.vars.example`: local vars for wrangler-based local runs
-
-## API (Cloud Run)
-
-You can use npm scripts added in this scaffold:
-
-- `npm run deploy:api:cloudrun`
-
-1. Build image locally (optional validation):
+Use these commands in order.
 
 ```bash
-docker build -f deploy/cloud-run/api.Dockerfile -t mitm-api:local .
-```
+# 0) Set your project/region once per shell
+export PROJECT_ID="YOUR_GCP_PROJECT"
+export REGION="us-central1"
+export SERVICE_NAME="mitm-api"
+export RUNTIME_SA="mitm-api-runtime"
 
-2. Copy and edit env values:
+gcloud config set project "$PROJECT_ID"
 
-```bash
-cp deploy/cloud-run/cloudrun.env.example deploy/cloud-run/cloudrun.env
-```
+# 1) Enable required APIs
+gcloud services enable \
+  run.googleapis.com \
+  cloudbuild.googleapis.com \
+  artifactregistry.googleapis.com \
+  secretmanager.googleapis.com
 
-Then set real `APP_URL` and `CORS_ORIGIN` in `deploy/cloud-run/cloudrun.env`.
+# 2) Create Artifact Registry repo (Docker format)
+gcloud artifacts repositories create "cloud-run-source-deploy" \
+  --repository-format=docker \
+  --location="$REGION" \
+  --description="Cloud Run source deploy artifacts"
 
-3. Fill placeholders in `deploy/cloud-run/service.template.yaml`:
-   - `PROJECT_ID`, `REGION`, image tag
-   - `APP_URL`, `CORS_ORIGIN`
+# 3) Create runtime service account + grant Secret Manager access
+gcloud iam service-accounts create "$RUNTIME_SA" \
+  --display-name="MITM API runtime"
 
-4. Set `GOOGLE_MAPS_API_KEY` in Secret Manager:
+gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+  --member="serviceAccount:${RUNTIME_SA}@${PROJECT_ID}.iam.gserviceaccount.com" \
+  --role="roles/secretmanager.secretAccessor"
 
-```bash
-gcloud secrets create GOOGLE_MAPS_API_KEY --replication-policy=automatic
-printf '%s' 'YOUR_KEY' | gcloud secrets versions add GOOGLE_MAPS_API_KEY --data-file=-
-```
+# 4) Create secret + add latest version for Google Maps key
+gcloud secrets create GOOGLE_MAPS_API_KEY --replication-policy="automatic"
+printf '%s' 'YOUR_GOOGLE_MAPS_API_KEY' | gcloud secrets versions add GOOGLE_MAPS_API_KEY --data-file=-
 
-5. Deploy with either:
-    - Cloud Build config: `deploy/cloud-run/cloudbuild.api.yaml`
-    - Service manifest: `deploy/cloud-run/service.template.yaml`
-
-If using direct gcloud deploy/update, reuse env file values:
-
-```bash
-gcloud run deploy mitm-api \
+# 5) Deploy from source (known-good flags)
+# NOTE: --clear-base-image was required in this project to bypass stale buildpack base-image behavior.
+gcloud run deploy "$SERVICE_NAME" \
   --source . \
-  --region us-central1 \
+  --region "$REGION" \
   --allow-unauthenticated \
+  --service-account "${RUNTIME_SA}@${PROJECT_ID}.iam.gserviceaccount.com" \
   --env-vars-file deploy/cloud-run/cloudrun.env \
-  --set-secrets GOOGLE_MAPS_API_KEY=GOOGLE_MAPS_API_KEY:latest
+  --set-secrets GOOGLE_MAPS_API_KEY=GOOGLE_MAPS_API_KEY:latest \
+  --clear-base-image
+
+# 6) Retrieve URL + verify health
+API_URL="$(gcloud run services describe "$SERVICE_NAME" --region "$REGION" --format='value(status.url)')"
+echo "$API_URL"
+curl -fsS "$API_URL/health"
 ```
 
-## Web (Cloudflare + OpenNext)
+## Cloudflare/OpenNext deployment notes (practical fixes)
 
-You can use npm scripts added in this scaffold:
-
-- `npm run build:cloudflare`
-- `npm run deploy:cloudflare`
-
-1. Build Next.js for Cloudflare Worker runtime:
+1. In `next.config.js`, set `output: "standalone"`.
+2. Ensure a `build` npm script exists and runs `next build`.
+3. Export API base URL before frontend build so the client bundle is correct:
 
 ```bash
+export NEXT_PUBLIC_API_BASE_URL="https://YOUR_API_HOST"
 npx @opennextjs/cloudflare@latest build
-```
-
-2. Update `deploy/cloudflare/wrangler.toml`:
-   - `name`
-   - `NEXT_PUBLIC_API_BASE_URL` to your Cloud Run API URL
-   - set `workers_dev = false` after custom domain wiring
-
-3. Deploy Worker:
-
-```bash
 npx wrangler@latest deploy --config deploy/cloudflare/wrangler.toml
 ```
 
-For local Worker runtime testing:
+4. Use explicit Wrangler config path (`--config deploy/cloudflare/wrangler.toml`).
+5. In `deploy/cloudflare/wrangler.toml`, remember path resolution is relative to that file, so `main` and `assets.directory` must target `../../.open-next/...` (not `./.open-next/...`).
+6. If OpenNext build artifacts are missing, run build first, then deploy.
 
-```bash
-cp deploy/cloudflare/.dev.vars.example deploy/cloudflare/.dev.vars
-npx wrangler@latest dev --config deploy/cloudflare/wrangler.toml
-```
+## Custom domain: `mmitm.giantmetalrooster.com`
 
-## Cloudflare repository layout and watch-path strategy
+1. In Cloudflare Worker settings, map the custom domain `mmitm.giantmetalrooster.com` to the deployed worker.
+2. Update Cloud Run runtime env to use the same domain for app links and CORS:
+   - `APP_URL=https://mmitm.giantmetalrooster.com`
+   - `CORS_ORIGIN=https://mmitm.giantmetalrooster.com`
+3. Redeploy Cloud Run and verify newly created session/invite links use the custom domain.
 
-- Current `mitm` layout is a root Next.js app with a separate `services/api` backend (not a `frontend/` + `backend/` split like `hex`).
-- Implication: Cloudflare cannot target a `frontend/` directory in `mitm` as-is because that directory does not exist.
+## Troubleshooting (errors seen in production setup)
 
-Option A (recommended initially): keep the current layout and use Cloudflare Build Watch Paths so frontend deployments trigger only for frontend-relevant changes.
+- `artifactregistry.googleapis.com` not enabled:
+  - Symptom: source deploy fails while preparing build artifacts.
+  - Fix: run `gcloud services enable artifactregistry.googleapis.com` and retry.
+- Secret version not found (`GOOGLE_MAPS_API_KEY:latest`):
+  - Symptom: deploy or runtime fails to resolve secret.
+  - Fix: create secret and add at least one version (`gcloud secrets versions add ...`).
+- Container startup issues from buildpack defaults (`/workspace/index.js`, missing `npm`/`node` in runtime image):
+  - Symptom: container crashes immediately on start.
+  - Fix: deploy with `gcloud run deploy --source . --clear-base-image` to force a clean base image selection.
+- OpenNext worker module not found:
+  - Symptom: Wrangler reports worker entrypoint missing.
+  - Fix: run OpenNext build first and ensure `wrangler.toml` paths use `../../.open-next/...` relative paths.
+- Frontend falls back to localhost API:
+  - Symptom: client requests target `http://localhost:8080` in production.
+  - Fix: export/set `NEXT_PUBLIC_API_BASE_URL` before running OpenNext build, then redeploy worker.
 
-Include examples:
+## Cloudflare GitHub watcher configuration
 
-- `src/**`
-- `package.json`
-- `package-lock.json`
-- `next.config.*`
-- `tsconfig.json`
-- `deploy/cloudflare/**`
-
-Exclude examples:
-
-- `services/api/**`
-- `deploy/cloud-run/**`
-- `.planning/**`
-- `tests/**` (optional)
-
-Option B (future): refactor into a `frontend/` + `backend/` split for cleaner deployment isolation, with migration overhead (moved paths, CI updates, script/env rewiring).
-
-Recommendation: start with watch paths now, and refactor layout later only if operational friction justifies it.
-
-## Minimal production env checklist
-
-- API: `APP_URL`, `CORS_ORIGIN`, `GOOGLE_MAPS_API_KEY`, `GOOGLE_MAPS_PLACES_RADIUS_METERS`
-- Web: `NEXT_PUBLIC_API_BASE_URL`
+- If you deploy via Wrangler Workers only, there is no automatic GitHub watch trigger by default.
+- If a Cloudflare Pages project is connected to GitHub, configure **Build Watch Paths** in Cloudflare Pages settings.
+- Recommended include patterns:
+  - `src/**`
+  - `package.json`
+  - `package-lock.json`
+  - `next.config.*`
+  - `tsconfig.json`
+  - `deploy/cloudflare/**`
+- Recommended exclude patterns:
+  - `services/api/**`
+  - `deploy/cloud-run/**`
+  - `.planning/**`
+  - `tests/**` (optional)
+- This is configured in the Cloudflare dashboard and cannot be enforced solely from this repository.
