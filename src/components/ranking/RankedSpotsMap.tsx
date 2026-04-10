@@ -29,13 +29,33 @@ function markerClassName(input: {
 
 function AutoFitBounds({
   results,
-  enabled
+  enabled,
+  selectedVenueId,
+  onVenueFocus
 }: {
   results: RankedVenue[];
   enabled: boolean;
+  selectedVenueId: string | null;
+  onVenueFocus?: (venueId: string) => void;
 }) {
   const map = useMap();
+  const prevSelectedRef = useRef<string | null>(null);
 
+  // Handle venue focus (pan to selected venue)
+  useEffect(() => {
+    if (!map || !selectedVenueId || selectedVenueId === prevSelectedRef.current) {
+      return;
+    }
+    
+    const venue = results.find(r => r.venueId === selectedVenueId);
+    if (venue && venue.lat != null && venue.lng != null) {
+      // Pan to venue while preserving current zoom
+      map.panTo({ lat: venue.lat, lng: venue.lng });
+      prevSelectedRef.current = selectedVenueId;
+    }
+  }, [map, selectedVenueId, results]);
+
+  // Auto-fit bounds on initial load
   useEffect(() => {
     if (!map || !enabled || results.length === 0) {
       return;
@@ -124,19 +144,22 @@ export function RankedSpotsMap({
   shortlistVenueIds,
   confirmedVenueId,
   selectedVenueId,
-  onMarkerSelect
+  onMarkerSelect,
+  onVenueFocus
 }: {
   results: RankedVenue[];
   shortlistVenueIds: string[];
   confirmedVenueId: string | null;
   selectedVenueId: string | null;
   onMarkerSelect: (venueId: string) => void;
+  onVenueFocus?: (venueId: string) => void;
 }) {
   const mapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
   const [mapLoaded, setMapLoaded] = useState(false);
   const [showFallback, setShowFallback] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mapRef = useRef<ReturnType<typeof useMap> | null>(null);
 
   const handleMapLoad = useCallback(() => {
     setMapLoaded(true);
@@ -242,7 +265,7 @@ export function RankedSpotsMap({
             zoomControl={true}
             streetViewControl={false}
           >
-            <AutoFitBounds results={results} enabled={mapLoaded && results.length > 0} />
+            <AutoFitBounds results={results} enabled={mapLoaded && results.length > 0} selectedVenueId={selectedVenueId} onVenueFocus={onVenueFocus} />
             {results.map((result, index) => {
               if (result.lat == null || result.lng == null) return null;
               

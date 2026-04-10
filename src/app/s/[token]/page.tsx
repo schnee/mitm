@@ -201,6 +201,18 @@ export default function JoinPage({ params }: JoinPageProps) {
     setRankingStatus("Loading: refreshing shared suggestions.");
     try {
       const response = await getRankedResults(sessionId);
+      
+      // D-09: Preserve selected venue if still in results, otherwise clear
+      const newResults = response.results;
+      if (selectedVenueId && !newResults.some(r => r.venueId === selectedVenueId)) {
+        // Selected venue no longer exists in results - clear selection or select first
+        if (newResults.length > 0) {
+          setSelectedVenueId(newResults[0].venueId);
+        } else {
+          setSelectedVenueId(null);
+        }
+      }
+      
       setLocalRankedResults(response.results);
       setRankingStatus(`Success: shared suggestions refreshed at ${response.generatedAt}`);
     } catch {
@@ -497,6 +509,7 @@ export default function JoinPage({ params }: JoinPageProps) {
                                 confirmedVenueId={confirmedPlace?.venueId ?? null}
                                 selectedVenueId={selectedVenueId}
                                 onMarkerSelect={(venueId) => setSelectedVenueId(venueId)}
+                                onVenueFocus={(venueId) => setSelectedVenueId(venueId)}
                               />
 
                               <RankedResultsList
