@@ -44,7 +44,22 @@ export function LocationCaptureForm({
   const [statusMessage, setStatusMessage] = useState("Set your location using the map below or use current location.");
   const [selectedLat, setSelectedLat] = useState<number | null>(null);
   const [selectedLng, setSelectedLng] = useState<number | null>(null);
+  const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null);
   const mapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+
+  useEffect(() => {
+    if (!("geolocation" in navigator)) return;
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setMapCenter({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude
+        });
+      },
+      () => {},
+      { timeout: 5000 }
+    );
+  }, []);
 
   const statusClass =
     statusType === "loading"
@@ -145,8 +160,8 @@ export function LocationCaptureForm({
           <APIProvider apiKey={mapsApiKey} solutionChannel="GMP_DEV">
             <Map
               mapId="location-capture-map"
-              defaultCenter={{ lat: 40.7128, lng: -74.006 }}
-              defaultZoom={10}
+              defaultCenter={mapCenter ?? { lat: 30.2672, lng: -97.7431 }}
+              defaultZoom={12}
               mapContainerClassName="location-map"
               gestureHandling="greedy"
               disableDefaultUI={false}
