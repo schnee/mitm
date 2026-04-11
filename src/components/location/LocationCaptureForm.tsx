@@ -8,7 +8,7 @@ import {
   Pin,
   useMap
 } from "@vis.gl/react-google-maps";
-import { upsertLocationDraft } from "../../lib/api/session-client";
+import { upsertLocationDraft, confirmLocation } from "../../lib/api/session-client";
 
 type GeoErrorCode = "PERMISSION_DENIED" | "POSITION_UNAVAILABLE" | "TIMEOUT" | null;
 
@@ -86,8 +86,9 @@ export function LocationCaptureForm({
         lng,
         addressLabel: "Map-click"
       });
+      await confirmLocation({ sessionId, participantId });
       setStatusType("success");
-      setStatusMessage("Location saved!");
+      setStatusMessage("Location saved and confirmed!");
       setGeoError(null);
       onDraftSaved();
     } catch {
@@ -118,8 +119,9 @@ export function LocationCaptureForm({
             lng: position.coords.longitude,
             addressLabel: "Current location"
           });
+          await confirmLocation({ sessionId, participantId });
           setStatusType("success");
-          setStatusMessage("Location saved!");
+          setStatusMessage("Location saved and confirmed!");
           setGeoError(null);
           onDraftSaved();
         } catch {
