@@ -25,7 +25,7 @@ export function RankingInputsForm({
   participantId: string;
   onSaved: (result: { rankingInputsReady: boolean; rankingLifecycle: RankingLifecycleResponse }) => void;
 }) {
-  const [split, setSplit] = useState<WillingnessSplit>("50_50");
+  const [split, setSplit] = useState<WillingnessSplit>("60_40");
   const [tags, setTags] = useState<PreferenceTag[]>(["coffee"]);
   const [statusType, setStatusType] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [status, setStatus] = useState("Idle: choose your travel split and meet-up tags.");
