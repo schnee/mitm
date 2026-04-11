@@ -449,17 +449,17 @@ export default function JoinPage({ params }: JoinPageProps) {
                                   inputsReady={Boolean(sync.snapshot?.inputsReady)}
                                   onConfirmed={(nextConfirmedAt) => setConfirmedAt(nextConfirmedAt)}
                                 />
-                              <p className={`status-badge ${confirmedAt ? "status-success" : "status-waiting"}`} role="status" aria-live="polite">
-                                {confirmedAt
-                                  ? `Success: location confirmed at ${confirmedAt}`
-                                  : "Waiting for partner: confirm your location, then wait for your partner to confirm."}
-                              </p>
+<p className={`status-badge ${confirmedAt ? "status-success" : "status-waiting"}`} role="status" aria-live="polite">
+                                  {confirmedAt
+                                    ? `Success: location confirmed at ${confirmedAt}. You can now set your preferences.`
+                                    : "Confirm your location to unlock preferences."}
+                                </p>
                             </div>
                           )}
 
                           {step.id === "preferences" && (
                             <div className="stage">
-                              {sync.snapshot?.inputsReady ? (
+                              {Boolean(me?.locationConfirmedAt) ? (
                                 <RankingInputsForm
                                   sessionId={sessionId}
                                   participantId={participantId}
@@ -474,7 +474,7 @@ export default function JoinPage({ params }: JoinPageProps) {
                                 />
                               ) : (
                                 <p className="status-badge status-waiting" role="status" aria-live="polite">
-                                  Waiting for partner: both participants must confirm locations before preferences can be saved.
+                                  Waiting for location: confirm your location in the previous step before setting preferences.
                                 </p>
                               )}
                             </div>
