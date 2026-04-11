@@ -155,7 +155,7 @@ test("shows shared shortlist and confirmed map handoff", async ({ page }) => {
   await page.goto(`${appUrl}/s/demo-token?asHost=1&sessionId=demo-session&participantId=demo-host`);
 
   await page.getByRole("button", { name: "Save meet-up preferences" }).click();
-  await expect(page.getByRole("heading", { name: "Ranked spots" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Ranked spots", exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Add to shortlist" }).click();
   await expect(page.getByRole("button", { name: "Confirm this place" })).toBeVisible();
 
