@@ -23,7 +23,7 @@ const STEP_ORDER: SessionStepId[] = ["location", "preferences", "spots", "shortl
 export function deriveSessionFlow(input: DeriveSessionFlowInput): { activeStepId: SessionStepId; steps: SessionFlowStep[] } {
   const locationCompleted = input.myLocationConfirmed;
   const preferencesCompleted = input.myPreferencesSaved;
-  const spotsCompleted = input.shortlistCount > 0 || Boolean(input.confirmedVenueId);
+  const spotsCompleted = input.rankedResultsCount > 0 || Boolean(input.confirmedVenueId);
   const shortlistCompleted = input.shortlistCount > 0 || Boolean(input.confirmedVenueId);
   const confirmCompleted = Boolean(input.confirmedVenueId);
   const spotsBlockedBy: "self" | "partner" | null = !preferencesCompleted
