@@ -101,7 +101,7 @@ export interface SessionEventResponse {
 }
 
 export type WillingnessSplit = "50_50" | "60_40" | "70_30";
-export type PreferenceTag = "coffee" | "cocktails" | "vintage_shops" | "dessert" | "quiet";
+export type PreferenceTag = "coffee" | "lunch" | "dinner" | "cocktails" | "dessert" | "museum" | "walk_and_talk" | "vintage_shops" | "quiet";
 
 export interface RankedVenue {
   venueId: string;

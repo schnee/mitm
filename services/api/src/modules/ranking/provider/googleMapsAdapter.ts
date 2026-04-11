@@ -26,17 +26,25 @@ interface DistanceMatrixResponse {
 
 const TAG_TO_QUERY: Record<PreferenceTag, string> = {
   coffee: "coffee",
+  lunch: "restaurant",
+  dinner: "restaurant",
   cocktails: "cocktail",
-  vintage_shops: "vintage shop",
   dessert: "dessert",
+  museum: "museum",
+  walk_and_talk: "park",
+  vintage_shops: "vintage shop",
   quiet: "quiet cafe"
 };
 
 const TAG_TO_CATEGORY: Record<PreferenceTag, string> = {
   coffee: "cafe",
+  lunch: "restaurant",
+  dinner: "restaurant",
   cocktails: "bar",
-  vintage_shops: "store",
   dessert: "bakery",
+  museum: "museum",
+  walk_and_talk: "park",
+  vintage_shops: "store",
   quiet: "cafe"
 };
 

@@ -10,9 +10,13 @@ import {
 
 const TAG_LABELS: Array<{ value: PreferenceTag; label: string }> = [
   { value: "coffee", label: "coffee" },
+  { value: "lunch", label: "lunch" },
+  { value: "dinner", label: "dinner" },
   { value: "cocktails", label: "cocktails" },
-  { value: "vintage_shops", label: "vintage shops" },
   { value: "dessert", label: "dessert" },
+  { value: "museum", label: "museum" },
+  { value: "walk_and_talk", label: "walk and talk" },
+  { value: "vintage_shops", label: "vintage shops" },
   { value: "quiet", label: "quiet" }
 ];
 
