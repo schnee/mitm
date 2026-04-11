@@ -16,11 +16,11 @@ import {
   upsertShortlistVenue
 } from "../../../lib/api/session-client";
 import { useSessionSync } from "../../../hooks/useSessionSync";
+
 import { ParticipantStatus } from "../../../components/session/ParticipantStatus";
-import { SessionProgressBar } from "../../../components/session/SessionProgressBar";
 import { NextActionRail } from "../../../components/session/NextActionRail";
 import { LocationCaptureForm } from "../../../components/location/LocationCaptureForm";
-import { LocationConfirmCard } from "../../../components/location/LocationConfirmCard";
+
 import { RankingInputsForm } from "../../../components/ranking/RankingInputsForm";
 import { RankedResultsList } from "../../../components/ranking/RankedResultsList";
 import { RankedSpotsMap } from "../../../components/ranking/RankedSpotsMap";
@@ -115,6 +115,7 @@ export default function JoinPage({ params }: JoinPageProps) {
   const [reactionPendingVenueIds, setReactionPendingVenueIds] = useState<string[]>([]);
   const [localConfirmedPlace, setLocalConfirmedPlace] = useState<ConfirmedPlace | null>(null);
   const [selectedVenueId, setSelectedVenueId] = useState<string | null>(null);
+  const [focusedVenueId, setFocusedVenueId] = useState<string | null>(null);
   const [decisionStatus, setDecisionStatus] = useState("Idle: add a ranked spot to shortlist to begin deciding.");
   const { token } = use(params);
   const searchParams = useSearchParams();
@@ -201,6 +202,18 @@ export default function JoinPage({ params }: JoinPageProps) {
     setRankingStatus("Loading: refreshing shared suggestions.");
     try {
       const response = await getRankedResults(sessionId);
+      
+      // D-09: Preserve selected venue if still in results, otherwise clear
+      const newResults = response.results;
+      if (selectedVenueId && !newResults.some(r => r.venueId === selectedVenueId)) {
+        // Selected venue no longer exists in results - clear selection or select first
+        if (newResults.length > 0) {
+          setSelectedVenueId(newResults[0].venueId);
+        } else {
+          setSelectedVenueId(null);
+        }
+      }
+      
       setLocalRankedResults(response.results);
       setRankingStatus(`Success: shared suggestions refreshed at ${response.generatedAt}`);
     } catch {
@@ -229,7 +242,7 @@ export default function JoinPage({ params }: JoinPageProps) {
   const reactionStatusByVenueId = buildReactionStatusByVenueId(reactions, participantId, partnerParticipantId);
 
   const flow = deriveSessionFlow({
-    myLocationConfirmed: Boolean(me?.locationConfirmedAt || confirmedAt),
+    myLocationConfirmed: Boolean(me?.locationConfirmedAt),
     partnerLocationConfirmed: Boolean(partner?.locationConfirmedAt),
     myPreferencesSaved: myPreferencesPersisted,
     partnerPreferencesSaved: Boolean(sync.snapshot?.rankingInputsReady),
@@ -398,12 +411,6 @@ export default function JoinPage({ params }: JoinPageProps) {
 
             {sessionId && participantId && (
               <>
-                <SessionProgressBar
-                  steps={steps}
-                  activeStepId={activeStepId}
-                  meRole={me?.role ?? "host"}
-                  partnerRole={partner?.role ?? null}
-                />
                 <section className="guided-stepper" aria-label="Guided session steps">
                   {steps.map((step) => {
                     const isActive = activeStepId === step.id;
@@ -427,26 +434,14 @@ export default function JoinPage({ params }: JoinPageProps) {
                               <LocationCaptureForm
                                 sessionId={sessionId}
                                 participantId={participantId}
-                                onDraftSaved={() => setDraftSaved(true)}
+onDraftSaved={() => setDraftSaved(true)}
                               />
-                                <LocationConfirmCard
-                                  sessionId={sessionId}
-                                  participantId={participantId}
-                                  draftReady={myDraftReady}
-                                  inputsReady={Boolean(sync.snapshot?.inputsReady)}
-                                  onConfirmed={(nextConfirmedAt) => setConfirmedAt(nextConfirmedAt)}
-                                />
-                              <p className={`status-badge ${confirmedAt ? "status-success" : "status-waiting"}`} role="status" aria-live="polite">
-                                {confirmedAt
-                                  ? `Success: location confirmed at ${confirmedAt}`
-                                  : "Waiting for partner: confirm your location, then wait for your partner to confirm."}
-                              </p>
                             </div>
                           )}
 
                           {step.id === "preferences" && (
                             <div className="stage">
-                              {sync.snapshot?.inputsReady ? (
+                              {Boolean(me?.locationConfirmedAt) ? (
                                 <RankingInputsForm
                                   sessionId={sessionId}
                                   participantId={participantId}
@@ -461,7 +456,7 @@ export default function JoinPage({ params }: JoinPageProps) {
                                 />
                               ) : (
                                 <p className="status-badge status-waiting" role="status" aria-live="polite">
-                                  Waiting for partner: both participants must confirm locations before preferences can be saved.
+                                  Waiting for location: confirm your location in the previous step before setting preferences.
                                 </p>
                               )}
                             </div>
@@ -496,7 +491,9 @@ export default function JoinPage({ params }: JoinPageProps) {
                                 shortlistVenueIds={shortlist.map((item) => item.venueId)}
                                 confirmedVenueId={confirmedPlace?.venueId ?? null}
                                 selectedVenueId={selectedVenueId}
+                                focusedVenueId={focusedVenueId}
                                 onMarkerSelect={(venueId) => setSelectedVenueId(venueId)}
+                                onVenueFocus={(venueId) => setFocusedVenueId(venueId)}
                               />
 
                               <RankedResultsList
@@ -505,6 +502,7 @@ export default function JoinPage({ params }: JoinPageProps) {
                                   void addToShortlist(venue);
                                 }}
                                 shortlistVenueIds={shortlist.map((item) => item.venueId)}
+                                confirmedVenueId={confirmedPlace?.venueId ?? null}
                                 reactions={reactions}
                                 participantId={participantId ?? undefined}
                                 onReact={(venue, reaction) => {
@@ -513,7 +511,8 @@ export default function JoinPage({ params }: JoinPageProps) {
                                 reactionPendingVenueIds={reactionPendingVenueIds}
                                 reactionStatusByVenueId={reactionStatusByVenueId}
                                 selectedVenueId={selectedVenueId}
-                                onVenueFocus={(venueId) => setSelectedVenueId(venueId)}
+                                focusedVenueId={focusedVenueId}
+                                onVenueFocus={(venueId) => setFocusedVenueId(venueId)}
                               />
                             </div>
                           )}

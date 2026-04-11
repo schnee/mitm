@@ -393,7 +393,11 @@ Plans:
 **Depends on**: Phase 10
 **Requirements**: UX-23, UX-24, UX-26
 **Gap Closure**: Closes integration GAP-02 and map-first decisioning flow break.
-**Plans**: 0 plans (to be created)
+**Plans**: 3 plans
+Plans:
+- [x] 11-01-PLAN.md — Replace fallback UI with provider-backed Google Maps (@vis.gl/react-google-maps), auto-fit bounds, simple custom markers.
+- [x] 11-02-PLAN.md — Implement bidirectional map/list sync, marker click scrolls to list, list focus pans to marker, preserve selection.
+- [x] 11-03-PLAN.md — Marker state hierarchy, accessibility (keyboard/live-region), failure handling (+timeout), telemetry events.
 
 ## Progress
 
@@ -409,4 +413,4 @@ Plans:
 | 8. Mobile-First Guided Flow & Map-Driven Decisioning | 3/3 | Complete | 08-01, 08-02, 08-03 |
 | 9. Verification Coverage & Traceability Recovery | 0/0 | Planned | - |
 | 10. Session Continuity & State Persistence Hardening | 3/3 | Complete    | 2026-04-10 |
-| 11. Map-First Provider Integration Completion | 0/0 | Planned | - |
+| 11. Map-First Provider Integration Completion | 3/3 | Planned | 11-01, 11-02, 11-03 |

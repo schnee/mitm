@@ -1,95 +1,31 @@
 "use client";
 
-import { useState } from "react";
-import { upsertLocationDraft } from "../../lib/api/session-client";
+import { useState, useEffect } from "react";
+import {
+  APIProvider,
+  Map,
+  AdvancedMarker,
+  Pin,
+  useMap
+} from "@vis.gl/react-google-maps";
+import { upsertLocationDraft, confirmLocation } from "../../lib/api/session-client";
 
 type GeoErrorCode = "PERMISSION_DENIED" | "POSITION_UNAVAILABLE" | "TIMEOUT" | null;
 
-function isLatitudeInRange(value: number): boolean {
-  return value >= -90 && value <= 90;
-}
+function MapClickHandler({ onMapClick }: { onMapClick: (lat: number, lng: number) => void }) {
+  const map = useMap();
 
-function isLongitudeInRange(value: number): boolean {
-  return value >= -180 && value <= 180;
-}
-
-function parseCoordinatePart(raw: string, axis: "lat" | "lng"): number | null {
-  const value = raw.trim().toUpperCase();
-  if (!value) {
-    return null;
-  }
-
-  const decimalMatch = value.match(/^[-+]?(?:\d+\.?\d*|\.\d+)$/);
-  if (decimalMatch) {
-    const parsed = Number.parseFloat(value);
-    if (!Number.isFinite(parsed)) {
-      return null;
-    }
-    if (axis === "lat" ? isLatitudeInRange(parsed) : isLongitudeInRange(parsed)) {
-      return parsed;
-    }
-    return null;
-  }
-
-  const hemisphereMatch = value.match(/[NSEW]/);
-  const hemisphere = hemisphereMatch?.[0] ?? null;
-  if (hemisphere) {
-    if (axis === "lat" && (hemisphere === "E" || hemisphere === "W")) {
-      return null;
-    }
-    if (axis === "lng" && (hemisphere === "N" || hemisphere === "S")) {
-      return null;
-    }
-  }
-
-  const normalized = value
-    .replace(/[NSEW]/g, " ")
-    .replace(/[°º'′"″]/g, " ")
-    .replace(/:/g, " ")
-    .replace(/,/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-
-  if (!normalized) {
-    return null;
-  }
-
-  const parts = normalized.split(" ");
-  if (parts.length < 1 || parts.length > 3) {
-    return null;
-  }
-
-  const degreesRaw = Number.parseFloat(parts[0]);
-  const minutesRaw = parts.length >= 2 ? Number.parseFloat(parts[1]) : 0;
-  const secondsRaw = parts.length === 3 ? Number.parseFloat(parts[2]) : 0;
-
-  if (![degreesRaw, minutesRaw, secondsRaw].every((item) => Number.isFinite(item))) {
-    return null;
-  }
-
-  if (Math.abs(minutesRaw) >= 60 || Math.abs(secondsRaw) >= 60) {
-    return null;
-  }
-
-  const signFromDegrees = degreesRaw < 0 ? -1 : 1;
-  const signFromHemisphere =
-    hemisphere === "S" || hemisphere === "W" ? -1 : hemisphere === "N" || hemisphere === "E" ? 1 : null;
-
-  if (signFromHemisphere !== null && signFromDegrees !== signFromHemisphere && degreesRaw !== 0) {
-    return null;
-  }
-
-  const sign = signFromHemisphere ?? signFromDegrees;
-  const absoluteValue = Math.abs(degreesRaw) + Math.abs(minutesRaw) / 60 + Math.abs(secondsRaw) / 3600;
-  const parsed = sign * absoluteValue;
-
-  if (!Number.isFinite(parsed)) {
-    return null;
-  }
-
-  if (axis === "lat" ? isLatitudeInRange(parsed) : isLongitudeInRange(parsed)) {
-    return parsed;
-  }
+  useEffect(() => {
+    if (!map) return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const listener = map.addListener("click", (e: any) => {
+      const latLng = e.latLng;
+      if (latLng) {
+        onMapClick(latLng.lat(), latLng.lng());
+      }
+    });
+    return () => listener.remove();
+  }, [map, onMapClick]);
 
   return null;
 }
@@ -103,70 +39,61 @@ export function LocationCaptureForm({
   participantId: string;
   onDraftSaved: () => void;
 }) {
-  const [manualAddress, setManualAddress] = useState("");
-  const [coordinates, setCoordinates] = useState("");
-  const [lat, setLat] = useState("");
-  const [lng, setLng] = useState("");
-  const [coordinatesHint, setCoordinatesHint] = useState("");
   const [geoError, setGeoError] = useState<GeoErrorCode>(null);
   const [statusType, setStatusType] = useState<"idle" | "loading" | "success" | "error">("idle");
-  const [statusMessage, setStatusMessage] = useState("Idle: choose current location or save a manual location draft.");
+  const [statusMessage, setStatusMessage] = useState("");
+  const [selectedLat, setSelectedLat] = useState<number | null>(null);
+  const [selectedLng, setSelectedLng] = useState<number | null>(null);
+  const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null);
+  const [showMap, setShowMap] = useState(false);
+  const mapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
+  const hasMapsKey = Boolean(mapsApiKey);
 
-  const handleCoordinatesChange = (value: string) => {
-    setCoordinates(value);
+  useEffect(() => {
+    if (!("geolocation" in navigator)) return;
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setMapCenter({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude
+        });
+      },
+      () => {},
+      { timeout: 5000 }
+    );
+  }, []);
 
-    if (!value.trim()) {
-      setCoordinatesHint("");
-      return;
-    }
+  const statusClass =
+    statusType === "loading"
+      ? "status-loading"
+      : statusType === "success"
+        ? "status-success"
+        : statusType === "error"
+          ? "status-error"
+          : "status-idle";
 
-    const parts = value.split(",");
-    if (parts.length !== 2) {
-      setCoordinatesHint("Use `lat, lng` in decimal or HMS (for example 30.271371, -97.759000 or 30 16 17 N, 97 45 32 W).");
-      return;
-    }
-
-    const parsedLat = parseCoordinatePart(parts[0], "lat");
-    const parsedLng = parseCoordinatePart(parts[1], "lng");
-
-    if (parsedLat === null || parsedLng === null) {
-      setCoordinatesHint("Use `lat, lng` in decimal or HMS (for example 30.271371, -97.759000 or 30 16 17 N, 97 45 32 W).");
-      return;
-    }
-
-    setLat(String(parsedLat));
-    setLng(String(parsedLng));
-    setCoordinatesHint("");
-  };
-
-  const saveManual = async () => {
+  const handleMapClick = async (lat: number, lng: number) => {
+    setSelectedLat(lat);
+    setSelectedLng(lng);
     try {
       setStatusType("loading");
-      setStatusMessage("Loading: saving manual location draft.");
-      const parsedLat = parseCoordinatePart(lat, "lat");
-      const parsedLng = parseCoordinatePart(lng, "lng");
-
-      if (parsedLat === null || parsedLng === null) {
-        setStatusType("error");
-        setStatusMessage("Error: invalid coordinates. Use decimal or HMS format and retry.");
-        return;
-      }
-
+      setStatusMessage("Saving...");
       await upsertLocationDraft({
         mode: "manual",
         sessionId,
         participantId,
-        lat: parsedLat,
-        lng: parsedLng,
-        addressLabel: manualAddress
+        lat,
+        lng,
+        addressLabel: "Map-click"
       });
+      await confirmLocation({ sessionId, participantId });
       setStatusType("success");
-      setStatusMessage("Success: manual location draft saved.");
+      setStatusMessage("Location saved and confirmed!");
       setGeoError(null);
       onDraftSaved();
     } catch {
       setStatusType("error");
-      setStatusMessage("Error: unable to save manual location. Check your inputs and retry.");
+      setStatusMessage("Error saving location. Try again.");
     }
   };
 
@@ -174,12 +101,12 @@ export function LocationCaptureForm({
     if (!("geolocation" in navigator)) {
       setGeoError("POSITION_UNAVAILABLE");
       setStatusType("error");
-      setStatusMessage("Error: geolocation is unavailable. Use manual entry to continue.");
+      setStatusMessage("Geolocation unavailable. Click the map.");
       return;
     }
 
     setStatusType("loading");
-    setStatusMessage("Loading: requesting your current location.");
+    setStatusMessage("Getting current location...");
 
     navigator.geolocation.getCurrentPosition(
       async (position) => {
@@ -192,95 +119,82 @@ export function LocationCaptureForm({
             lng: position.coords.longitude,
             addressLabel: "Current location"
           });
+          await confirmLocation({ sessionId, participantId });
           setStatusType("success");
-          setStatusMessage("Success: current location draft saved.");
+          setStatusMessage("Location saved and confirmed!");
           setGeoError(null);
           onDraftSaved();
         } catch {
           setStatusType("error");
-          setStatusMessage("Error: unable to save current location. Use manual entry to continue.");
+          setStatusMessage("Error saving location. Click the map instead.");
         }
       },
       (error) => {
-        if (error.code === 1) {
-          setGeoError("PERMISSION_DENIED");
-        } else if (error.code === 2) {
-          setGeoError("POSITION_UNAVAILABLE");
-        } else {
-          setGeoError("TIMEOUT");
-        }
+        if (error.code === 1) setGeoError("PERMISSION_DENIED");
+        else if (error.code === 2) setGeoError("POSITION_UNAVAILABLE");
+        else setGeoError("TIMEOUT");
         setStatusType("error");
-        setStatusMessage("Error: geolocation was not available. Use manual entry below to continue.");
+        setStatusMessage("Could not get location. Click the map.");
       },
       { timeout: 10_000 }
     );
   };
 
-  const statusClass =
-    statusType === "loading"
-      ? "status-loading"
-      : statusType === "success"
-        ? "status-success"
-        : statusType === "error"
-          ? "status-error"
-          : "status-idle";
-
   return (
-    <section className="panel stage" aria-labelledby="location-capture-title">
+    <section className="panel stage location-capture-section" aria-labelledby="location-capture-title">
       <header className="section-header">
-        <h2 id="location-capture-title">Location capture</h2>
-        <p>Pick your location input method. Manual entry is always available as fallback.</p>
+        <h2 id="location-capture-title">Set your location</h2>
       </header>
 
       <div className="btn-row">
         <button className="btn-secondary" type="button" onClick={useCurrentLocation}>
-          Use current location
+          Use current
         </button>
+        {hasMapsKey && (
+          <button className="btn-secondary" type="button" onClick={() => setShowMap(true)}>
+            Use map
+          </button>
+        )}
       </div>
+
       {geoError && (
         <p className="status-badge status-error" role="status" aria-live="polite">
-          Error: geolocation issue ({geoError}). Use manual entry below to continue without blocking the flow.
+          {geoError === "PERMISSION_DENIED" ? "Location permission denied" : "Could not get location"}. Try the map instead.
         </p>
       )}
 
-      <div className="panel input-stack">
-        <h3>Manual entry</h3>
-        <label htmlFor="manual-address-input">Address label</label>
-        <input
-          id="manual-address-input"
-          value={manualAddress}
-          onChange={(event) => setManualAddress(event.target.value)}
-          placeholder="Address label"
-        />
-        <label htmlFor="coordinates-input">
-          Coordinates (lat, lng)
-          <input
-            id="coordinates-input"
-            value={coordinates}
-            onChange={(event) => handleCoordinatesChange(event.target.value)}
-            placeholder="30.271371, -97.759000 or 30 16 17 N, 97 45 32 W"
-          />
-        </label>
-        {coordinatesHint && <p className="muted">Waiting: {coordinatesHint}</p>}
-        <label htmlFor="latitude-input">Latitude</label>
-        <input id="latitude-input" value={lat} onChange={(event) => setLat(event.target.value)} placeholder="Latitude" />
-        <label htmlFor="longitude-input">Longitude</label>
-        <input id="longitude-input" value={lng} onChange={(event) => setLng(event.target.value)} placeholder="Longitude" />
-        <button
-          className="btn-primary"
-          type="button"
-          onClick={() => {
-            void saveManual();
-          }}
-          disabled={!manualAddress || !lat || !lng}
-        >
-          Save manual location
-        </button>
-      </div>
+      {showMap ? (
+        <div className="location-map-container">
+          <p className="muted">Click map to set your location:</p>
+          <APIProvider apiKey={mapsApiKey} solutionChannel="GMP_DEV">
+            <Map
+              mapId="location-capture-map"
+              defaultCenter={mapCenter ?? { lat: 30.2672, lng: -97.7431 }}
+              defaultZoom={12}
+              mapContainerClassName="location-map"
+              style={{ height: "400px", minHeight: "400px" }}
+              gestureHandling="greedy"
+              disableDefaultUI={false}
+              fullscreenControl={true}
+              zoomControl={true}
+              streetViewControl={false}
+            >
+              <MapClickHandler onMapClick={handleMapClick} />
+              {selectedLat !== null && selectedLng !== null && (
+                <AdvancedMarker position={{ lat: selectedLat, lng: selectedLng }}>
+                  <Pin background={"#3b82f6"} glyphColor={"#ffffff"} />
+                </AdvancedMarker>
+              )}
+            </Map>
+          </APIProvider>
+        </div>
+      ) : null}
 
-      <p className={`status-badge ${statusClass}`} role="status" aria-live="polite">
-        {statusMessage}
-      </p>
+      {statusMessage && (
+        <p className={`status-badge ${statusClass}`} role="status" aria-live="polite">
+          {statusMessage}
+        </p>
+      )}
     </section>
   );
 }
