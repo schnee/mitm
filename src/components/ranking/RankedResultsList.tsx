@@ -107,21 +107,23 @@ export function RankedResultsList({
                 </span>
               )}
               <h3>{result.name}</h3>
-              <p className="status-badge status-idle">Fairness delta: {result.fairnessDeltaMinutes} min</p>
-              <p className="muted">Lower fairness delta means a more balanced travel burden.</p>
+              <p className="status-badge status-idle">Δ {result.fairnessDeltaMinutes} min</p>
 
               <div className="chip-list" aria-label="Score summary">
                 <span className="chip">Fairness: {result.fairnessScore.toFixed(2)}</span>
-                <span className="chip">Preference: {result.preferenceScore.toFixed(2)}</span>
-                <span className="chip">Total: {result.totalScore.toFixed(2)}</span>
+                <span className="chip">Prefs: {result.preferenceScore.toFixed(2)}</span>
               </div>
 
-              <div className="meta-grid">
-                <p>Category: {result.category}</p>
-                <p>{renderOpenStatus(result.openNow)}</p>
-                <p>ETA (You): {result.etaParticipantA} min</p>
-                <p>ETA (Partner): {result.etaParticipantB} min</p>
-              </div>
+              <dl className="eta-table">
+                <dt>Category</dt>
+                <dd>{result.category}</dd>
+                <dt>Open</dt>
+                <dd>{renderOpenStatus(result.openNow)}</dd>
+                <dt>You</dt>
+                <dd>{result.etaParticipantA > 60 ? `${Math.round(result.etaParticipantA / 60)}h` : `${result.etaParticipantA} min`}</dd>
+                <dt>Partner</dt>
+                <dd>{result.etaParticipantB > 60 ? `${Math.round(result.etaParticipantB / 60)}h` : `${result.etaParticipantB} min`}</dd>
+              </dl>
 
               {onReact && (
                 <div className="stage" aria-label="Reaction controls">
