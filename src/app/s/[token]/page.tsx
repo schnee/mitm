@@ -425,7 +425,7 @@ export default function JoinPage({ params }: JoinPageProps) {
                         <h2>{step.title}</h2>
                       </header>
 
-                      {step.completed && !isActive ? (
+                      {step.completed && !isActive && step.id !== "spots" && rankedResults.length === 0 ? (
                         <p className="step-summary step-summary-complete">{step.summary}</p>
                       ) : (
                         <>
@@ -462,7 +462,7 @@ onDraftSaved={() => setDraftSaved(true)}
                             </div>
                           )}
 
-                          {step.id === "spots" && (
+{step.id === "spots" && (
                             <div className="stage map-list-layout">
                               <section className="panel stage" aria-labelledby="run-ranking-title">
                                 <h2 id="run-ranking-title">Shared preferences status</h2>
@@ -517,7 +517,7 @@ onDraftSaved={() => setDraftSaved(true)}
                             </div>
                           )}
 
-                          {step.id === "shortlist" && (
+{step.id === "shortlist" && (
                             <div className="stage">
                               <p className={`status-badge ${decisionStatusClass}`} role="status" aria-live="polite">
                                 {decisionStatus}
@@ -532,7 +532,7 @@ onDraftSaved={() => setDraftSaved(true)}
                             </div>
                           )}
 
-                          {step.id === "confirm" && (
+{step.id === "confirm" && (
                             <div className="stage">
                               {confirmedPlace ? (
                                 <ConfirmedPlaceCard confirmedPlace={confirmedPlace} />
