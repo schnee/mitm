@@ -278,6 +278,7 @@ export function RankedSpotsMap({
             defaultCenter={{ lat: 40.7128, lng: -74.006 }}
             defaultZoom={12}
             mapContainerClassName="map-panel"
+            style={{ height: "350px", minHeight: "350px" }}
             gestureHandling="greedy"
             disableDefaultUI={false}
             fullscreenControl={true}

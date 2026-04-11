@@ -318,7 +318,7 @@ legend {
 }
 
 .map-container {
-  min-height: 180px;
+  min-height: 380px;
 }
 
 .map-marker-grid {
@@ -406,11 +406,13 @@ legend {
 .map-list-layout {
   display: grid;
   gap: 0.75rem;
+  grid-template-rows: minmax(350px, 1fr) auto;
 }
 
 /* Provider map container */
 .map-panel {
-  min-height: 300px;
+  min-height: 350px;
+  height: 350px;
   width: 100%;
   border-radius: 12px;
   overflow: hidden;
