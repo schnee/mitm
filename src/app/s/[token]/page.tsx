@@ -20,7 +20,7 @@ import { useSessionSync } from "../../../hooks/useSessionSync";
 import { ParticipantStatus } from "../../../components/session/ParticipantStatus";
 import { NextActionRail } from "../../../components/session/NextActionRail";
 import { LocationCaptureForm } from "../../../components/location/LocationCaptureForm";
-import { LocationConfirmCard } from "../../../components/location/LocationConfirmCard";
+
 import { RankingInputsForm } from "../../../components/ranking/RankingInputsForm";
 import { RankedResultsList } from "../../../components/ranking/RankedResultsList";
 import { RankedSpotsMap } from "../../../components/ranking/RankedSpotsMap";
@@ -242,7 +242,7 @@ export default function JoinPage({ params }: JoinPageProps) {
   const reactionStatusByVenueId = buildReactionStatusByVenueId(reactions, participantId, partnerParticipantId);
 
   const flow = deriveSessionFlow({
-    myLocationConfirmed: Boolean(me?.locationConfirmedAt || confirmedAt),
+    myLocationConfirmed: Boolean(me?.locationConfirmedAt),
     partnerLocationConfirmed: Boolean(partner?.locationConfirmedAt),
     myPreferencesSaved: myPreferencesPersisted,
     partnerPreferencesSaved: Boolean(sync.snapshot?.rankingInputsReady),
@@ -434,20 +434,8 @@ export default function JoinPage({ params }: JoinPageProps) {
                               <LocationCaptureForm
                                 sessionId={sessionId}
                                 participantId={participantId}
-                                onDraftSaved={() => setDraftSaved(true)}
+onDraftSaved={() => setDraftSaved(true)}
                               />
-                                <LocationConfirmCard
-                                  sessionId={sessionId}
-                                  participantId={participantId}
-                                  draftReady={myDraftReady}
-                                  inputsReady={Boolean(sync.snapshot?.inputsReady)}
-                                  onConfirmed={(nextConfirmedAt) => setConfirmedAt(nextConfirmedAt)}
-                                />
-<p className={`status-badge ${confirmedAt ? "status-success" : "status-waiting"}`} role="status" aria-live="polite">
-                                  {confirmedAt
-                                    ? `Success: location confirmed at ${confirmedAt}. You can now set your preferences.`
-                                    : "Confirm your location to unlock preferences."}
-                                </p>
                             </div>
                           )}
 
