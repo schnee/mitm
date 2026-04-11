@@ -289,9 +289,7 @@ legend {
 }
 
 .session-progress-sticky {
-  position: sticky;
-  top: 0.5rem;
-  z-index: 10;
+  position: static;
 }
 
 .status-inline-partner {
@@ -319,6 +317,8 @@ legend {
 
 .map-container {
   min-height: 380px;
+  position: sticky;
+  top: 0.5rem;
 }
 
 .map-marker-grid {
@@ -337,6 +337,11 @@ legend {
   color: #113b66;
 }
 
+.marker-focused {
+  background: #ffedd5;
+  color: #9a3412;
+}
+
 .marker-shortlisted {
   background: #efe5ff;
   color: #4f2f7a;
@@ -348,8 +353,13 @@ legend {
 }
 
 .result-card-selected {
-  border-color: var(--secondary);
-  box-shadow: 0 0 0 2px rgba(47, 95, 133, 0.2);
+  background: #d9ecff;
+  color: #113b66;
+}
+
+.result-card-focused {
+  background: #ffedd5;
+  color: #9a3412;
 }
 
 .result-card-shortlisted {
@@ -368,8 +378,13 @@ legend {
 }
 
 .state-badge-selected {
-  background: rgba(59, 130, 246, 0.15);
-  color: var(--secondary);
+  background: #d9ecff;
+  color: #113b66;
+}
+
+.state-badge-focused {
+  background: #ffedd5;
+  color: #9a3412;
 }
 
 .state-badge-shortlisted {
@@ -406,7 +421,9 @@ legend {
 .map-list-layout {
   display: grid;
   gap: 0.75rem;
-  grid-template-rows: minmax(350px, 1fr) auto;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto;
+  align-items: start;
 }
 
 /* Provider map container */
@@ -458,6 +475,9 @@ legend {
 
   .map-list-layout {
     grid-template-columns: 1fr 1fr;
-    align-items: start;
+  }
+
+  .map-list-layout > .panel:first-child {
+    grid-column: 1 / -1;
   }
 }

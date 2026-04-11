@@ -115,6 +115,7 @@ export default function JoinPage({ params }: JoinPageProps) {
   const [reactionPendingVenueIds, setReactionPendingVenueIds] = useState<string[]>([]);
   const [localConfirmedPlace, setLocalConfirmedPlace] = useState<ConfirmedPlace | null>(null);
   const [selectedVenueId, setSelectedVenueId] = useState<string | null>(null);
+  const [focusedVenueId, setFocusedVenueId] = useState<string | null>(null);
   const [decisionStatus, setDecisionStatus] = useState("Idle: add a ranked spot to shortlist to begin deciding.");
   const { token } = use(params);
   const searchParams = useSearchParams();
@@ -508,8 +509,9 @@ export default function JoinPage({ params }: JoinPageProps) {
                                 shortlistVenueIds={shortlist.map((item) => item.venueId)}
                                 confirmedVenueId={confirmedPlace?.venueId ?? null}
                                 selectedVenueId={selectedVenueId}
+                                focusedVenueId={focusedVenueId}
                                 onMarkerSelect={(venueId) => setSelectedVenueId(venueId)}
-                                onVenueFocus={(venueId) => setSelectedVenueId(venueId)}
+                                onVenueFocus={(venueId) => setFocusedVenueId(venueId)}
                               />
 
                               <RankedResultsList
@@ -527,7 +529,8 @@ export default function JoinPage({ params }: JoinPageProps) {
                                 reactionPendingVenueIds={reactionPendingVenueIds}
                                 reactionStatusByVenueId={reactionStatusByVenueId}
                                 selectedVenueId={selectedVenueId}
-                                onVenueFocus={(venueId) => setSelectedVenueId(venueId)}
+                                focusedVenueId={focusedVenueId}
+                                onVenueFocus={(venueId) => setFocusedVenueId(venueId)}
                               />
                             </div>
                           )}

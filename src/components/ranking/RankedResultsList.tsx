@@ -25,6 +25,7 @@ export function RankedResultsList({
   reactionPendingVenueIds,
   reactionStatusByVenueId,
   selectedVenueId,
+  focusedVenueId,
   onVenueFocus
 }: {
   results: RankedVenue[];
@@ -37,6 +38,7 @@ export function RankedResultsList({
   reactionPendingVenueIds?: string[];
   reactionStatusByVenueId?: Record<string, string>;
   selectedVenueId?: string | null;
+  focusedVenueId?: string | null;
   onVenueFocus?: (venueId: string) => void;
 }) {
   const shortlistedSet = new Set(shortlistVenueIds ?? []);
@@ -63,12 +65,15 @@ export function RankedResultsList({
     }
   }, []);
 
-  const getCardState = (venueId: string): "confirmed" | "shortlisted" | "selected" | "default" => {
+  const getCardState = (venueId: string): "confirmed" | "shortlisted" | "focused" | "selected" | "default" => {
     if (confirmedSet.has(venueId)) {
       return "confirmed";
     }
     if (shortlistedSet.has(venueId)) {
       return "shortlisted";
+    }
+    if (focusedVenueId === venueId) {
+      return "focused";
     }
     if (selectedVenueId === venueId) {
       return "selected";
@@ -96,7 +101,7 @@ export function RankedResultsList({
               ref={setRef(result.venueId)}
               className={`result-card ${isSelected ? "result-card-selected" : ""} ${isShortlisted ? "result-card-shortlisted" : ""} ${isConfirmed ? "result-card-confirmed" : ""}`}
             >
-              {cardState !== "default" && (
+              {cardState !== "default" && cardState !== "focused" && (
                 <span className={`state-badge state-badge-${cardState}`}>
                   {cardState === "confirmed" ? "Confirmed" : cardState === "shortlisted" ? "Shortlisted" : "Selected"}
                 </span>

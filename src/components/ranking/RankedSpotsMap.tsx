@@ -4,7 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   APIProvider,
   Map,
-  Marker,
+  AdvancedMarker,
+  Pin,
   useMap
 } from "@vis.gl/react-google-maps";
 import type { RankedVenue } from "../../lib/api/session-client";
@@ -15,12 +16,16 @@ function markerClassName(input: {
   selectedVenueId: string | null;
   shortlistVenueIds: string[];
   confirmedVenueId: string | null;
+  focusedVenueId: string | null;
 }): string {
   if (input.confirmedVenueId === input.venueId) {
     return "marker-confirmed";
   }
   if (input.shortlistVenueIds.includes(input.venueId)) {
     return "marker-shortlisted";
+  }
+  if (input.focusedVenueId === input.venueId) {
+    return "marker-focused";
   }
   if (input.selectedVenueId === input.venueId) {
     return "marker-selected";
@@ -31,30 +36,30 @@ function markerClassName(input: {
 function AutoFitBounds({
   results,
   enabled,
-  selectedVenueId,
+  focusedVenueId,
   onVenueFocus
 }: {
   results: RankedVenue[];
   enabled: boolean;
-  selectedVenueId: string | null;
+  focusedVenueId: string | null;
   onVenueFocus?: (venueId: string) => void;
 }) {
   const map = useMap();
-  const prevSelectedRef = useRef<string | null>(null);
+  const prevFocusedRef = useRef<string | null>(null);
 
-  // Handle venue focus (pan to selected venue)
+  // Handle venue focus (pan to focused venue)
   useEffect(() => {
-    if (!map || !selectedVenueId || selectedVenueId === prevSelectedRef.current) {
+    if (!map || !focusedVenueId || focusedVenueId === prevFocusedRef.current) {
       return;
     }
     
-    const venue = results.find(r => r.venueId === selectedVenueId);
+    const venue = results.find(r => r.venueId === focusedVenueId);
     if (venue && venue.lat != null && venue.lng != null) {
       // Pan to venue while preserving current zoom
       map.panTo({ lat: venue.lat, lng: venue.lng });
-      prevSelectedRef.current = selectedVenueId;
+      prevFocusedRef.current = focusedVenueId;
     }
-  }, [map, selectedVenueId, results]);
+  }, [map, focusedVenueId, results]);
 
   // Auto-fit bounds on initial load
   useEffect(() => {
@@ -114,7 +119,8 @@ function FallbackMap({
           venueId: result.venueId,
           selectedVenueId,
           shortlistVenueIds,
-          confirmedVenueId
+          confirmedVenueId,
+          focusedVenueId: null
         });
         return (
           <button
@@ -145,6 +151,7 @@ export function RankedSpotsMap({
   shortlistVenueIds,
   confirmedVenueId,
   selectedVenueId,
+  focusedVenueId,
   onMarkerSelect,
   onVenueFocus
 }: {
@@ -152,6 +159,7 @@ export function RankedSpotsMap({
   shortlistVenueIds: string[];
   confirmedVenueId: string | null;
   selectedVenueId: string | null;
+  focusedVenueId?: string | null;
   onMarkerSelect: (venueId: string) => void;
   onVenueFocus?: (venueId: string) => void;
 }) {
@@ -227,6 +235,8 @@ export function RankedSpotsMap({
         return "#10b981";
       case "marker-shortlisted":
         return "#f59e0b";
+      case "marker-focused":
+        return "#f97316";
       case "marker-selected":
         return "#3b82f6";
       default:
@@ -285,7 +295,7 @@ export function RankedSpotsMap({
             zoomControl={true}
             streetViewControl={false}
           >
-            <AutoFitBounds results={results} enabled={mapLoaded && results.length > 0} selectedVenueId={selectedVenueId} onVenueFocus={onVenueFocus} />
+            <AutoFitBounds results={results} enabled={mapLoaded && results.length > 0} focusedVenueId={focusedVenueId ?? null} onVenueFocus={onVenueFocus} />
             {results.map((result, index) => {
               if (result.lat == null || result.lng == null) return null;
               
@@ -293,17 +303,20 @@ export function RankedSpotsMap({
                 venueId: result.venueId,
                 selectedVenueId,
                 shortlistVenueIds,
-                confirmedVenueId
+                confirmedVenueId,
+                focusedVenueId: focusedVenueId ?? null
               });
               const color = getMarkerColor(state);
 
               return (
-                <Marker
+                <AdvancedMarker
                   key={result.venueId}
                   position={{ lat: result.lat, lng: result.lng }}
                   title={result.name}
                   onClick={() => onMarkerSelect(result.venueId)}
-                />
+                >
+                  <Pin background={color} glyphColor={"#ffffff"} />
+                </AdvancedMarker>
               );
             })}
           </Map>
