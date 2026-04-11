@@ -86,32 +86,23 @@ a {
 /* Location capture map */
 .location-map-container {
   margin: 0.75rem 0;
-  min-height: 500px;
-  display: flex;
-  flex-direction: column;
-}
-
-.location-map-container .location-map {
-  flex: 1;
-  min-height: 500px;
-}
-
-.location-capture-section {
-  display: flex;
-  flex-direction: column;
-  min-height: 600px;
-}
-
-.location-capture-section .location-map-container {
-  flex: 1;
 }
 
 .location-map {
-  height: 100%;
+  height: 400px;
   width: 100%;
   border-radius: 10px;
   overflow: hidden;
   cursor: pointer;
+}
+
+.location-capture-section .btn-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.location-capture-section .btn-row button {
+  flex: 1;
 }
 
 .progress-table th,

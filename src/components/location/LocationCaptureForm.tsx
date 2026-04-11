@@ -41,11 +41,13 @@ export function LocationCaptureForm({
 }) {
   const [geoError, setGeoError] = useState<GeoErrorCode>(null);
   const [statusType, setStatusType] = useState<"idle" | "loading" | "success" | "error">("idle");
-  const [statusMessage, setStatusMessage] = useState("Set your location using the map below or use current location.");
+  const [statusMessage, setStatusMessage] = useState("");
   const [selectedLat, setSelectedLat] = useState<number | null>(null);
   const [selectedLng, setSelectedLng] = useState<number | null>(null);
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null);
-  const mapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+  const [showMap, setShowMap] = useState(false);
+  const mapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
+  const hasMapsKey = Boolean(mapsApiKey);
 
   useEffect(() => {
     if (!("geolocation" in navigator)) return;
@@ -144,17 +146,22 @@ export function LocationCaptureForm({
 
       <div className="btn-row">
         <button className="btn-secondary" type="button" onClick={useCurrentLocation}>
-          Use current location
+          Use current
         </button>
+        {hasMapsKey && (
+          <button className="btn-secondary" type="button" onClick={() => setShowMap(true)}>
+            Use map
+          </button>
+        )}
       </div>
 
       {geoError && (
         <p className="status-badge status-error" role="status" aria-live="polite">
-          {geoError === "PERMISSION_DENIED" ? "Location permission denied" : "Could not get location"}. Click the map instead.
+          {geoError === "PERMISSION_DENIED" ? "Location permission denied" : "Could not get location"}. Try the map instead.
         </p>
       )}
 
-      {mapsApiKey && (
+      {showMap ? (
         <div className="location-map-container">
           <p className="muted">Click map to set your location:</p>
           <APIProvider apiKey={mapsApiKey} solutionChannel="GMP_DEV">
@@ -163,6 +170,7 @@ export function LocationCaptureForm({
               defaultCenter={mapCenter ?? { lat: 30.2672, lng: -97.7431 }}
               defaultZoom={12}
               mapContainerClassName="location-map"
+              style={{ height: "400px", minHeight: "400px" }}
               gestureHandling="greedy"
               disableDefaultUI={false}
               fullscreenControl={true}
@@ -178,11 +186,13 @@ export function LocationCaptureForm({
             </Map>
           </APIProvider>
         </div>
-      )}
+      ) : null}
 
-      <p className={`status-badge ${statusClass}`} role="status" aria-live="polite">
-        {statusMessage}
-      </p>
+      {statusMessage && (
+        <p className={`status-badge ${statusClass}`} role="status" aria-live="polite">
+          {statusMessage}
+        </p>
+      )}
     </section>
   );
 }
