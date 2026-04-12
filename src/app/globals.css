@@ -560,4 +560,28 @@ legend {
   .map-list-layout > .panel:first-child {
     grid-column: 1 / -1;
   }
+
+  .setup-grid {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+
+  .setup-grid .map-container {
+    min-height: 300px;
+    height: 300px;
+  }
+
+  @media (max-width: 767px) {
+    .setup-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .setup-grid .preferences-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
 }

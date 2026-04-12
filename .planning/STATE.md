@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Phase 11 context gathered
-last_updated: "2026-04-10T13:39:08.301Z"
-last_activity: 2026-04-10
+stopped_at: Phase 12 verification
+last_updated: "2026-04-12T07:45:00.000Z"
+last_activity: 2026-04-12
 progress:
-  total_phases: 11
-  completed_phases: 10
-  total_plans: 30
-  completed_plans: 30
-  percent: 96
+  total_phases: 12
+  completed_phases: 11
+  total_plans: 32
+  completed_plans: 32
+  percent: 100
 ---
 
 # Project State
@@ -21,22 +21,22 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-10)
 
 **Core value:** Turn a slow, awkward "where should we meet?" negotiation into a fast and fair decision both people accept.
-**Current focus:** Phase 10 — session-continuity-state-persistence-hardening
+**Current focus:** Phase 12 — Unified Setup Flow
 
 ## Current Position
 
-Phase: 11
-Plan: Not started
-Status: Phase complete — ready for verification
-Last activity: 2026-04-10
+Phase: 12
+Plan: Complete
+Status: Deployed - verification in progress
+Last activity: 2026-04-12
 
-Progress: [██████████] 96%
+Progress: [████████████] 100%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 26
+- Total plans completed: 32
 - Average duration: TBD
 - Total execution time: TBD
 
@@ -52,11 +52,13 @@ Progress: [██████████] 96%
 | 6. UX Polish & Professional Experience | 3 | TBD | TBD |
 | 7. Shared Auto-Ranking & Synced Results | 3 | TBD | TBD |
 | 8. Mobile-First Guided Flow & Map-Driven Decisioning | 3 | 167 | 56 |
+| 11. Map-first Provider Integration | 3 | TBD | TBD |
+| 12. Unified Setup Flow | 2 | TBD | TBD |
 
 **Recent Trend:**
 
-- Last 5 plans: 08-01, 08-02, 08-03, 09-01, 09-02
-- Trend: Phase 9 verification recovery underway with foundational requirement evidence restored for phases 1-4
+- Last 5 plans: 12-01, 12-02, 11-01, 11-02, 11-03
+- Trend: Phase 12 unified setup complete, deployed to production
 
 *Updated after each plan completion*
 | Phase 07 P03 | 74 | 3 tasks | 7 files |
@@ -69,6 +71,11 @@ Progress: [██████████] 96%
 | Phase 10 P01 | 124 | 2 tasks | 6 files |
 | Phase 10 P02 | 3 | 2 tasks | 9 files |
 | Phase 10 P03 | 5 | 2 tasks | 2 files |
+| Phase 11 P01 | TBD | TBD | TBD |
+| Phase 11 P02 | TBD | TBD | TBD |
+| Phase 11 P03 | TBD | TBD | TBD |
+| Phase 12 P01 | TBD | TBD | TBD |
+| Phase 12 P02 | TBD | TBD | TBD |
 
 ## Accumulated Context
 
@@ -104,18 +111,28 @@ Recent decisions affecting current work:
 - [Phase 10]: Treat optimistic local flags as fallback only when canonical snapshot continuity has not hydrated yet.
 - [Phase 10]: Model reload continuity fixtures with participant locationDraftUpdatedAt and rankingInputsUpdatedAt timestamps.
 - [Phase 10]: Verify reload regressions on Pixel 5 and Desktop Safari while logging unrelated legacy failures as deferred.
+- [Phase 12]: Unified setup combines location + preferences in single step with SetupCard component.
+- [Phase 12]: Two-column layout: map left, preferences right (desktop), stacked on mobile.
+- [Phase 12]: Partner completion detection via partner.rankingInputsUpdatedAt timestamp.
 
 ### Pending Todos
 
-- None.
+- Phase 11 verification
+- Phase 12 verification
+- WebKit browser installation (blocked - requires sudo)
 
 ### Blockers/Concerns
 
-- Provider choice (places + routing) must be finalized early to avoid adapter rework.
+- WebKit not installed - E2E tests skip Safari/iPhone matrices
 - Cross-cloud environment parity (dev/stage/prod) needs early guardrails to avoid integration churn.
 
 ## Session Continuity
 
-Last session: 2026-04-10T13:39:08.298Z
-Stopped at: Phase 11 context gathered
-Resume file: .planning/phases/11-map-first-provider-integration-completion/11-CONTEXT.md
+Last session: 2026-04-12T07:40:00.000Z
+Stopped at: Phase 12 verification
+Resume file: None - in verification phase
+
+## Deployment
+
+- **API**: https://mitm-api-90430144741.us-central1.run.app
+- **Web**: https://mitm-web.schneeman.workers.dev / https://mmitm.giantmetalrooster.com
