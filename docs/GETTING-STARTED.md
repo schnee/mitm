@@ -58,11 +58,10 @@ npm run dev:web
 2. Click "Create session"
 3. Copy the invite URL
 4. Open the invite URL in Browser B (incognito)
-5. In both browsers, enter locations (or use manual coordinates)
-6. Set travel preferences (e.g., 70/30)
-7. Wait for ranked results
-8. Add places to shortlist
-9. Confirm final venue
+5. In both browsers, complete unified setup (location + travel preference + tags)
+6. Wait for shared suggestions
+7. Add places to shortlist
+8. Confirm final venue
 
 ## Next Steps
 
