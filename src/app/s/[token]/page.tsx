@@ -400,6 +400,10 @@ const mapStage: MapStage = confirmedPlace ? "confirm" : deriveMapStage(activeSte
 
         {state === "joined" && (
           <>
+            <header className="app-header">
+              <h1>Meet Me In The Middle</h1>
+              <p>Agree on a meet-up spot in minutes</p>
+            </header>
             <div className="map-first-layout">
               <section className="map-section">
                 <PersistentMap
