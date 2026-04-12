@@ -174,37 +174,43 @@ export function SetupCard({
         <p>Click the map to set your location, then choose your preferences below.</p>
       </header>
 
-      <div className="map-container" style={{ height: "280px", width: "100%", marginBottom: "1rem" }}>
-        <APIProvider apiKey={mapsApiKey}>
-          {mapCenter && (
-            <Map
-              defaultCenter={mapCenter}
-              defaultZoom={13}
-              mapId="location-capture-map"
-              style={{ width: "100%", height: "100%" }}
-            >
-              <MapClickHandler onMapClick={handleMapClick} />
-              {selectedLat !== null && selectedLng !== null && (
-                <AdvancedMarker position={{ lat: selectedLat, lng: selectedLng }}>
-                  <Pin background="#2563eb" glyphColor="#ffffff" />
-                </AdvancedMarker>
-              )}
-            </Map>
+      <div className="setup-grid">
+        <div className="map-container" style={{ height: "280px", width: "100%" }}>
+          <APIProvider apiKey={mapsApiKey}>
+            {mapCenter && (
+              <Map
+                defaultCenter={mapCenter}
+                defaultZoom={13}
+                mapId="location-capture-map"
+                style={{ width: "100%", height: "100%" }}
+                zoomControl={true}
+                streetViewControl={false}
+                mapTypeControl={false}
+                fullscreenControl={false}
+              >
+                <MapClickHandler onMapClick={handleMapClick} />
+                {selectedLat !== null && selectedLng !== null && (
+                  <AdvancedMarker position={{ lat: selectedLat, lng: selectedLng }}>
+                    <Pin background="#2563eb" glyphColor="#ffffff" />
+                  </AdvancedMarker>
+                )}
+              </Map>
+            )}
+          </APIProvider>
+        </div>
+
+        <div className="preferences-panel">
+          {geoError && (
+            <p className="status-badge status-error" role="status">
+              Could not get your location. Click the map to set it manually.
+            </p>
           )}
-        </APIProvider>
-      </div>
 
-      {geoError && (
-        <p className="status-badge status-error" role="status">
-          Could not get your location. Click the map to set it manually.
-        </p>
-      )}
+          <p className={`status-badge ${statusClass}`} role="status" aria-live="polite">
+            {statusMessage}
+          </p>
 
-      <p className={`status-badge ${statusClass}`} role="status" aria-live="polite">
-        {statusMessage}
-      </p>
-
-      <fieldset className="panel input-stack">
+          <fieldset className="panel input-stack">
         <legend>Travel split</legend>
         <label htmlFor="split-50-50">
           <input
@@ -259,16 +265,18 @@ export function SetupCard({
       </fieldset>
 
       <div className="btn-row">
-        <button
-          className="btn-primary"
-          type="button"
-          disabled={selectedLat === null || statusType === "loading"}
-          onClick={() => {
-            void submit();
-          }}
-        >
-          Continue
-        </button>
+          <button
+            className="btn-primary"
+            type="button"
+            disabled={selectedLat === null || statusType === "loading"}
+            onClick={() => {
+              void submit();
+            }}
+          >
+            Continue
+          </button>
+        </div>
+        </div>
       </div>
     </section>
   );
