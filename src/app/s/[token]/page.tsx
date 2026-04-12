@@ -18,13 +18,12 @@ import {
 import { useSessionSync } from "../../../hooks/useSessionSync";
 
 import { ParticipantStatus } from "../../../components/session/ParticipantStatus";
-import { NextActionRail } from "../../../components/session/NextActionRail";
-import { SetupCard } from "../../../components/setup/SetupCard";
-import { RankedResultsList } from "../../../components/ranking/RankedResultsList";
-import { RankedSpotsMap } from "../../../components/ranking/RankedSpotsMap";
-import { ShortlistPanel } from "../../../components/decision/ShortlistPanel";
-import { ConfirmedPlaceCard } from "../../../components/decision/ConfirmedPlaceCard";
-import { deriveSessionFlow } from "../../../lib/session-flow";
+import { SetupOverlay } from "../../../components/overlays/SetupOverlay";
+import { PersistentMap, type MapStage } from "../../../components/map/PersistentMap";
+import { SpotsListOverlay } from "../../../components/overlays/SpotsListOverlay";
+import { ShortlistOverlay } from "../../../components/overlays/ShortlistOverlay";
+import { ConfirmOverlay } from "../../../components/overlays/ConfirmOverlay";
+import { deriveSessionFlow, deriveMapStage } from "../../../lib/session-flow";
 import { deriveDraftReady, derivePreferencesSaved } from "../../../lib/session-continuity";
 
 type JoinState = "joining" | "joined" | "join_error";
@@ -113,6 +112,7 @@ export default function JoinPage({ params }: JoinPageProps) {
   const [reactionPendingVenueIds, setReactionPendingVenueIds] = useState<string[]>([]);
   const [localConfirmedPlace, setLocalConfirmedPlace] = useState<ConfirmedPlace | null>(null);
   const [selectedVenueId, setSelectedVenueId] = useState<string | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [focusedVenueId, setFocusedVenueId] = useState<string | null>(null);
   const [decisionStatus, setDecisionStatus] = useState("Idle: add a ranked spot to shortlist to begin deciding.");
   const { token } = use(params);
@@ -379,6 +379,20 @@ export default function JoinPage({ params }: JoinPageProps) {
   const syncStatusClass =
     sync.syncState === "reconnecting" || sync.error ? "status-error" : sync.syncState === "syncing" ? "status-loading" : "status-success";
 
+const mapStage: MapStage = confirmedPlace ? "confirm" : deriveMapStage(activeStepId);
+  const confirmedVenueId = confirmedPlace ? confirmedPlace.venueId : null;
+  
+  const hasSetupCompleted = me?.locationConfirmedAt != null || draftSaved || myPreferencesSaved || rankedResults.length > 0;
+  const userLocation = me?.lat && me?.lng ? { lat: me.lat, lng: me.lng } : null;
+
+  const handleMapClick = (lat: number, lng: number) => {
+    if (mapStage === "setup") {
+      setSelectedLocation({ lat, lng });
+    } else if (mapStage === "spots" || mapStage === "shortlist" || mapStage === "confirm") {
+      setSelectedVenueId(`${lat}-${lng}`);
+    }
+  };
+
   return (
     <main>
       <div className="app-shell page-stack">
@@ -386,158 +400,77 @@ export default function JoinPage({ params }: JoinPageProps) {
 
         {state === "joined" && (
           <>
-            <section className="panel stage" aria-labelledby="session-stage-title">
-              <header className="section-header">
-                <h1 id="session-stage-title">Meet Me In The Middle</h1>
-                <p>Session in progress. Work through each stage: location, preferences, shortlist, and final confirmation.</p>
-              </header>
-              <p className={`status-badge ${syncStatusClass}`} role="status" aria-live="polite">
-                {sync.error
-                  ? `Error: sync issue detected (${sync.error}). Actions still work; updates may be delayed.`
-                  : sync.syncState === "reconnecting"
-                    ? "Error: reconnecting to live session updates."
-                    : sync.syncState === "syncing"
-                      ? "Loading: syncing session updates."
-                      : "Success: live sync connected."}
-              </p>
-              <p className="status-badge status-success">Success: joined. Continue to location setup.</p>
-            </section>
-
-            {sync.snapshot && <ParticipantStatus participants={sync.snapshot.participants} />}
-
-            {sessionId && participantId && (
-              <>
-                <section className="guided-stepper" aria-label="Guided session steps">
-                  {steps.map((step) => {
-                    const isActive = activeStepId === step.id;
-                    return (
-                      <section
-                        key={step.id}
-                        className={`panel guided-step ${isActive ? "active" : ""}`}
-                        data-step-id={step.id}
-                        data-step-active={isActive ? "true" : "false"}
-                      >
-                      <header className="section-header">
-                        <h2>{step.title}</h2>
-                      </header>
-
-                      {step.completed && !isActive && step.id !== "spots" && rankedResults.length === 0 ? (
-                        <p className="step-summary step-summary-complete">{step.summary}</p>
-                      ) : (
-                        <>
-                          {step.id === "location" && (
-                            <div className="stage">
-                              <SetupCard
-                                sessionId={sessionId}
-                                participantId={participantId}
-                                onSetupComplete={({ rankingInputsReady, rankingLifecycle }) => {
-                                  setDraftSaved(true);
-                                  setMyPreferencesSaved(true);
-                                  setRankingStatus(
-                                    rankingLifecycle.state === "waiting"
-                                      ? "Setup complete. Waiting for your partner to finish."
-                                      : "Setup complete! Generating shared suggestions..."
-                                  );
-                                }}
-                              />
-                            </div>
-                          )}
-
-{step.id === "spots" && (
-                            <div className="stage map-list-layout">
-                              <section className="panel stage" aria-labelledby="run-ranking-title">
-                                <h2 id="run-ranking-title">Shared preferences status</h2>
-                                <p className={`status-badge ${sharedLifecycleStatusClass}`} role="status" aria-live="polite">
-                                  {sharedLifecycleStatus}
-                                </p>
-                                <div className="btn-row">
-                                  <button
-                                    className="btn-secondary"
-                                    type="button"
-                                    disabled={!Boolean(sync.snapshot?.rankingInputsReady) || rankingRefreshPending}
-                                    onClick={() => {
-                                      void refreshRanking();
-                                    }}
-                                  >
-                                    Refresh suggestions
-                                  </button>
-                                </div>
-                                <p className={`status-badge ${rankingStatusClass}`} role="status" aria-live="polite">
-                                  {rankingStatus}
-                                </p>
-                              </section>
-
-                              <RankedSpotsMap
-                                results={rankedResults}
-                                shortlistVenueIds={shortlist.map((item) => item.venueId)}
-                                confirmedVenueId={confirmedPlace?.venueId ?? null}
-                                selectedVenueId={selectedVenueId}
-                                focusedVenueId={focusedVenueId}
-                                onMarkerSelect={(venueId) => setSelectedVenueId(venueId)}
-                                onVenueFocus={(venueId) => setFocusedVenueId(venueId)}
-                              />
-
-                              <RankedResultsList
-                                results={rankedResults}
-                                onAddToShortlist={(venue) => {
-                                  void addToShortlist(venue);
-                                }}
-                                shortlistVenueIds={shortlist.map((item) => item.venueId)}
-                                confirmedVenueId={confirmedPlace?.venueId ?? null}
-                                reactions={reactions}
-                                participantId={participantId ?? undefined}
-                                onReact={(venue, reaction) => {
-                                  void reactToVenue(venue, reaction);
-                                }}
-                                reactionPendingVenueIds={reactionPendingVenueIds}
-                                reactionStatusByVenueId={reactionStatusByVenueId}
-                                selectedVenueId={selectedVenueId}
-                                focusedVenueId={focusedVenueId}
-                                onVenueFocus={(venueId) => setFocusedVenueId(venueId)}
-                              />
-                            </div>
-                          )}
-
-{step.id === "shortlist" && (
-                            <div className="stage">
-                              <p className={`status-badge ${decisionStatusClass}`} role="status" aria-live="polite">
-                                {decisionStatus}
-                              </p>
-                              <ShortlistPanel
-                                shortlist={shortlist}
-                                confirmedPlace={confirmedPlace}
-                                onConfirm={(venueId) => {
-                                  void confirmShortlistedVenue(venueId);
-                                }}
-                              />
-                            </div>
-                          )}
-
-{step.id === "confirm" && (
-                            <div className="stage">
-                              {confirmedPlace ? (
-                                <ConfirmedPlaceCard confirmedPlace={confirmedPlace} />
-                              ) : (
-                                <p className="status-badge status-waiting">Waiting: select a shortlisted spot to confirm.</p>
-                              )}
-                            </div>
-                          )}
-                        </>
-                      )}
-                      </section>
-                    );
-                  })}
-                </section>
-                <NextActionRail
-                  label={nextActionLabel}
-                  status={nextActionStatus}
-                  onClick={() => {
-                    const active = document.querySelector<HTMLElement>(`[data-step-id="${activeStepId}"]`);
-                    active?.scrollIntoView({ behavior: "smooth", block: "start" });
-                  }}
+            <div className="map-first-layout">
+              <section className="map-section">
+                <PersistentMap
+                  stage={mapStage}
+                  userLocation={userLocation}
+                  clickedLocation={selectedLocation}
+                  results={rankedResults}
+                  shortlistVenueIds={shortlist.map((item) => item.venueId)}
+                  confirmedVenueId={confirmedPlace?.venueId ?? null}
+                  confirmedVenueLocation={confirmedPlace ? { lat: confirmedPlace.lat, lng: confirmedPlace.lng } : null}
+                  selectedVenueId={selectedVenueId}
+                  focusedVenueId={focusedVenueId}
+                  onMarkerSelect={(venueId) => setSelectedVenueId(venueId)}
+                  onVenueFocus={(venueId) => setFocusedVenueId(venueId)}
+                  onMapClick={handleMapClick}
                 />
-              </>
-            )}
+              </section>
+
+              <aside className="overlay-section">
+                {mapStage === "setup" && !hasSetupCompleted && sessionId && participantId ? (
+                  <SetupOverlay
+                    sessionId={sessionId}
+                    participantId={participantId}
+                    selectedLocation={selectedLocation}
+                    onSetupComplete={({ rankingInputsReady, rankingLifecycle }) => {
+                      setDraftSaved(true);
+                      setMyPreferencesSaved(true);
+                      setRankingStatus(
+                        rankingLifecycle.state === "waiting"
+                          ? "Setup complete. Waiting for your partner to finish."
+                          : "Setup complete! Generating shared suggestions..."
+                      );
+                    }}
+                  />
+                ) : null}
+
+                {mapStage === "spots" && !confirmedPlace && (
+                  <SpotsListOverlay
+                    results={rankedResults}
+                    shortlistVenueIds={shortlist.map((item) => item.venueId)}
+                    confirmedVenueId={confirmedVenueId}
+                    reactions={reactions}
+                    participantId={participantId ?? undefined}
+                    reactionPendingVenueIds={reactionPendingVenueIds}
+                    reactionStatusByVenueId={reactionStatusByVenueId}
+                    selectedVenueId={selectedVenueId}
+                    focusedVenueId={focusedVenueId}
+                    onAddToShortlist={addToShortlist}
+                    onReact={reactToVenue}
+                    onVenueFocus={(venueId) => setFocusedVenueId(venueId)}
+                    rankingStatus={rankingStatus}
+                    onRefresh={refreshRanking}
+                    refreshDisabled={!Boolean(sync.snapshot?.rankingInputsReady) || rankingRefreshPending}
+                    showRefresh={true}
+                  />
+                )}
+
+                {(shortlist.length > 0 || mapStage === "shortlist") && !confirmedPlace && (
+                  <ShortlistOverlay
+                    shortlist={shortlist}
+                    confirmedPlace={confirmedPlace}
+                    onConfirm={confirmShortlistedVenue}
+                    decisionStatus={decisionStatus}
+                  />
+                )}
+
+                {confirmedPlace && (
+                  <ConfirmOverlay confirmedPlace={confirmedPlace} />
+                )}
+              </aside>
+            </div>
           </>
         )}
 

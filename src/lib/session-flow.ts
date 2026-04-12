@@ -1,4 +1,5 @@
 export type SessionStepId = "location" | "spots" | "shortlist" | "confirm";
+export type MapStage = "setup" | "spots" | "shortlist" | "confirm";
 
 export interface SessionFlowStep {
   id: SessionStepId;
@@ -25,7 +26,7 @@ export function deriveSessionFlow(input: DeriveSessionFlowInput): { activeStepId
   // Unified setup: preferences are saved with location in single step
   const preferencesCompleted = input.myPreferencesSaved || input.myLocationConfirmed;
   const partnerSetupComplete = input.partnerPreferencesSaved || input.partnerLocationConfirmed;
-  const spotsCompleted = input.rankedResultsCount > 0 || Boolean(input.confirmedVenueId);
+  const spotsCompleted = false; // Never auto-complete - user must explicitly select
   const shortlistCompleted = input.shortlistCount > 0 || Boolean(input.confirmedVenueId);
   const confirmCompleted = Boolean(input.confirmedVenueId);
   const spotsBlockedBy: "self" | "partner" | null = !locationCompleted
@@ -84,4 +85,11 @@ export function deriveSessionFlow(input: DeriveSessionFlowInput): { activeStepId
     activeStepId: activeStep ?? "confirm",
     steps
   };
+}
+
+export function deriveMapStage(step: SessionStepId): MapStage {
+  if (step === "location") return "setup";
+  if (step === "spots") return "spots";
+  if (step === "shortlist") return "shortlist";
+  return "confirm";
 }
