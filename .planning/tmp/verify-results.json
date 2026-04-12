@@ -1,0 +1,66 @@
+{
+  "verification_results": [
+    {
+      "doc_path": "README.md",
+      "claims_checked": 5,
+      "passed": 5,
+      "failed": 0,
+      "status": "verified"
+    },
+    {
+      "doc_path": "docs/ARCHITECTURE.md",
+      "claims_checked": 12,
+      "passed": 11,
+      "failed": 1,
+      "status": "failed",
+      "failures": [
+        {
+          "line": 62,
+          "claim": "State machine: draft → location_pending → preferences_pending → ranking → decision → confirmed",
+          "expected": "Actual state machine: created → joined → locating → ranked → confirmed → expired",
+          "actual": "Documented state machine has incorrect states"
+        }
+      ]
+    },
+    {
+      "doc_path": "docs/CONFIGURATION.md",
+      "claims_checked": 8,
+      "passed": 8,
+      "failed": 0,
+      "status": "verified"
+    },
+    {
+      "doc_path": "docs/GETTING-STARTED.md",
+      "claims_checked": 6,
+      "passed": 6,
+      "failed": 0,
+      "status": "verified"
+    },
+    {
+      "doc_path": "docs/DEVELOPMENT.md",
+      "claims_checked": 6,
+      "passed": 6,
+      "failed": 0,
+      "status": "verified"
+    },
+    {
+      "doc_path": "docs/TESTING.md",
+      "claims_checked": 8,
+      "passed": 8,
+      "failed": 0,
+      "status": "verified"
+    },
+    {
+      "doc_path": "docs/deployment/production-cloud-run-cloudflare.md",
+      "claims_checked": 6,
+      "passed": 6,
+      "failed": 0,
+      "status": "verified"
+    }
+  ],
+  "review_results": [],
+  "total_checked": 51,
+  "total_passed": 50,
+  "total_failed": 1,
+  "VERIFY_markers": 0
+}
