@@ -399,6 +399,16 @@ Plans:
 - [x] 11-02-PLAN.md — Implement bidirectional map/list sync, marker click scrolls to list, list focus pans to marker, preserve selection.
 - [x] 11-03-PLAN.md — Marker state hierarchy, accessibility (keyboard/live-region), failure handling (+timeout), telemetry events.
 
+### Phase 12: Unified Setup Flow
+**Goal**: Combine location capture and meetup preferences into a single "setup" step, reducing friction.
+**Depends on**: Phase 11
+**Requirements**: UX-25
+**Gap Closure**: UX improvement - combines two steps into one for faster flow completion.
+**Plans**: 2 plans
+Plans:
+- [ ] 12-01-PLAN.md — Create unified SetupCard component that combines location capture + preferences.
+- [ ] 12-02-PLAN.md — Integrate SetupCard into session page and update session-flow to 4 steps.
+
 ## Progress
 
 | Phase | Plans Complete | Status | Completed |
@@ -414,3 +424,4 @@ Plans:
 | 9. Verification Coverage & Traceability Recovery | 0/0 | Planned | - |
 | 10. Session Continuity & State Persistence Hardening | 3/3 | Complete    | 2026-04-10 |
 | 11. Map-First Provider Integration Completion | 3/3 | Planned | 11-01, 11-02, 11-03 |
+| 12. Unified Setup Flow | 2/2 | Planned | 12-01, 12-02 |
