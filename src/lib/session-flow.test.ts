@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { deriveSessionFlow } from "./session-flow";
 
 describe("deriveSessionFlow", () => {
-  it("keeps fixed step order and single active location step initially", () => {
+  it("keeps fixed step order with unified setup initially", () => {
     const flow = deriveSessionFlow({
       myLocationConfirmed: false,
       partnerLocationConfirmed: false,
@@ -14,13 +14,13 @@ describe("deriveSessionFlow", () => {
     });
 
     expect(flow.activeStepId).toBe("location");
-    expect(flow.steps.map((step) => step.id)).toEqual(["location", "preferences", "spots", "shortlist", "confirm"]);
+    expect(flow.steps.map((step) => step.id)).toEqual(["location", "spots", "shortlist", "confirm"]);
   });
 
-  it("collapses completed location with summary and advances to preferences", () => {
+  it("advances to spots after location setup is complete", () => {
     const flow = deriveSessionFlow({
       myLocationConfirmed: true,
-      partnerLocationConfirmed: true,
+      partnerLocationConfirmed: false,
       myPreferencesSaved: false,
       partnerPreferencesSaved: false,
       rankedResultsCount: 0,
@@ -28,14 +28,15 @@ describe("deriveSessionFlow", () => {
       confirmedVenueId: null
     });
 
-    expect(flow.activeStepId).toBe("preferences");
-    expect(flow.steps.find((step) => step.id === "location")?.summary).toBe("Location: Confirmed");
+    expect(flow.activeStepId).toBe("spots");
+    expect(flow.steps.find((step) => step.id === "location")?.completed).toBe(true);
+    expect(flow.steps.find((step) => step.id === "location")?.summary).toBe("Setup: Complete");
   });
 
-  it("keeps partner blocker ownership when only my preferences are saved", () => {
+  it("blocks spots when partner has not completed setup", () => {
     const flow = deriveSessionFlow({
       myLocationConfirmed: true,
-      partnerLocationConfirmed: true,
+      partnerLocationConfirmed: false,
       myPreferencesSaved: true,
       partnerPreferencesSaved: false,
       rankedResultsCount: 0,
@@ -45,10 +46,25 @@ describe("deriveSessionFlow", () => {
 
     expect(flow.activeStepId).toBe("spots");
     expect(flow.steps.find((step) => step.id === "spots")?.blockedBy).toBe("partner");
-    expect(flow.steps.find((step) => step.id === "spots")?.summary).toBe("Spots: Waiting for partner preferences");
+    expect(flow.steps.find((step) => step.id === "spots")?.summary).toBe("Spots: Waiting for partner setup");
   });
 
-  it("keeps confirm as active after shortlist when waiting on self", () => {
+  it("allows spots progression when both have completed setup", () => {
+    const flow = deriveSessionFlow({
+      myLocationConfirmed: true,
+      partnerLocationConfirmed: true,
+      myPreferencesSaved: true,
+      partnerPreferencesSaved: true,
+      rankedResultsCount: 0,
+      shortlistCount: 0,
+      confirmedVenueId: null
+    });
+
+    expect(flow.activeStepId).toBe("spots");
+    expect(flow.steps.find((step) => step.id === "spots")?.blockedBy).toBe(null);
+  });
+
+  it("keeps confirm as active after shortlist", () => {
     const flow = deriveSessionFlow({
       myLocationConfirmed: true,
       partnerLocationConfirmed: true,

@@ -19,9 +19,7 @@ import { useSessionSync } from "../../../hooks/useSessionSync";
 
 import { ParticipantStatus } from "../../../components/session/ParticipantStatus";
 import { NextActionRail } from "../../../components/session/NextActionRail";
-import { LocationCaptureForm } from "../../../components/location/LocationCaptureForm";
-
-import { RankingInputsForm } from "../../../components/ranking/RankingInputsForm";
+import { SetupCard } from "../../../components/setup/SetupCard";
 import { RankedResultsList } from "../../../components/ranking/RankedResultsList";
 import { RankedSpotsMap } from "../../../components/ranking/RankedSpotsMap";
 import { ShortlistPanel } from "../../../components/decision/ShortlistPanel";
@@ -245,7 +243,7 @@ export default function JoinPage({ params }: JoinPageProps) {
     myLocationConfirmed: Boolean(me?.locationConfirmedAt),
     partnerLocationConfirmed: Boolean(partner?.locationConfirmedAt),
     myPreferencesSaved: myPreferencesPersisted,
-    partnerPreferencesSaved: Boolean(sync.snapshot?.rankingInputsReady),
+    partnerPreferencesSaved: Boolean(partner?.rankingInputsUpdatedAt),
     rankedResultsCount: rankedResults.length,
     shortlistCount: shortlist.length,
     confirmedVenueId: confirmedPlace?.venueId ?? null
@@ -254,14 +252,12 @@ export default function JoinPage({ params }: JoinPageProps) {
 
   const nextActionLabel =
     activeStepId === "location"
-      ? "Confirm location"
-      : activeStepId === "preferences"
-        ? "Save preferences"
-        : activeStepId === "spots"
-          ? "Review ranked spots"
-          : activeStepId === "shortlist"
-            ? "Pick shortlist spot"
-            : "Confirm final place";
+      ? "Complete setup"
+      : activeStepId === "spots"
+        ? "Review ranked spots"
+        : activeStepId === "shortlist"
+          ? "Pick shortlist spot"
+          : "Confirm final place";
 
   const nextActionStatus: "idle" | "loading" | "waiting" | "success" | "error" =
     rankingLifecycleState === "failed"
@@ -431,34 +427,19 @@ export default function JoinPage({ params }: JoinPageProps) {
                         <>
                           {step.id === "location" && (
                             <div className="stage">
-                              <LocationCaptureForm
+                              <SetupCard
                                 sessionId={sessionId}
                                 participantId={participantId}
-onDraftSaved={() => setDraftSaved(true)}
+                                onSetupComplete={({ rankingInputsReady, rankingLifecycle }) => {
+                                  setDraftSaved(true);
+                                  setMyPreferencesSaved(true);
+                                  setRankingStatus(
+                                    rankingLifecycle.state === "waiting"
+                                      ? "Setup complete. Waiting for your partner to finish."
+                                      : "Setup complete! Generating shared suggestions..."
+                                  );
+                                }}
                               />
-                            </div>
-                          )}
-
-                          {step.id === "preferences" && (
-                            <div className="stage">
-                              {Boolean(me?.locationConfirmedAt) ? (
-                                <RankingInputsForm
-                                  sessionId={sessionId}
-                                  participantId={participantId}
-                                  onSaved={({ rankingLifecycle }) => {
-                                    setMyPreferencesSaved(true);
-                                    setRankingStatus(
-                                      rankingLifecycle.state === "waiting"
-                                        ? "Waiting: preferences saved. Waiting for your partner to finish."
-                                        : "Loading: preferences saved. Generating shared suggestions."
-                                    );
-                                  }}
-                                />
-                              ) : (
-                                <p className="status-badge status-waiting" role="status" aria-live="polite">
-                                  Waiting for location: confirm your location in the previous step before setting preferences.
-                                </p>
-                              )}
                             </div>
                           )}
 

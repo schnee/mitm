@@ -1,4 +1,4 @@
-export type SessionStepId = "location" | "preferences" | "spots" | "shortlist" | "confirm";
+export type SessionStepId = "location" | "spots" | "shortlist" | "confirm";
 
 export interface SessionFlowStep {
   id: SessionStepId;
@@ -18,38 +18,35 @@ export interface DeriveSessionFlowInput {
   confirmedVenueId: string | null;
 }
 
-const STEP_ORDER: SessionStepId[] = ["location", "preferences", "spots", "shortlist", "confirm"];
+const STEP_ORDER: SessionStepId[] = ["location", "spots", "shortlist", "confirm"];
 
 export function deriveSessionFlow(input: DeriveSessionFlowInput): { activeStepId: SessionStepId; steps: SessionFlowStep[] } {
   const locationCompleted = input.myLocationConfirmed;
-  const preferencesCompleted = input.myPreferencesSaved;
+  // Unified setup: preferences are saved with location in single step
+  const preferencesCompleted = input.myPreferencesSaved || input.myLocationConfirmed;
+  const partnerSetupComplete = input.partnerPreferencesSaved || input.partnerLocationConfirmed;
   const spotsCompleted = input.rankedResultsCount > 0 || Boolean(input.confirmedVenueId);
   const shortlistCompleted = input.shortlistCount > 0 || Boolean(input.confirmedVenueId);
   const confirmCompleted = Boolean(input.confirmedVenueId);
-  const spotsBlockedBy: "self" | "partner" | null = !preferencesCompleted
-    ? input.partnerPreferencesSaved
+  const spotsBlockedBy: "self" | "partner" | null = !locationCompleted
+    ? partnerSetupComplete
       ? "self"
       : "partner"
     : spotsCompleted
       ? null
-      : input.partnerPreferencesSaved
-        ? "self"
-        : "partner";
+      : locationCompleted && partnerSetupComplete
+        ? null
+        : partnerSetupComplete
+          ? "self"
+          : "partner";
 
   const steps: SessionFlowStep[] = [
     {
       id: "location",
-      title: "Location",
+      title: "Setup",
       completed: locationCompleted,
       blockedBy: locationCompleted ? null : "self",
-      summary: locationCompleted ? "Location: Confirmed" : "Location: Waiting"
-    },
-    {
-      id: "preferences",
-      title: "Preferences",
-      completed: preferencesCompleted,
-      blockedBy: preferencesCompleted ? null : "self",
-      summary: preferencesCompleted ? "Preferences: Saved" : "Preferences: Waiting"
+      summary: locationCompleted ? "Setup: Complete" : "Setup: Waiting"
     },
     {
       id: "spots",
@@ -59,7 +56,7 @@ export function deriveSessionFlow(input: DeriveSessionFlowInput): { activeStepId
       summary: spotsCompleted
         ? "Spots: map + list synced"
         : spotsBlockedBy === "partner"
-          ? "Spots: Waiting for partner preferences"
+          ? "Spots: Waiting for partner setup"
           : "Spots: Waiting"
     },
     {
