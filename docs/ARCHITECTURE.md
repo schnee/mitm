@@ -59,7 +59,7 @@ Located in `services/api/src/`, provides REST endpoints:
 ### Modules
 
 **Session Module** (`services/api/src/modules/session/`)
-- State machine: `draft` → `location_pending` → `preferences_pending` → `ranking` → `decision` → `confirmed`
+- Lifecycle: `created` → `joined` → `locating` → `ranked` → `confirmed` → `expired`
 - Participant tracking (host + invitee)
 - Session persistence (in-memory for MVP)
 
