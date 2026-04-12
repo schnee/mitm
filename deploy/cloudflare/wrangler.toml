@@ -9,4 +9,4 @@ directory = "../../.open-next/assets"
 binding = "ASSETS"
 
 [vars]
-NEXT_PUBLIC_API_BASE_URL = "https://mitm-api-jird3i3t7a-uc.a.run.app"
+NEXT_PUBLIC_API_BASE_URL = "https://mitm-api-90430144741.us-central1.run.app"
