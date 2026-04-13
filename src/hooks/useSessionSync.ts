@@ -8,6 +8,7 @@ import {
   type SessionEventResponse,
   type SessionSnapshotResponse
 } from "../lib/api/session-client";
+import { API_BASE_URL, FALLBACK_POLLING_INTERVAL_MS } from "../lib/env";
 
 export type SyncState = "syncing" | "live" | "reconnecting";
 
@@ -195,7 +196,7 @@ export function useSessionSync(sessionId: string | null) {
       void pollOnce();
       pollIntervalId = window.setInterval(() => {
         void pollOnce();
-      }, 1000);
+      }, FALLBACK_POLLING_INTERVAL_MS);
     };
 
     const subscribe = async (cursor?: string) => {
@@ -210,7 +211,7 @@ export function useSessionSync(sessionId: string | null) {
 
       const sinceQuery = cursor ? `?since=${encodeURIComponent(cursor)}` : "";
       eventSource = new EventSource(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080"}/v1/sessions/${stableSessionId}/events${sinceQuery}`
+        `${API_BASE_URL}/v1/sessions/${stableSessionId}/events${sinceQuery}`
       );
 
       eventSource.onopen = () => {
