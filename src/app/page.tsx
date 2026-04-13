@@ -29,7 +29,7 @@ export default function HostPage() {
   };
 
   const statusCopyByState: Record<HostState, string> = {
-    idle: "Idle: start a session when you are ready.",
+    idle: "Find a middle to meet up.",
     creating: "Loading: creating your shared session now.",
     created: "",
     error: "Error: unable to create session. Please retry."
@@ -120,9 +120,9 @@ export default function HostPage() {
                 void handleCreateSession();
               }}
               disabled={state === "creating"}
-              aria-label="Create session"
+              aria-label="Find a middle"
             >
-              {state === "creating" ? "Creating session..." : "Create session"}
+              {state === "creating" ? "Finding a middle..." : "Find a middle"}
             </button>
           </div>
 
@@ -136,7 +136,7 @@ export default function HostPage() {
         {state === "created" && createdSession && (
           <section className="panel startup-links" aria-labelledby="session-ready-title">
             <header className="section-header">
-              <h2 id="session-ready-title">Session ready</h2>
+              <h2 id="session-ready-title">Let's Go!</h2>
               <p>Copy the invite link and send it to the other person, then continue as host.</p>
             </header>
             <label>

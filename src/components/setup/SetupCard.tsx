@@ -211,40 +211,26 @@ export function SetupCard({
           </p>
 
           <fieldset className="panel input-stack">
-        <legend>Travel split</legend>
-        <label htmlFor="split-50-50">
+        <legend>Travel willingness</legend>
+        <div className="slider-container">
           <input
-            id="split-50-50"
-            type="radio"
+            type="range"
+            id="split-slider"
             name="split"
-            value="50_50"
-            checked={split === "50_50"}
-            onChange={() => setSplit("50_50")}
+            min="50"
+            max="100"
+            value={parseInt(split.split("_")[0])}
+            onChange={(e) => {
+              const value = parseInt(e.target.value);
+              setSplit(`${value}_${100 - value}`);
+            }}
           />
-          50/50
-        </label>
-        <label htmlFor="split-60-40">
-          <input
-            id="split-60-40"
-            type="radio"
-            name="split"
-            value="60_40"
-            checked={split === "60_40"}
-            onChange={() => setSplit("60_40")}
-          />
-          60/40
-        </label>
-        <label htmlFor="split-70-30">
-          <input
-            id="split-70-30"
-            type="radio"
-            name="split"
-            value="70_30"
-            checked={split === "70_30"}
-            onChange={() => setSplit("70_30")}
-          />
-          70/30
-        </label>
+          <div className="slider-labels">
+            <span>50%</span>
+            <span className="slider-value">{split.split("_")[0]}% / {split.split("_")[1]}%</span>
+            <span>100%</span>
+          </div>
+        </div>
       </fieldset>
 
       <fieldset className="panel input-stack">

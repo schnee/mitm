@@ -26,7 +26,7 @@ export interface ParticipantRecord {
   locationDraftUpdatedAt?: string;
   locationConfirmedAt?: string;
   locationExpireAt?: string;
-  willingnessSplit?: "50_50" | "60_40" | "70_30";
+  willingnessSplit?: string;
   preferenceTags?: Array<"coffee" | "lunch" | "dinner" | "cocktails" | "dessert" | "museum" | "walk_and_talk" | "vintage_shops" | "quiet">;
   rankingInputsUpdatedAt?: string;
 }

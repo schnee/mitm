@@ -1,16 +1,14 @@
 import type { PreferenceTag, ScoredCandidate, WillingnessSplit } from "./contracts";
 
-export const SCORE_WEIGHTS: Record<WillingnessSplit, { fairnessWeight: number; preferenceWeight: number }> = {
-  "50_50": { fairnessWeight: 0.7, preferenceWeight: 0.3 },
-  "60_40": { fairnessWeight: 0.8, preferenceWeight: 0.2 },
-  "70_30": { fairnessWeight: 0.8, preferenceWeight: 0.2 }
-};
+function parseSplit(split: WillingnessSplit): { first: number; second: number } {
+  const [first, second] = split.split("_").map(Number);
+  return { first, second };
+}
 
-const TARGET_RATIO_BY_SPLIT: Record<WillingnessSplit, number> = {
-  "50_50": 0.5,
-  "60_40": 0.6,
-  "70_30": 0.7
-};
+function computeTargetRatio(split: WillingnessSplit): number {
+  const { first } = parseSplit(split);
+  return first / 100;
+}
 
 function computeFairness(etaParticipantA: number, etaParticipantB: number, split: WillingnessSplit): number {
   const total = etaParticipantA + etaParticipantB;
@@ -18,7 +16,7 @@ function computeFairness(etaParticipantA: number, etaParticipantB: number, split
     return 0;
   }
 
-  const targetRatio = TARGET_RATIO_BY_SPLIT[split];
+  const targetRatio = computeTargetRatio(split);
   const actualRatio = etaParticipantA / total;
   const maxDistance = Math.max(targetRatio, 1 - targetRatio);
   const normalizedDistance = Math.abs(actualRatio - targetRatio) / maxDistance;
@@ -50,25 +48,21 @@ export function scoreCandidates(
   split: WillingnessSplit,
   selectedTags: PreferenceTag[]
 ): ScoredCandidate[] {
-  const { fairnessWeight, preferenceWeight } = SCORE_WEIGHTS[split];
+  const { first } = parseSplit(split);
+  const fairnessWeight = 0.7 + (first - 50) * 0.01;
+  const preferenceWeight = 1 - fairnessWeight;
 
   return candidates
     .map((candidate) => {
       const fairnessScore = computeFairness(candidate.etaParticipantA, candidate.etaParticipantB, split);
       const preferenceScore = computePreference(candidate.tags, selectedTags);
-      const totalScore = fairnessWeight * fairnessScore + preferenceWeight * preferenceScore;
-
+      const totalScore = fairnessScore * fairnessWeight + preferenceScore * preferenceWeight;
       return {
         ...candidate,
         fairnessScore,
         preferenceScore,
         totalScore
-      } as ScoredCandidate;
+      };
     })
-    .sort((a, b) => {
-      if (b.totalScore !== a.totalScore) {
-        return b.totalScore - a.totalScore;
-      }
-      return a.venueId.localeCompare(b.venueId);
-    });
+    .sort((a, b) => b.totalScore - a.totalScore);
 }

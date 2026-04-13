@@ -152,6 +152,7 @@ export function RankedSpotsMap({
   confirmedVenueId,
   selectedVenueId,
   focusedVenueId,
+  defaultCenter,
   onMarkerSelect,
   onVenueFocus
 }: {
@@ -160,6 +161,7 @@ export function RankedSpotsMap({
   confirmedVenueId: string | null;
   selectedVenueId: string | null;
   focusedVenueId?: string | null;
+  defaultCenter?: { lat: number; lng: number };
   onMarkerSelect: (venueId: string) => void;
   onVenueFocus?: (venueId: string) => void;
 }) {
@@ -285,7 +287,7 @@ export function RankedSpotsMap({
         <APIProvider apiKey={mapsApiKey} onLoad={handleMapLoad} onError={handleMapError} solutionChannel="GMP_DEV">
           <Map
             mapId="ranked-spots-map"
-            defaultCenter={{ lat: 40.7128, lng: -74.006 }}
+            defaultCenter={defaultCenter ?? { lat: 40.7128, lng: -74.006 }}
             defaultZoom={12}
             mapContainerClassName="map-panel"
             style={{ height: "350px", minHeight: "350px" }}

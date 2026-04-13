@@ -18,6 +18,8 @@ export interface SessionSnapshotParticipant {
   locationDraftUpdatedAt: string | null;
   locationConfirmedAt: string | null;
   rankingInputsUpdatedAt: string | null;
+  lat?: number;
+  lng?: number;
 }
 
 export interface ShortlistVenue {
@@ -100,7 +102,7 @@ export interface SessionEventResponse {
   diff?: SessionEventDiffResponse;
 }
 
-export type WillingnessSplit = "50_50" | "60_40" | "70_30";
+export type WillingnessSplit = string; // validated: XX_YY where XX + YY = 100, both >= 50
 export type PreferenceTag = "coffee" | "lunch" | "dinner" | "cocktails" | "dessert" | "museum" | "walk_and_talk" | "vintage_shops" | "quiet";
 
 export interface RankedVenue {
@@ -257,7 +259,7 @@ export async function confirmLocation(input: {
 export async function upsertRankingInputs(input: {
   sessionId: string;
   participantId: string;
-  split: WillingnessSplit;
+  split: string;
   tags: PreferenceTag[];
 }): Promise<{
   split: WillingnessSplit;

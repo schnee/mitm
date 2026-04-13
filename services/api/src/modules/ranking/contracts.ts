@@ -1,4 +1,4 @@
-export type WillingnessSplit = "50_50" | "60_40" | "70_30";
+export type WillingnessSplit = string; // validated separately via validation.ts
 
 export type PreferenceTag = "coffee" | "lunch" | "dinner" | "cocktails" | "dessert" | "museum" | "walk_and_talk" | "vintage_shops" | "quiet";
 
