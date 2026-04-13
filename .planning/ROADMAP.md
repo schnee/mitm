@@ -445,4 +445,4 @@ Plans:
 | 11. Map-First Provider Integration Completion | 3/3 | Planned | 11-01, 11-02, 11-03 |
 | 12. Unified Setup Flow | 2/2 | Planned | 12-01, 12-02 |
 | 13. Refactoring Quick Wins | 3/3 | Planned | 13-01, 13-02, 13-03 |
-| 14. Shared Types Package | 2/2 | Planned | 14-01, 14-02 |
+| 14. Shared Types Package | 2/2 | Complete    | 2026-04-13 |

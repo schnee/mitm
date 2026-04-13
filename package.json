@@ -2,6 +2,9 @@
   "name": "meet-me-in-the-middle",
   "private": true,
   "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "dev:api": "tsx services/api/src/dev-server.ts",
     "dev:web": "next dev -p 3000",
@@ -25,6 +28,7 @@
     "wrangler": "^4.81.1"
   },
   "dependencies": {
+    "@mitm/types": "file:packages/types",
     "@vis.gl/react-google-maps": "^1.8.2",
     "next": "^16.2.2",
     "pnpm": "^10.33.0",
