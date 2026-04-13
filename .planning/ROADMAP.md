@@ -409,6 +409,25 @@ Plans:
 - [ ] 12-01-PLAN.md — Create unified SetupCard component that combines location capture + preferences.
 - [ ] 12-02-PLAN.md — Integrate SetupCard into session page and update session-flow to 4 steps.
 
+### Phase 13: Refactoring Quick Wins
+**Goal**: Centralize environment variables, error codes, and create shared hooks to eliminate code duplication.
+**Depends on**: Phase 12
+**Requirements**: REFACTOR-01, REFACTOR-02, REFACTOR-03, REFACTOR-04, REFACTOR-05
+**Plans**: 3 plans
+Plans:
+- [x] 13-01-PLAN.md — Centralize env config (env.ts), update session-client.ts and useSessionSync.ts to use centralized API_BASE_URL
+- [x] 13-02-PLAN.md — Create shared error-codes.ts in services/api/src/lib/
+- [x] 13-03-PLAN.md — Create useMapsConfig hook and add SESSION_TTL_HOURS to env
+
+### Phase 14: Shared Types Package
+**Goal**: Create @mitm/types package for shared frontend/backend type definitions.
+**Depends on**: Phase 13
+**Requirements**: REFACTOR-06
+**Plans**: 2 plans
+Plans:
+- [x] 14-01-PLAN.md — Create packages/types/ with PreferenceTag, WillingnessSplit, RankedVenue
+- [x] 14-02-PLAN.md — Update frontend and backend to import from @mitm/types
+
 ## Progress
 
 | Phase | Plans Complete | Status | Completed |
@@ -425,3 +444,5 @@ Plans:
 | 10. Session Continuity & State Persistence Hardening | 3/3 | Complete    | 2026-04-10 |
 | 11. Map-First Provider Integration Completion | 3/3 | Planned | 11-01, 11-02, 11-03 |
 | 12. Unified Setup Flow | 2/2 | Planned | 12-01, 12-02 |
+| 13. Refactoring Quick Wins | 3/3 | Planned | 13-01, 13-02, 13-03 |
+| 14. Shared Types Package | 2/2 | Planned | 14-01, 14-02 |
