@@ -774,3 +774,34 @@ legend {
   font-weight: 600;
   color: #111827;
 }
+
+/* Confirm overlay */
+.confirm-overlay .divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 1rem 0;
+}
+
+.confirm-overlay .support-section,
+.confirm-overlay .reuse-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.confirm-overlay .btn-secondary,
+.confirm-overlay .btn-subtle {
+  margin-top: 0.25rem;
+}
+
+.confirm-overlay .action-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.confirm-overlay .bmac-link img {
+  height: 50px;
+}
