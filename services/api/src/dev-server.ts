@@ -27,16 +27,20 @@ const apiPort = Number(process.env.API_PORT ?? 8080);
 const appUrl = process.env.APP_URL ?? "http://localhost:3000";
 const corsOrigin = process.env.CORS_ORIGIN ?? "http://localhost:3000";
 
-function setCorsHeaders(response: ServerResponse): void {
-  response.setHeader("Access-Control-Allow-Origin", corsOrigin);
+function setCorsHeaders(response: ServerResponse, request: IncomingMessage): void {
+  const origin = request.headers.origin;
+  const allowedOrigins = corsOrigin.split(",");
+  const validOrigin = allowedOrigins.includes(origin ?? "") ? origin ?? "" : allowedOrigins[0] ?? "";
+  
+  response.setHeader("Access-Control-Allow-Origin", validOrigin);
   response.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
   response.setHeader("Access-Control-Allow-Headers", "Content-Type");
 }
 
-function sendJson(response: ServerResponse, status: number, body: unknown): void {
+function sendJson(response: ServerResponse, request: IncomingMessage, status: number, body: unknown): void {
   response.statusCode = status;
   response.setHeader("Content-Type", "application/json");
-  setCorsHeaders(response);
+  setCorsHeaders(response, request);
   response.end(JSON.stringify(body));
 }
 
@@ -63,7 +67,7 @@ function streamSessionEvents(
 ): void {
   const snapshot = repository.getSessionSnapshot(sessionId);
   if (!snapshot) {
-    sendJson(response, 404, { error: "SESSION_NOT_FOUND" });
+    sendJson(response, request, 404, { error: "SESSION_NOT_FOUND" });
     return;
   }
 
@@ -71,7 +75,7 @@ function streamSessionEvents(
   response.setHeader("Content-Type", "text/event-stream");
   response.setHeader("Cache-Control", "no-cache, no-transform");
   response.setHeader("Connection", "keep-alive");
-  setCorsHeaders(response);
+  setCorsHeaders(response, request);
   response.flushHeaders();
 
   let cursor = since;
@@ -101,27 +105,27 @@ const server = createServer(async (request, response) => {
 
   if (method === "OPTIONS") {
     response.statusCode = 204;
-    setCorsHeaders(response);
+    setCorsHeaders(response, request);
     response.end();
     return;
   }
 
   if (method === "GET" && url.pathname === "/health") {
-    sendJson(response, 200, { ok: true });
+    sendJson(response, request, 200, { ok: true });
     return;
   }
 
   if (method === "POST" && url.pathname === "/v1/sessions") {
     const payload = await readJsonBody(request);
     const result = await createSessionHandler(payload, { repository, appUrl });
-    sendJson(response, result.status, result.body);
+    sendJson(response, request, result.status, result.body);
     return;
   }
 
   if (method === "POST" && url.pathname === "/v1/sessions/join") {
     const payload = await readJsonBody(request);
     const result = await joinSessionHandler(payload, { repository });
-    sendJson(response, result.status, result.body);
+    sendJson(response, request, result.status, result.body);
     return;
   }
 
@@ -129,7 +133,7 @@ const server = createServer(async (request, response) => {
   if (method === "GET" && snapshotMatch) {
     const sessionId = decodeURIComponent(snapshotMatch[1]);
     const result = await getSessionSnapshotHandler(sessionId, { repository });
-    sendJson(response, result.status, result.body);
+    sendJson(response, request, result.status, result.body);
     return;
   }
 
@@ -145,7 +149,7 @@ const server = createServer(async (request, response) => {
     }
 
     const result = await sessionEventsHandler(sessionId, { repository }, { since });
-    sendJson(response, result.status, result.body);
+    sendJson(response, request, result.status, result.body);
     return;
   }
 
@@ -153,60 +157,60 @@ const server = createServer(async (request, response) => {
   if (method === "GET" && funnelMatch) {
     const sessionId = decodeURIComponent(funnelMatch[1]);
     const result = await getSessionFunnelHandler(sessionId, { repository });
-    sendJson(response, result.status, result.body);
+    sendJson(response, request, result.status, result.body);
     return;
   }
 
   if (method === "POST" && url.pathname === "/v1/location/draft") {
     const payload = await readJsonBody(request);
     const result = await upsertLocationDraftHandler(payload, { repository: locationRepository });
-    sendJson(response, result.status, result.body);
+    sendJson(response, request, result.status, result.body);
     return;
   }
 
   if (method === "POST" && url.pathname === "/v1/location/confirm") {
     const payload = await readJsonBody(request);
     const result = await confirmLocationHandler(payload, { repository: locationRepository });
-    sendJson(response, result.status, result.body);
+    sendJson(response, request, result.status, result.body);
     return;
   }
 
   if (method === "POST" && url.pathname === "/v1/ranking/inputs") {
     const payload = await readJsonBody(request);
     const result = await upsertRankingInputsHandler(payload, { repository: rankingRepository, service: rankingService });
-    sendJson(response, result.status, result.body);
+    sendJson(response, request, result.status, result.body);
     return;
   }
 
   if (method === "POST" && url.pathname === "/v1/ranking/results") {
     const payload = await readJsonBody(request);
     const result = await getRankedResultsHandler(payload, { service: rankingService });
-    sendJson(response, result.status, result.body);
+    sendJson(response, request, result.status, result.body);
     return;
   }
 
   if (method === "POST" && url.pathname === "/v1/decision/shortlist") {
     const payload = await readJsonBody(request);
     const result = await upsertShortlistVenueHandler(payload, { repository });
-    sendJson(response, result.status, result.body);
+    sendJson(response, request, result.status, result.body);
     return;
   }
 
   if (method === "POST" && url.pathname === "/v1/decision/reaction") {
     const payload = await readJsonBody(request);
     const result = await upsertVenueReactionHandler(payload, { repository });
-    sendJson(response, result.status, result.body);
+    sendJson(response, request, result.status, result.body);
     return;
   }
 
   if (method === "POST" && url.pathname === "/v1/decision/confirm") {
     const payload = await readJsonBody(request);
     const result = await confirmVenueHandler(payload, { repository });
-    sendJson(response, result.status, result.body);
+    sendJson(response, request, result.status, result.body);
     return;
   }
 
-  sendJson(response, 404, { error: "NOT_FOUND" });
+  sendJson(response, request, 404, { error: "NOT_FOUND" });
 });
 
 server.listen(apiPort, () => {
