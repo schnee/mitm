@@ -26,6 +26,9 @@ import { ConfirmOverlay } from "../../../components/overlays/ConfirmOverlay";
 import { deriveSessionFlow, deriveMapStage } from "../../../lib/session-flow";
 import { deriveDraftReady, derivePreferencesSaved } from "../../../lib/session-continuity";
 
+const BANNER_DESKTOP = "/images/mmitm-desktop.webp";
+const BANNER_MOBILE = "/images/mmitm-mobile.webp";
+
 type JoinState = "joining" | "joined" | "join_error";
 
 interface JoinPageProps {
@@ -401,8 +404,13 @@ const mapStage: MapStage = confirmedPlace ? "confirm" : deriveMapStage(activeSte
         {state === "joined" && (
           <>
             <header className="app-header">
-              <h1>Meet Me In The Middle</h1>
-              <p>Agree on a meet-up spot in minutes</p>
+              <img
+                src={BANNER_DESKTOP}
+                srcSet={`${BANNER_MOBILE} 375w, ${BANNER_DESKTOP} 1440w`}
+                sizes="(max-width: 768px) 100vw, 1440px"
+                alt="Meet Me In The Middle banner"
+                className="banner-hero"
+              />
             </header>
             <div className="map-first-layout">
               <section className="map-section">

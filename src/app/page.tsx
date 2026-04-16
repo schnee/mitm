@@ -3,6 +3,9 @@
 import { useState } from "react";
 import { createSession } from "../lib/api/session-client";
 
+const BANNER_DESKTOP = "/images/mmitm-desktop.webp";
+const BANNER_MOBILE = "/images/mmitm-mobile.webp";
+
 type HostState = "idle" | "creating" | "created" | "error";
 
 interface CreatedSession {
@@ -104,6 +107,13 @@ export default function HostPage() {
     <main>
       <div className="app-shell page-stack">
         <section className="panel startup-hero" aria-labelledby="startup-title">
+          <img
+            src={BANNER_DESKTOP}
+            srcSet={`${BANNER_MOBILE} 375w, ${BANNER_DESKTOP} 1440w`}
+            sizes="(max-width: 768px) 100vw, 1440px"
+            alt="Meet Me In The Middle banner"
+            className="banner-hero"
+          />
           <header className="section-header">
             <h1 id="startup-title">Meet Me In The Middle</h1>
             <p>
