@@ -8,7 +8,12 @@ test-results/
 .env
 .env.local
 .env.prod
+.env*.bak
+.env.*.backup
 .open-next/
 .wrangler/
 deploy/cloudflare/.dev.vars
 data/trackstat.duckdb
+opencode*.bak
+*.js
+!next.config.js
